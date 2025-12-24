@@ -1,10 +1,19 @@
-
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Home from './pages/Home';
+import VehicleDetail from './pages/VehicleDetail';
+import CoastalRoutes from './pages/CoastalRoutes';
+import Payment from './pages/Payment';
 
 function App() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontSize: '3rem', fontFamily: 'sans-serif', color: 'red' }}>
-      <h1>Hola Mundo</h1>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/vehiculo/:id" element={<VehicleDetail />} />
+        <Route path="/rutas" element={<CoastalRoutes />} />
+        <Route path="/pago/:bookingId" element={<Payment />} />
+      </Routes>
+    </Router>
   )
 }
 
