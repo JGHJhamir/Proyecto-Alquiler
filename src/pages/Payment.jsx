@@ -38,12 +38,28 @@ const Payment = () => {
         }
     }, [bookingId, booking, vehicle]);
 
-    const handlePayment = () => {
+    const handlePayment = async () => {
         setPaymentStatus('processing');
-        // Visual simulation only - No DB update
-        setTimeout(() => {
-            setPaymentStatus('success');
-        }, 2000);
+
+        try {
+            // Update booking status to confirmed
+            const { error } = await supabase
+                .from('bookings')
+                .update({ status: 'confirmed' })
+                .eq('id', booking.id);
+
+            if (error) throw error;
+
+            setTimeout(() => {
+                setPaymentStatus('success');
+            }, 1500);
+
+        } catch (error) {
+            console.error('Payment error:', error);
+            // Optionally handle error state here
+            setPaymentStatus('idle');
+            alert('Error al procesar el pago. Inténtalo de nuevo.');
+        }
     };
 
     if (!booking || !vehicle) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div></div>;
@@ -58,8 +74,8 @@ const Payment = () => {
                 <p className="text-slate-600 text-lg max-w-md mb-10">
                     Tu reserva para el <span className="font-bold text-slate-800">{vehicle.make} {vehicle.model}</span> está confirmada. Te hemos enviado los detalles a tu correo.
                 </p>
-                <Link to="/" className="btn-primary px-8 py-3 rounded-full flex items-center gap-2">
-                    Volver al Inicio <ArrowRight className="w-4 h-4" />
+                <Link to="/cliente" className="btn-primary px-8 py-3 rounded-full flex items-center gap-2">
+                    Ir a Mis Reservas <ArrowRight className="w-4 h-4" />
                 </Link>
             </div>
         );
