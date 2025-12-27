@@ -63,7 +63,7 @@ const Login = () => {
                     navigate('/owner');
                     break;
                 case 'client':
-                    navigate('/cliente');
+                    navigate('/');
                     break;
                 default:
                     // Default fallback

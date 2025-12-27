@@ -174,7 +174,7 @@ const ClientDashboard = () => {
                             <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                             <h3 className="text-lg font-bold text-slate-900">Sin reservas aún</h3>
                             <p className="text-slate-500 text-sm mb-6">¿Listo para tu próxima aventura?</p>
-                            <button onClick={() => navigate('/fleet')} className="px-6 py-2.5 bg-brand-blue text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-600 transition-colors">
+                            <button onClick={() => navigate('/')} className="px-6 py-2.5 bg-brand-blue text-white font-bold rounded-xl shadow-lg shadow-blue-200 hover:bg-blue-600 transition-colors">
                                 Ver Vehículos
                             </button>
                         </div>
