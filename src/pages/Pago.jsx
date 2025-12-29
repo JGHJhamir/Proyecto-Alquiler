@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom'; // Added useLocation
-import Navbar from '../components/Navbar';
+import BarraNavegacion from '../components/BarraNavegacion';
 import { CheckCircle, CreditCard, Smartphone, ShieldCheck, Lock, ArrowRight } from 'lucide-react';
 import { supabase } from '../supabase';
 
-const Payment = () => {
+const Pago = () => {
     const { bookingId } = useParams();
     const location = useLocation(); // Hook for passed state
     const [booking, setBooking] = useState(location.state?.booking || null);
@@ -83,7 +83,7 @@ const Payment = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 selection:bg-brand-blue/20">
-            <Navbar />
+            <BarraNavegacion />
 
             <div className="pt-32 pb-20 px-6 max-w-6xl mx-auto">
                 <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-10 text-center">Finalizar Reserva</h1>
@@ -185,4 +185,4 @@ const Payment = () => {
     );
 };
 
-export default Payment;
+export default Pago;

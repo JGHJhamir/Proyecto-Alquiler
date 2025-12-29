@@ -3,7 +3,7 @@ import { supabase } from '../supabase';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 
-const Login = () => {
+const IniciarSesion = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -200,5 +200,5 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default IniciarSesion;
 

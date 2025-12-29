@@ -3,7 +3,7 @@ import { Sun, User, LogOut, Waves } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 
-const Navbar = () => {
+const BarraNavegacion = () => {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [role, setRole] = useState(null);
@@ -64,7 +64,7 @@ const Navbar = () => {
 
             <div className="hidden md:flex items-center gap-10 text-slate-600 font-medium">
                 <Link to="/" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Flota 4x4</Link>
-                <Link to="/rutas" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Rutas Costeras</Link>
+                <Link to="/explorar" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Explorar Flota</Link>
                 <a href="#" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Experiencias</a>
             </div>
 
@@ -147,4 +147,4 @@ const Navbar = () => {
     );
 };
 
-export default Navbar;
+export default BarraNavegacion;

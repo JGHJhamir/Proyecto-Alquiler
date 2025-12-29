@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { Calendar, Clock, CreditCard, ChevronRight, MapPin, User, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import PaymentModal from '../components/PaymentModal';
+import ModalPago from '../components/ModalPago';
 
-const ClientDashboard = () => {
+const PanelCliente = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
@@ -143,15 +143,18 @@ const ClientDashboard = () => {
                                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${booking.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
                                                 booking.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-100' :
                                                     booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-                                                        'bg-slate-100 text-slate-500 border-slate-200'
+                                                        booking.status === 'completed' ? 'bg-blue-50 text-blue-700 border-blue-100' :
+                                                            'bg-slate-100 text-slate-500 border-slate-200'
                                                 }`}>
                                                 <span className={`w-1.5 h-1.5 rounded-full ${booking.status === 'confirmed' ? 'bg-emerald-500' :
                                                     booking.status === 'pending' ? 'bg-amber-500' :
-                                                        booking.status === 'cancelled' ? 'bg-red-500' : 'bg-slate-400'
+                                                        booking.status === 'cancelled' ? 'bg-red-500' :
+                                                            booking.status === 'completed' ? 'bg-blue-500' : 'bg-slate-400'
                                                     }`}></span>
                                                 {booking.status === 'confirmed' ? 'Confirmada' :
                                                     booking.status === 'pending' ? 'Pendiente de Pago' :
-                                                        booking.status === 'cancelled' ? 'Cancelada' : booking.status}
+                                                        booking.status === 'cancelled' ? 'Cancelada' :
+                                                            booking.status === 'completed' ? 'Finalizada' : booking.status}
                                             </span>
                                         </div>
 
@@ -182,7 +185,7 @@ const ClientDashboard = () => {
                 </div>
             </main>
 
-            <PaymentModal
+            <ModalPago
                 isOpen={!!selectedBookingForPayment}
                 onClose={() => setSelectedBookingForPayment(null)}
                 booking={selectedBookingForPayment}
@@ -193,4 +196,4 @@ const ClientDashboard = () => {
     );
 };
 
-export default ClientDashboard;
+export default PanelCliente;

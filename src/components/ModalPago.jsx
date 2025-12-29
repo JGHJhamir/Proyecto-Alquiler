@@ -1,6 +1,6 @@
 import { X, Smartphone } from 'lucide-react';
 
-const PaymentModal = ({ isOpen, onClose, booking, vehicle, user }) => {
+const ModalPago = ({ isOpen, onClose, booking, vehicle, user }) => {
     if (!isOpen || !booking || !vehicle) return null;
 
     const ADMIN_PHONE = '51954025029';
@@ -71,4 +71,4 @@ const PaymentModal = ({ isOpen, onClose, booking, vehicle, user }) => {
     );
 };
 
-export default PaymentModal;
+export default ModalPago;

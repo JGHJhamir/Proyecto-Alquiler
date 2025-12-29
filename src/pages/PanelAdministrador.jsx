@@ -1,26 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import BarraNavegacion from '../components/BarraNavegacion';
 import { supabase } from '../supabase';
 import {
     Car, Users, Calendar, Plus, Search, BarChart3, Settings,
     X, Save, Image as ImageIcon, LayoutDashboard, Tag, ShoppingBag,
     LogOut, MoreVertical, MapPin, Filter, FileText, Briefcase, Bell, Menu,
     Waves, Trash2, Edit, Loader2
-} from 'lucide-react';
 
-const COASTAL_LOCATIONS = {
-    "Tumbes": ["Tumbes", "Contralmirante Villar", "Zarumilla"],
-    "Piura": ["Piura", "Talara", "Paita", "Sechura", "Sullana", "Morropón", "Ayabaca", "Huancabamba"],
-    "Lambayeque": ["Chiclayo", "Lambayeque", "Ferreñafe"],
-    "La Libertad": ["Trujillo", "Chepén", "Pacasmayo", "Virú", "Ascope"],
-    "Ancash": ["Santa", "Casma", "Huarmey"],
-    "Lima": ["Lima", "Barranca", "Cañete", "Huaral", "Huaura"],
-    "Ica": ["Ica", "Chincha", "Pisco", "Nazca", "Palpa"],
-    "Arequipa": ["Arequipa", "Camaná", "Islay", "Caravelí"],
-    "Moquegua": ["Ilo", "Mariscal Nieto", "General Sánchez Cerro"],
-    "Tacna": ["Tacna", "Jorge Basadre"]
-};
+} from 'lucide-react';
+import { COASTAL_LOCATIONS } from '../constants';
+
+
 
 const VIEW_TITLES = {
     dashboard: 'Panel de Control',
@@ -51,14 +42,9 @@ const UserIconMap = {
 const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) => {
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'operaciones', label: 'Operaciones', icon: Settings },
         { id: 'reservas', label: 'Reservas', icon: Calendar },
         { id: 'clients', label: 'Clientes', icon: Users },
         { id: 'vehicles', label: 'Vehículos', icon: Car },
-        { id: 'locations', label: 'Ubicaciones', icon: MapPin },
-        { id: 'team', label: 'Equipo', icon: Users },
-        { id: 'promotions', label: 'Promociones', icon: Tag },
-        { id: 'reports', label: 'Reportes', icon: BarChart3 },
     ];
 
     const handleLogout = async () => {
@@ -126,11 +112,12 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
         if (name === 'department') {
-            setFormData(prev => ({ ...prev, department: value, province: '' }));
+            setFormData(prev => ({ ...prev, department: value, city: '' }));
         } else {
             setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
         }
     };
+
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
@@ -195,8 +182,8 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         </div>
                     </div>
 
-                    {/* Row 3: Category & Dept */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Row 3: Category & Dept & City (Merged for cleaner layout) */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="space-y-1.5">
                             <label className="text-sm font-semibold text-slate-700 block">Categoría</label>
                             <div className="relative">
@@ -210,9 +197,6 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                                     <option value="Sedan">Sedán</option>
                                     <option value="Moto">Moto / Cuatrimoto</option>
                                 </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
                             </div>
                         </div>
                         <div className="space-y-1.5">
@@ -225,26 +209,19 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                                     <option value="">Selecciona...</option>
                                     {Object.keys(COASTAL_LOCATIONS).map(dept => <option key={dept} value={dept}>{dept}</option>)}
                                 </select>
-                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    {/* Row 4: Prov & Image */}
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-slate-700 block">Provincia (Ciudad)</label>
-                        <div className="relative">
-                            <select name="province" required disabled={!formData.department}
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                                value={formData.province} onChange={handleInputChange}
-                            >
-                                <option value="">Selecciona...</option>
-                                {formData.department && COASTAL_LOCATIONS[formData.department].map(prov => <option key={prov} value={prov}>{prov}</option>)}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-semibold text-slate-700 block">Ciudad / Playa</label>
+                            <div className="relative">
+                                <select name="city" required disabled={!formData.department}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                    value={formData.city || ''}
+                                    onChange={handleInputChange}
+                                >
+                                    <option value="">Selecciona...</option>
+                                    {formData.department && COASTAL_LOCATIONS[formData.department].map(city => <option key={city} value={city}>{city}</option>)}
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -288,6 +265,87 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         </button>
                         <button type="submit" disabled={submitting} className="flex-1 py-3.5 rounded-xl bg-brand-blue text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-brand-blue/20 flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
                             {submitting ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-5 h-5" /> {isEditing ? 'Actualizar' : 'Guardar Vehículo'}</>}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const ClientModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitting, isEditing }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
+                <div className="bg-white px-8 py-5 border-b border-slate-100 flex justify-between items-center">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Editar Cliente' : 'Añadir Cliente'}</h2>
+                        <p className="text-slate-500 text-sm">Gestiona la información del perfil del usuario.</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                        <X className="w-5 h-5 text-slate-400" />
+                    </button>
+                </div>
+
+                <form onSubmit={onSubmit} className="p-8 space-y-6">
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-semibold text-slate-700 block">Nombre Completo</label>
+                            <input type="text"
+                                value={formData.full_name}
+                                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                                required
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-semibold text-slate-700 block">Email</label>
+                            <input type="email"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                disabled={isEditing} // Email usually handled by Auth, better not edit here to avoid sync issues
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none disabled:bg-slate-100 disabled:text-slate-500"
+                            />
+                            {isEditing && <p className="text-[10px] text-slate-400">El email no se puede cambiar desde aquí.</p>}
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">Celular</label>
+                                <input type="text"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">DNI / Pasaporte</label>
+                                <input type="text"
+                                    value={formData.dni}
+                                    onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
+                                />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-sm font-semibold text-slate-700 block">Rol</label>
+                            <select
+                                value={formData.role}
+                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
+                            >
+                                <option value="client">Cliente</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="pt-2 flex gap-4">
+                        <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50">Cancelar</button>
+                        <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-xl bg-brand-blue text-white font-bold hover:bg-blue-700 items-center justify-center flex gap-2">
+                            {submitting ? <Loader2 className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />}
+                            {isEditing ? 'Actualizar' : 'Guardar'}
                         </button>
                     </div>
                 </form>
@@ -396,9 +454,10 @@ const DashboardView = ({ users }) => (
     </div>
 );
 
-const VehiclesView = ({ onAddClick, onClearDB, onDelete, onEdit, activeMenu, setActiveMenu }) => {
+const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, onDeleteMultiple, onEdit, activeMenu, setActiveMenu }) => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedVehicles, setSelectedVehicles] = useState([]);
 
     const fetchVehicles = async () => {
         setLoading(true);
@@ -409,6 +468,22 @@ const VehiclesView = ({ onAddClick, onClearDB, onDelete, onEdit, activeMenu, set
 
     useEffect(() => { fetchVehicles(); }, []);
 
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedVehicles(vehicles.map(v => v.id));
+        } else {
+            setSelectedVehicles([]);
+        }
+    };
+
+    const handleSelectOne = (id) => {
+        if (selectedVehicles.includes(id)) {
+            setSelectedVehicles(selectedVehicles.filter(vId => vId !== id));
+        } else {
+            setSelectedVehicles([...selectedVehicles, id]);
+        }
+    };
+
     return (
         <div className="space-y-6 animate-fade-in-up">
             <div className="flex justify-between items-center">
@@ -417,6 +492,17 @@ const VehiclesView = ({ onAddClick, onClearDB, onDelete, onEdit, activeMenu, set
                     <input type="text" placeholder="Filtrar por vehículo..." className="pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none w-64" />
                 </div>
                 <div className="flex gap-3">
+                    {selectedVehicles.length > 0 && (
+                        <button
+                            onClick={() => { onDeleteMultiple(selectedVehicles); setSelectedVehicles([]); }}
+                            className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg animate-fade-in"
+                        >
+                            <Trash2 className="w-4 h-4" /> Eliminar ({selectedVehicles.length})
+                        </button>
+                    )}
+                    <button onClick={onSeed} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold px-2 hover:underline transition-all">
+                        + Auto-completar
+                    </button>
                     <button onClick={onClearDB} className="text-red-500 hover:text-red-700 text-xs font-semibold px-4 hover:underline transition-all">
                         Limpiar Todo
                     </button>
@@ -430,7 +516,14 @@ const VehiclesView = ({ onAddClick, onClearDB, onDelete, onEdit, activeMenu, set
                 <table className="w-full text-left">
                     <thead className="bg-slate-50 border-b border-slate-200">
                         <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                            <th className="p-4 w-8"><input type="checkbox" className="rounded border-slate-300" /></th>
+                            <th className="p-4 w-8">
+                                <input
+                                    type="checkbox"
+                                    className="rounded border-slate-300 w-4 h-4 accent-brand-blue cursor-pointer"
+                                    onChange={handleSelectAll}
+                                    checked={vehicles.length > 0 && selectedVehicles.length === vehicles.length}
+                                />
+                            </th>
                             <th className="px-6 py-3">Vehículo</th>
                             <th className="px-6 py-3">Categoría</th>
                             <th className="px-6 py-3">Ubicación</th>
@@ -441,12 +534,27 @@ const VehiclesView = ({ onAddClick, onClearDB, onDelete, onEdit, activeMenu, set
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                         {vehicles.map((car) => (
-                            <tr key={car.id} className="hover:bg-blue-50/50 transition-colors group">
-                                <td className="p-4"><input type="checkbox" className="rounded border-slate-300" /></td>
+                            <tr key={car.id} className={`hover:bg-blue-50/50 transition-colors group ${selectedVehicles.includes(car.id) ? 'bg-blue-50/30' : ''}`}>
+                                <td className="p-4">
+                                    <input
+                                        type="checkbox"
+                                        className="rounded border-slate-300 w-4 h-4 accent-brand-blue cursor-pointer"
+                                        checked={selectedVehicles.includes(car.id)}
+                                        onChange={() => handleSelectOne(car.id)}
+                                    />
+                                </td>
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-md bg-slate-100 overflow-hidden">
-                                            <img src={car.image_url} alt={car.model} className="w-full h-full object-cover" />
+                                            <img
+                                                src={car.image_url}
+                                                alt={car.model}
+                                                className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000';
+                                                }}
+                                            />
                                         </div>
                                         <div>
                                             <div className="font-semibold text-slate-900 text-sm">{car.make} {car.model}</div>
@@ -460,8 +568,8 @@ const VehiclesView = ({ onAddClick, onClearDB, onDelete, onEdit, activeMenu, set
                                 </td>
                                 <td className="px-6 py-4 font-semibold text-slate-900 text-sm">
                                     <div className="flex flex-col">
-                                        {car.price_per_day > 0 && <span>S/ {car.price_per_day}/día</span>}
-                                        {car.price_per_hour > 0 && <span className="text-xs text-slate-500">S/ {car.price_per_hour}/hora</span>}
+                                        {car.price_per_day > 0 && <span>S/ {Math.round(car.price_per_day)}/día</span>}
+                                        {car.price_per_hour > 0 && <span className="text-xs text-slate-500">S/ {Math.round(car.price_per_hour)}/hora</span>}
                                         {!car.price_per_day && !car.price_per_hour && <span className="text-slate-400 text-xs">Sin precio</span>}
                                     </div>
                                 </td>
@@ -499,15 +607,20 @@ const VehiclesView = ({ onAddClick, onClearDB, onDelete, onEdit, activeMenu, set
     );
 };
 
-const ClientsView = ({ users }) => (
+const ClientsView = ({ users, onEdit, onDelete, onAdd, onSeed, activeMenu, setActiveMenu }) => (
     <div className="space-y-6 animate-fade-in-up">
         <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                 <Users className="w-6 h-6" /> Gestión de Clientes
             </h2>
-            <button className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
-                <Plus className="w-4 h-4" /> Añadir Cliente
-            </button>
+            <div className="flex gap-2">
+                <button onClick={onSeed} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold px-2 hover:underline transition-all">
+                    + Demo Clientes
+                </button>
+                <button onClick={onAdd} className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                    <Plus className="w-4 h-4" /> Añadir Cliente
+                </button>
+            </div>
         </div>
 
         <div className="flex gap-4">
@@ -520,7 +633,7 @@ const ClientsView = ({ users }) => (
             </button>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
             <table className="w-full text-left">
                 <thead className="bg-slate-50 border-b border-slate-200">
                     <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
@@ -529,7 +642,7 @@ const ClientsView = ({ users }) => (
                         <th className="px-6 py-3">Email</th>
                         <th className="px-6 py-3">Celular</th>
                         <th className="px-6 py-3">DNI/Pasaporte</th>
-                        <th className="px-6 py-3">Fecha Registro</th>
+                        <th className="px-6 py-3">Role</th>
                         <th className="px-4 py-3 text-right"></th>
                     </tr>
                 </thead>
@@ -546,13 +659,28 @@ const ClientsView = ({ users }) => (
                                 </div>
                             </td>
                             <td className="px-6 py-4 text-sm text-slate-600">{user.email || 'email@example.com'}</td>
-                            <td className="px-6 py-4 text-sm text-slate-600">{user.phone || '987654321'}</td>
-                            <td className="px-6 py-4 text-sm text-slate-600">{user.dni || '12345678'}</td>
-                            <td className="px-6 py-4 text-sm text-slate-600">
-                                {new Date(user.created_at).toLocaleDateString()}
+                            <td className="px-6 py-4 text-sm text-slate-600">{user.phone || '-'}</td>
+                            <td className="px-6 py-4 text-sm text-slate-600">{user.dni || '-'}</td>
+                            <td className="px-6 py-4">
+                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                    {user.role || 'client'}
+                                </span>
                             </td>
-                            <td className="px-4 py-4 text-right">
-                                <button className="text-slate-400 hover:text-brand-blue"><MoreVertical className="w-4 h-4" /></button>
+                            <td className="px-4 py-4 text-right relative">
+                                <button onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)} className="text-slate-400 hover:text-brand-blue p-2 rounded-full hover:bg-slate-100 transition-colors">
+                                    <MoreVertical className="w-4 h-4" />
+                                </button>
+                                {/* Dropdown Menu */}
+                                {activeMenu === user.id && (
+                                    <div className="absolute right-8 top-12 w-32 bg-white rounded-lg shadow-lg border border-slate-100 z-10 overflow-hidden animate-fade-in-up">
+                                        <button onClick={() => { onEdit(user); setActiveMenu(null); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                            <Edit className="w-3.5 h-3.5 text-slate-400" /> Editar
+                                        </button>
+                                        <button onClick={() => { onDelete(user.id); setActiveMenu(null); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                            <LogOut className="w-3.5 h-3.5" /> Eliminar
+                                        </button>
+                                    </div>
+                                )}
                             </td>
                         </tr>
                     ))}
@@ -1159,16 +1287,20 @@ const BookingsView = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
+    const [statusFilter, setStatusFilter] = useState('all');
+
+    useEffect(() => {
+        fetchBookings();
+    }, []);
 
     const fetchBookings = async () => {
-        setLoading(true);
         try {
             const { data, error } = await supabase
                 .from('bookings')
                 .select(`
                     *,
-                    vehicles ( make, model, image_url ),
-                    profiles ( full_name, email )
+                    vehicles ( make, model, image_url, year ),
+                    profiles ( full_name, email, phone, dni )
                 `)
                 .order('created_at', { ascending: false });
 
@@ -1181,146 +1313,174 @@ const BookingsView = () => {
         }
     };
 
-    useEffect(() => {
-        fetchBookings();
-    }, []);
+    const handleUpdateStatus = async (id, newStatus) => {
+        if (!confirm(`¿Estás seguro de cambiar el estado a "${newStatus === 'confirmed' ? 'Confirmado' : newStatus === 'cancelled' ? 'Cancelado' : 'Finalizado'}"?`)) return;
 
-    const handleUpdateStatus = async (bookingId, newStatus) => {
-        if (!confirm(`¿Estás seguro de cambiar el estado a "${newStatus}"?`)) return;
-
-        setActionLoading(bookingId);
+        setActionLoading(id);
         try {
-            const { error } = await supabase
-                .from('bookings')
-                .update({ status: newStatus })
-                .eq('id', bookingId);
-
+            const { error } = await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
             if (error) throw error;
 
             // Optimistic update
-            setBookings(bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
-            alert(`Reserva ${newStatus === 'confirmed' ? 'confirmada' : 'cancelada'} con éxito.`);
+            setBookings(bookings.map(b => b.id === id ? { ...b, status: newStatus } : b));
+            alert('Estado actualizado correctamente.');
         } catch (error) {
-            console.error('Error updating status:', error);
-            alert('Error al actualizar el estado.');
+            alert('Error al actualizar: ' + error.message);
         } finally {
             setActionLoading(null);
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-brand-blue" /></div>;
+    const filteredBookings = statusFilter === 'all'
+        ? bookings
+        : bookings.filter(b => b.status === statusFilter);
+
+    // Status Badge Component
+    const StatusBadge = ({ status }) => {
+        const styles = {
+            pending: 'bg-amber-100 text-amber-800 border-amber-200',
+            confirmed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+            cancelled: 'bg-red-100 text-red-800 border-red-200',
+            completed: 'bg-blue-100 text-blue-800 border-blue-200'
+        };
+        const labels = {
+            pending: 'Pendiente',
+            confirmed: 'Confirmado',
+            cancelled: 'Cancelado',
+            completed: 'Finalizado'
+        };
+        return (
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${styles[status] || styles.pending}`}>
+                {labels[status] || status}
+            </span>
+        );
+    };
+
+    if (loading) return <div className="p-8 text-center text-slate-400">Cargando reservas...</div>;
 
     return (
         <div className="space-y-6 animate-fade-in-up">
             <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold font-serif text-slate-900 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                     <Calendar className="w-6 h-6" /> Gestión de Reservas
                 </h2>
-                <div className="text-sm text-slate-500">
-                    Total: <span className="font-bold text-slate-900">{bookings.length}</span>
+                <div className="flex bg-white rounded-lg border border-slate-200 p-1">
+                    {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(status => (
+                        <button
+                            key={status}
+                            onClick={() => setStatusFilter(status)}
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${statusFilter === status ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                                }`}
+                        >
+                            {status === 'all' ? 'Ver Todo' :
+                                status === 'pending' ? 'Pendientes' :
+                                    status === 'confirmed' ? 'Activos' :
+                                        status === 'completed' ? 'Finalizados' : 'Cancelados'}
+                        </button>
+                    ))}
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50 border-b border-slate-100 text-xs uppercase text-slate-500 font-bold tracking-wider">
-                                <th className="p-4">ID</th>
-                                <th className="p-4">Vehículo</th>
-                                <th className="p-4">Cliente</th>
-                                <th className="p-4">Fechas</th>
-                                <th className="p-4 text-right">Total</th>
-                                <th className="p-4 text-center">Estado</th>
-                                <th className="p-4 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 text-sm">
-                            {bookings.map((booking) => (
-                                <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="p-4 font-mono text-xs text-slate-400">
-                                        {booking.id.slice(0, 8)}...
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <img
-                                                src={booking.vehicles?.image_url}
-                                                alt={booking.vehicles?.model}
-                                                className="w-10 h-10 rounded-lg object-cover bg-slate-100"
-                                            />
-                                            <div>
-                                                <div className="font-bold text-slate-900 whitespace-nowrap">
-                                                    {booking.vehicles?.make} {booking.vehicles?.model}
-                                                </div>
-                                            </div>
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
+                <table className="w-full text-left">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                            <th className="px-6 py-3">Vehículo</th>
+                            <th className="px-6 py-3">Cliente</th>
+                            <th className="px-6 py-3">Fechas</th>
+                            <th className="px-6 py-3">Total</th>
+                            <th className="px-6 py-3">Estado</th>
+                            <th className="px-6 py-3 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {filteredBookings.map((booking) => (
+                            <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden">
+                                            <img src={booking.vehicles?.image_url} alt="" className="w-full h-full object-cover" />
                                         </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="font-medium text-slate-900">{booking.profiles?.full_name || 'Desconocido'}</div>
-                                        <div className="text-xs text-slate-500">{booking.profiles?.email}</div>
-                                    </td>
-                                    <td className="p-4 whitespace-nowrap text-slate-600">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="flex items-center gap-1.5 text-xs"><Calendar className="w-3 h-3 text-emerald-500" /> {new Date(booking.start_date).toLocaleDateString()}</span>
-                                            <span className="flex items-center gap-1.5 text-xs"><Calendar className="w-3 h-3 text-red-400" /> {new Date(booking.end_date).toLocaleDateString()}</span>
+                                        <div>
+                                            <div className="font-bold text-slate-900 text-sm">{booking.vehicles?.make} {booking.vehicles?.model}</div>
+                                            <div className="text-xs text-slate-500">{booking.vehicles?.year}</div>
                                         </div>
-                                    </td>
-                                    <td className="p-4 text-right font-bold text-slate-900">
-                                        S/ {booking.total_price}
-                                    </td>
-                                    <td className="p-4 text-center">
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${booking.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                            booking.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                                                booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
-                                                    'bg-slate-100 text-slate-500 border-slate-200'
-                                            }`}>
-                                            {booking.status === 'confirmed' ? 'Confirmada' :
-                                                booking.status === 'pending' ? 'Pendiente' :
-                                                    booking.status === 'cancelled' ? 'Cancelada' : booking.status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            {booking.status === 'pending' && (
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="font-medium text-slate-900 text-sm">{booking.profiles?.full_name || 'Usuario'}</div>
+                                    <div className="text-xs text-slate-500">{booking.profiles?.email}</div>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="text-sm text-slate-600 flex flex-col">
+                                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(booking.start_date).toLocaleDateString()}</span>
+                                        <span className="text-xs text-slate-400 ml-4">al {new Date(booking.end_date).toLocaleDateString()}</span>
+                                    </div>
+                                </td>
+                                <td className="px-6 py-4 font-bold text-slate-900 text-sm">
+                                    S/ {booking.total_price}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <StatusBadge status={booking.status} />
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                    <div className="flex justify-end gap-2">
+                                        {booking.status === 'pending' && (
+                                            <>
                                                 <button
                                                     onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
                                                     disabled={actionLoading === booking.id}
-                                                    className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg transition-colors tooltip"
-                                                    title="Confirmar Pago"
+                                                    className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-sm"
+                                                    title="Confirmar Pago y Alquiler"
                                                 >
-                                                    {actionLoading === booking.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                                                    {actionLoading === booking.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
+                                                    Aprobar
                                                 </button>
-                                            )}
-                                            {booking.status !== 'cancelled' && (
                                                 <button
                                                     onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
                                                     disabled={actionLoading === booking.id}
-                                                    className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-colors tooltip"
-                                                    title="Cancelar Reserva"
+                                                    className="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors"
+                                                    title="Rechazar Reserva"
                                                 >
-                                                    {actionLoading === booking.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                                                    Rechazar
                                                 </button>
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                            {bookings.length === 0 && (
-                                <tr>
-                                    <td colSpan="7" className="p-8 text-center text-slate-400">
-                                        No hay reservas registradas.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                            </>
+                                        )}
+                                        {booking.status === 'confirmed' && (
+                                            <button
+                                                onClick={() => handleUpdateStatus(booking.id, 'completed')}
+                                                disabled={actionLoading === booking.id}
+                                                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
+                                                title="Marcar como Finalizado (Vehículo devuelto)"
+                                            >
+                                                Finalizar
+                                            </button>
+                                        )}
+                                        {booking.status === 'completed' && (
+                                            <span className="text-xs text-slate-400 font-medium italic">Archivado</span>
+                                        )}
+                                    </div>
+                                </td>
+                            </tr>
+                        ))}
+                        {filteredBookings.length === 0 && (
+                            <tr>
+                                <td colSpan="6" className="p-12 text-center text-slate-400">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Calendar className="w-8 h-8 opacity-20" />
+                                        <p className="text-sm">No hay reservas en este estado.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
 };
 
-const AdminDashboard = () => {
+const PanelAdministrador = () => {
     const [activeView, setActiveView] = useState('dashboard');
     const [users, setUsers] = useState([]);
     const [loadingUsers, setLoadingUsers] = useState(true);
@@ -1337,6 +1497,13 @@ const AdminDashboard = () => {
     const [formData, setFormData] = useState({
         make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', province: '',
         category: '4x4', image_url: '', description: '', is_offer: false
+    });
+
+    // Client Form State
+    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+    const [editingClientId, setEditingClientId] = useState(null);
+    const [clientFormData, setClientFormData] = useState({
+        full_name: '', email: '', phone: '', dni: '', role: 'client'
     });
 
     useEffect(() => {
@@ -1358,12 +1525,26 @@ const AdminDashboard = () => {
     }, []);
 
     const handleClearDatabase = async () => {
-        if (!confirm('¿Estás seguro de ELIMINAR TODOS los vehículos? Esta acción no se puede deshacer.')) return;
+        if (!confirm('¿Estás seguro de ELIMINAR TODOS los vehículos? Esta acción también eliminará todas las reservas asociadas.')) return;
         try {
-            // Delete all rows where id is not 0 (effectively all rows)
-            const { error } = await supabase.from('vehicles').delete().not('id', 'is', null);
-            if (error) throw error;
-            alert('¡Base de datos limpia!');
+            // 1. Fetch and Delete Bookings explicitly
+            const { data: bookings } = await supabase.from('bookings').select('id');
+            if (bookings && bookings.length > 0) {
+                const bookingIds = bookings.map(b => b.id);
+                // Delete in chunks if necessary, but for now simple in filter
+                const { error: bookingError } = await supabase.from('bookings').delete().in('id', bookingIds);
+                if (bookingError) throw bookingError;
+            }
+
+            // 2. Fetch and Delete Vehicles explicitly
+            const { data: vehicles } = await supabase.from('vehicles').select('id');
+            if (vehicles && vehicles.length > 0) {
+                const vehicleIds = vehicles.map(v => v.id);
+                const { error: vehicleError } = await supabase.from('vehicles').delete().in('id', vehicleIds);
+                if (vehicleError) throw vehicleError;
+            }
+
+            alert('¡Base de datos limpia! (Vehículos y Reservas eliminados)');
             window.location.reload();
         } catch (err) { alert('Error: ' + err.message); }
     };
@@ -1371,12 +1552,279 @@ const AdminDashboard = () => {
     const handleDeleteVehicle = async (id) => {
         if (!confirm('¿Estás seguro de eliminar este vehículo?')) return;
         try {
+            // Cascade delete for single vehicle
+            await supabase.from('bookings').delete().eq('vehicle_id', id);
             const { error } = await supabase.from('vehicles').delete().eq('id', id);
             if (error) throw error;
             alert('¡Vehículo eliminado!');
             window.location.reload();
         } catch (error) {
             alert('Error al eliminar: ' + error.message);
+        }
+    };
+
+    const handleDeleteMultipleVehicles = async (ids) => {
+        if (!confirm(`¿Estás seguro de eliminar ${ids.length} vehículos seleccionados?`)) return;
+        try {
+            // Cascade delete for multiple vehicles
+            const { error: bookingError } = await supabase.from('bookings').delete().in('vehicle_id', ids);
+            if (bookingError) throw bookingError;
+
+            const { error: vehicleError } = await supabase.from('vehicles').delete().in('id', ids);
+            if (vehicleError) throw vehicleError;
+
+            alert('¡Vehículos eliminados correctamente!');
+            window.location.reload();
+        } catch (error) {
+            alert('Error al eliminar: ' + error.message);
+        }
+    };
+
+    const handleSeedDatabase = async () => {
+        if (!confirm('¿Quieres agregar datos de prueba? Se generarán 6 vehículos por región (3 de Ciudad, 3 de Playa).')) return;
+        setSubmitting(true);
+        try {
+            // Updated Coastal Locations (Tropical/Central Focus)
+
+
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Debes iniciar sesión para realizar esta acción.");
+
+            const CITY_TEMPLATES = [
+                { make: 'Toyota', model: 'Corolla', category: 'Sedán', price_base: 60, image_url: 'https://tse2.mm.bing.net/th/id/OIP.qr6xSD3kUiQXnlAGZP1MIQHaE8?rs=1&pid=ImgDetMain&o=7&rm=3' },
+                { make: 'Kia', model: 'Rio', category: 'Compacto', price_base: 50, image_url: 'https://tse3.mm.bing.net/th/id/OIP.IuyBv9Lr_Y2qPJ1o00w7awHaE1?rs=1&pid=ImgDetMain&o=7&rm=3' },
+                { make: 'Hyundai', model: 'Tucson', category: 'SUV', price_base: 85, image_url: 'https://mediacloud.carbuyer.co.uk/image/private/s--DHfOYrcD--/f_auto,t_content-image-full-desktop@1/v1600853566/carbuyer/2020/09/all-new_hyundai_tucson_1.jpg' }
+            ];
+
+            const BEACH_TEMPLATES = [
+                { make: 'Jeep', model: 'Wrangler', category: '4x4', price_base: 150, image_url: 'https://tse1.mm.bing.net/th/id/OIP.XORhAQWLkCPd8kzQ-suzsgHaEi?rs=1&pid=ImgDetMain&o=7&rm=3' },
+                { make: 'Ford', model: 'Bronco', category: '4x4', price_base: 180, image_url: 'https://i.pinimg.com/originals/03/ba/34/03ba345c76599c99d272e3d24d43f1d0.jpg' },
+                { make: 'Can-Am', model: 'Maverick', category: 'Deportivo', price_base: 200, image_url: 'https://tse1.mm.bing.net/th/id/OIP.svtV1MvH8pTopowvqOUdJQHaFE?w=1024&h=702&rs=1&pid=ImgDetMain&o=7&rm=3' }
+            ];
+
+            const vehiclesToInsert = [];
+
+            // Iterate over each Coastal Department
+            for (const [department, cities] of Object.entries(COASTAL_LOCATIONS)) {
+                // Identify "City" node (usually first item) and "Beach" node (usually second item or explicitly defined)
+                // Heuristic: First item is Capital/City, others are beaches
+                const cityNode = cities[0];
+                const beachNode = cities.length > 1 ? cities[1] : cities[0];
+
+                // 1. Generate 3 City Vehicles
+                for (let i = 0; i < 3; i++) {
+                    const template = CITY_TEMPLATES[i % CITY_TEMPLATES.length];
+                    vehiclesToInsert.push({
+                        make: template.make,
+                        model: template.model,
+                        year: 2020 + Math.floor(Math.random() * 4),
+                        price_per_day: Math.round(template.price_base),
+                        price_per_hour: Math.round(template.price_base / 8),
+                        location_city: cityNode,
+                        category: template.category,
+                        image_url: template.image_url,
+                        description: `Perfecto para moverte por la ciudad de ${cityNode}. Económico y cómodo.`,
+                        rating: Number((4.0 + Math.random()).toFixed(1)),
+                        owner_id: user.id,
+                        created_at: new Date().toISOString()
+                    });
+                }
+
+                // 2. Generate 3 Beach Vehicles
+                for (let i = 0; i < 3; i++) {
+                    const template = BEACH_TEMPLATES[i % BEACH_TEMPLATES.length];
+                    vehiclesToInsert.push({
+                        make: template.make,
+                        model: template.model,
+                        year: 2022 + Math.floor(Math.random() * 3),
+                        price_per_day: Math.round(template.price_base),
+                        price_per_hour: Math.round(template.price_base / 6),
+                        location_city: beachNode,
+                        category: template.category,
+                        image_url: template.image_url,
+                        description: `¡Domina la arena en ${beachNode}! Ideal para aventuras off-road.`,
+                        rating: Number((4.5 + Math.random() * 0.5).toFixed(1)),
+                        owner_id: user.id,
+                        created_at: new Date().toISOString()
+                    });
+                }
+            }
+
+            // Insert in chunks to avoid payload limits if necessary, but 40 items is fine
+            if (vehiclesToInsert.length > 0) {
+                const { error } = await supabase.from('vehicles').insert(vehiclesToInsert);
+                if (error) throw error;
+                alert(`¡Base de datos populada! Se añadieron ${vehiclesToInsert.length} vehículos (6 por región).`);
+                window.location.reload();
+            }
+
+        } catch (error) {
+            console.error(error);
+            alert('Error al popular: ' + error.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+
+    // --- Client Management Logic ---
+    const handleEditClient = (client) => {
+        setEditingClientId(client.id);
+        setClientFormData({
+            full_name: client.full_name || '',
+            email: client.email || '',
+            phone: client.phone || '',
+            dni: client.dni || '',
+            role: client.role || 'client'
+        });
+        setIsClientModalOpen(true);
+    };
+
+    const handleDeleteClient = async (id) => {
+        if (!confirm('¿Estás seguro de eliminar este usuario? Esto no borrará su cuenta de autenticación, solo su perfil.')) return;
+        try {
+            const { error } = await supabase.from('profiles').delete().eq('id', id);
+            if (error) throw error;
+            alert('Usuario eliminado correctamente.');
+            setUsers(users.filter(u => u.id !== id));
+        } catch (error) {
+            alert('Error al eliminar: ' + error.message);
+        }
+    };
+
+    const handleSaveClient = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            if (editingClientId) {
+                // Update existing profile
+                const { error } = await supabase.from('profiles').update({
+                    full_name: clientFormData.full_name,
+                    phone: clientFormData.phone,
+                    dni: clientFormData.dni,
+                    role: clientFormData.role
+                    // Email cannot be updated here straightforwardly as it's linked to Auth
+                }).eq('id', editingClientId);
+
+                if (error) throw error;
+                alert('Cliente actualizado correctamente');
+
+                // Optimistic Update
+                setUsers(users.map(u => u.id === editingClientId ? { ...u, ...clientFormData } : u));
+            } else {
+                // Create new profile (Simulated, as auth user creation requires backend)
+                alert('Nota: Para crear un usuario completo con acceso, debe registrarse desde la página de Login/Registro. Aquí solo se creará el registro de perfil.');
+                const { error } = await supabase.from('profiles').insert([{
+                    full_name: clientFormData.full_name,
+                    phone: clientFormData.phone,
+                    dni: clientFormData.dni,
+                    role: clientFormData.role,
+                    email: clientFormData.email, // Just for record keeping if possible
+                    updated_at: new Date()
+                }]);
+                if (error) throw error;
+                alert('Perfil de cliente creado.');
+                window.location.reload();
+            }
+            setIsClientModalOpen(false);
+        } catch (error) {
+            alert('Error al guardar: ' + error.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleSeedClients = async () => {
+        if (!confirm('¿Generar clientes de prueba? (Nota: Estos perfiles son ficticios y no tendrán acceso real al sistema).')) return;
+        setSubmitting(true);
+        try {
+            const fakeClients = [
+                { full_name: 'Maria Garcia', email: 'maria.garcia@example.com', phone: '998877665', dni: '45678901', role: 'client' },
+                { full_name: 'Juan Perez', email: 'juan.perez@example.com', phone: '987654321', dni: '12345678', role: 'client' },
+                { full_name: 'Carlos Rodriguez', email: 'carlos.rod@example.com', phone: '912345678', dni: '87654321', role: 'client' },
+                { full_name: 'Ana Martinez', email: 'ana.martinez@example.com', phone: '923456789', dni: '11223344', role: 'client' },
+                { full_name: 'Luis Hernandez', email: 'luis.h@example.com', phone: '934567890', dni: '55667788', role: 'client' },
+                { full_name: 'Sofia Lopez', email: 'sofia.lopez@example.com', phone: '945678901', dni: '99887766', role: 'client' },
+                { full_name: 'Jorge Chavez', email: 'jorge.chavez@example.com', phone: '956789012', dni: '44556677', role: 'client' }
+            ];
+
+            const clientsWithIds = fakeClients.map(c => ({
+                ...c,
+                id: crypto.randomUUID(), // Generate a random UUID for the profile ID
+                updated_at: new Date()
+            }));
+
+            const { error } = await supabase.from('profiles').insert(clientsWithIds);
+            if (error) {
+                if (error.message.includes('foreign key') || error.code === '23503') {
+                    throw new Error('No se pueden crear perfiles falsos porque tu base de datos requiere que el ID coincida con un usuario real de autenticación. Solo los usuarios reales aparecerán aquí.');
+                }
+                throw error;
+            }
+            alert('¡Clientes de prueba creados exitosamente!');
+            window.location.reload();
+        } catch (error) {
+            alert('Error al generar clientes: ' + error.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const handleFixImages = async () => {
+        if (!confirm('¿Quieres intentar reparar las imágenes faltantes o rotas basándote en el modelo del vehículo?')) return;
+        setSubmitting(true);
+        try {
+            // 1. Fetch all vehicles
+            const { data: vehicles, error } = await supabase.from('vehicles').select('*');
+            if (error) throw error;
+
+            const VEHICLE_TEMPLATES = [
+                { make: 'Toyota', model: 'Hilux 4x4', image_url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Kia', model: 'Picanto', image_url: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Jeep', model: 'Wrangler Rubicon', image_url: 'https://images.unsplash.com/photo-1533558701576-23c65e0272fb?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Hyundai', model: 'H1', image_url: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Yamaha', model: 'Waverunner FX', image_url: 'https://images.unsplash.com/photo-1564052357774-6d9b4db74288?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Mitsubishi', model: 'L200', image_url: 'https://images.unsplash.com/photo-1551830691-177301c2333b?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Can-Am', model: 'Maverick X3', image_url: 'https://images.unsplash.com/photo-1588696123998-25f0254c0ce5?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Toyota', model: 'Fortuner', image_url: 'https://images.unsplash.com/photo-1502161254066-6c74afbf07aa?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Volkswagen', model: 'Amarok V6', image_url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Suzuki', model: 'Jimny', image_url: 'https://images.unsplash.com/photo-1598555986386-23d242966810?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Ford', model: 'Raptor', image_url: 'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Honda', model: 'CR-V', image_url: 'https://images.unsplash.com/photo-1568844293986-8d0400bd4745?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Mazda', model: 'CX-5', image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79f341?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Nissan', model: 'Versa', image_url: 'https://images.unsplash.com/photo-1567808291548-fc3ee04dbcf3?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Toyota', model: 'Corolla', image_url: 'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&q=80&w=1000' },
+                { make: 'Polaris', model: 'RZR', image_url: 'https://images.unsplash.com/photo-1571224792671-840843232670?auto=format&fit=crop&q=80&w=1000' }
+            ];
+
+            let fixedCount = 0;
+            const updates = vehicles.map(async (v) => {
+                // Find matching template by model name (partial match)
+                const template = VEHICLE_TEMPLATES.find(t =>
+                    v.model.toLowerCase().includes(t.model.toLowerCase()) ||
+                    t.model.toLowerCase().includes(v.model.toLowerCase())
+                );
+
+                if (template) {
+                    await supabase.from('vehicles').update({ image_url: template.image_url }).eq('id', v.id);
+                    fixedCount++;
+                } else if (!v.image_url || v.image_url.length < 10) {
+                    // Fallback for completely missing images if no template match
+                    await supabase.from('vehicles').update({
+                        image_url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000'
+                    }).eq('id', v.id);
+                    fixedCount++;
+                }
+            });
+
+            await Promise.all(updates);
+            alert(`¡Proceso completado! Se actualizaron las imágenes de ${fixedCount} vehículos.`);
+            window.location.reload();
+
+        } catch (error) {
+            alert('Error al reparar imágenes: ' + error.message);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -1398,7 +1846,7 @@ const AdminDashboard = () => {
             price_per_day: vehicle.price_per_day || '',
             price_per_hour: vehicle.price_per_hour || '',
             department: foundDept,
-            province: vehicle.location_city,
+            city: vehicle.location_city,
             category: vehicle.category,
             image_url: vehicle.image_url,
             description: vehicle.description || '',
@@ -1418,24 +1866,27 @@ const AdminDashboard = () => {
                 make: formData.make, model: formData.model, year: parseInt(formData.year),
                 price_per_day: Number(formData.price_per_day) || 0,
                 price_per_hour: Number(formData.price_per_hour) || 0,
-                location_city: formData.province, category: formData.category, image_url: formData.image_url,
+                location_city: formData.city, category: formData.category, image_url: formData.image_url,
                 description: formData.description,
-                is_offer: false, owner_id: user.id
+                is_offer: false
             };
 
             if (editingId) {
+                // Don't overwrite owner_id on edit to avoid permission issues
                 const { error } = await supabase.from('vehicles').update(vehicleData).eq('id', editingId);
                 if (error) throw error;
                 alert('¡Vehículo actualizado!');
             } else {
-                const { error } = await supabase.from('vehicles').insert([{ ...vehicleData, rating: 5.0 }]);
+                // Determine owner for new vehicle
+                const { error } = await supabase.from('vehicles').insert([{ ...vehicleData, owner_id: user.id, rating: 5.0 }]);
                 if (error) throw error;
                 alert('¡Vehículo guardado!');
             }
 
             setIsModalOpen(false);
             setEditingId(null);
-            setFormData({ make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', province: '', category: '4x4', image_url: '', description: '', is_offer: false });
+            setEditingId(null);
+            setFormData({ make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false });
             window.location.reload();
         } catch (error) { alert(error.message); }
         finally { setSubmitting(false); }
@@ -1444,8 +1895,8 @@ const AdminDashboard = () => {
     const renderContent = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView users={users} />;
-            case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', province: '', category: '4x4', image_url: '', description: '', is_offer: false }); setIsModalOpen(true); }} onClearDB={handleClearDatabase} onDelete={handleDeleteVehicle} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
-            case 'clients': return <ClientsView users={users} />;
+            case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false }); setIsModalOpen(true); }} onClearDB={handleClearDatabase} onSeed={handleSeedDatabase} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
+            case 'clients': return <ClientsView users={users} onEdit={handleEditClient} onDelete={handleDeleteClient} onAdd={() => { setEditingClientId(null); setClientFormData({ full_name: '', email: '', phone: '', dni: '', role: 'client' }); setIsClientModalOpen(true); }} onSeed={handleSeedClients} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'promotions': return <PromotionsView />;
             case 'reports': return <ReportsView />;
             case 'reservas': return <BookingsView />;
@@ -1498,8 +1949,18 @@ const AdminDashboard = () => {
                 submitting={submitting}
                 isEditing={!!editingId} // Ensure isEditing is passed correctly
             />
+
+            <ClientModal
+                isOpen={isClientModalOpen}
+                onClose={() => setIsClientModalOpen(false)}
+                formData={clientFormData}
+                setFormData={setClientFormData}
+                onSubmit={handleSaveClient}
+                submitting={submitting}
+                isEditing={!!editingClientId}
+            />
         </div>
     );
 };
 
-export default AdminDashboard;
+export default PanelAdministrador;

@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { Loader2 } from 'lucide-react';
 
-const ProtectedRoute = ({ allowedRoles = [] }) => {
+const RutaProtegida = ({ allowedRoles = [] }) => {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [role, setRole] = useState(null);
@@ -68,4 +68,4 @@ const ProtectedRoute = ({ allowedRoles = [] }) => {
     return <Outlet />;
 };
 
-export default ProtectedRoute;
+export default RutaProtegida;

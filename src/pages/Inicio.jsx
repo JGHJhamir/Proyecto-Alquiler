@@ -2,7 +2,8 @@ import { Search, ChevronDown, Sun, Minus, Plus, MapPin, Star, ArrowRight, User }
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar'; // Import shared Navbar
+import BarraNavegacion from '../components/BarraNavegacion'; // Import shared Navbar
+import { COASTAL_LOCATIONS } from '../constants';
 
 // --- Shared Components ---
 const SectionTitle = ({ title, subtitle }) => (
@@ -15,62 +16,180 @@ const SectionTitle = ({ title, subtitle }) => (
 
 // Navbar removed (using shared component)
 
+import { useNavigate } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+// Custom CSS for DatePicker to match the dark theme or just general improvements
+import '../index.css'; // Ensure main css is loaded for variables if needed
+
 const SearchBar = () => {
+    const [destination, setDestination] = useState('');
+    const [dateRange, setDateRange] = useState([null, null]);
+    const [startDate, endDate] = dateRange;
     const [passengers, setPassengers] = useState(1);
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const navigate = useNavigate();
+
+    const [availableLocations, setAvailableLocations] = useState([]);
+
+    useEffect(() => {
+        const fetchLocations = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('vehicles')
+                    .select('location_city');
+
+                if (error) throw error;
+
+                const cities = new Set(data.map(v => v.location_city));
+                const locations = [];
+
+                Object.entries(COASTAL_LOCATIONS).forEach(([dept, deptCities]) => {
+                    const availableDeptCities = deptCities.filter(city => cities.has(city));
+
+                    if (availableDeptCities.length > 0) {
+                        locations.push({ type: 'department', name: dept, label: dept });
+                        availableDeptCities.forEach(city => {
+                            locations.push({ type: 'city', name: city, label: `${city}, ${dept}` });
+                        });
+                    }
+                });
+
+                setAvailableLocations(locations);
+            } catch (error) {
+                console.error('Error fetching locations:', error);
+            }
+        };
+
+        fetchLocations();
+    }, []);
+
+    const handleLocationChange = (e) => {
+        const value = e.target.value;
+        setDestination(value);
+
+        setDestination(value);
+
+        if (value.length > 0) {
+            const filtered = availableLocations.filter(loc =>
+                loc.label.toLowerCase().includes(value.toLowerCase())
+            ).slice(0, 5); // Limit to 5 suggestions
+            setSuggestions(filtered);
+            setShowSuggestions(true);
+        } else {
+            setShowSuggestions(false);
+        }
+    };
+
+    const selectLocation = (loc) => {
+        setDestination(loc.type === 'city' ? loc.name : loc.name);
+        setShowSuggestions(false);
+    };
+
+    const handleSearch = () => {
+        const formattedStart = startDate ? startDate.toISOString() : '';
+        const formattedEnd = endDate ? endDate.toISOString() : '';
+        navigate(`/explorar?destination=${destination}&start=${formattedStart}&end=${formattedEnd}&passengers=${passengers}`);
+    };
+
+    // Custom Input to match the design - Clean/Airbnb
+    const CustomDateInput = ({ value, onClick }, ref) => (
+        <div onClick={onClick} ref={ref} className="cursor-pointer w-full">
+            <input
+                type="text"
+                value={value}
+                readOnly
+                placeholder="Agrega fechas"
+                className="w-full bg-transparent outline-none text-slate-800 font-semibold placeholder:text-slate-400 text-sm cursor-pointer"
+            />
+        </div>
+    );
 
     return (
-        <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-glass p-3 max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-4 transform -translate-y-1/2 border border-white/50">
+        <div className="bg-white rounded-full shadow-2xl pl-8 pr-2 py-2 max-w-4xl mx-auto flex flex-col md:flex-row items-center border border-slate-100 transform -translate-y-1/2 relative z-50">
+
             {/* Location */}
-            <div className="flex-1 px-8 py-3 w-full md:w-auto border-b md:border-b-0 md:border-r border-slate-100">
-                <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Destino (Perú)</label>
-                <div className="flex items-center gap-3">
-                    <MapPin className="w-5 h-5 text-slate-400" />
+            <div className="flex-1 py-2 pr-6 w-full md:w-[32%] relative border-b md:border-b-0 md:border-r border-slate-200 hover:bg-slate-50 rounded-full transition-colors group cursor-pointer">
+                <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Dónde</label>
+                <div className="relative">
                     <input
                         type="text"
-                        placeholder="Ej: Paracas, Máncora, Ica..."
-                        className="w-full bg-transparent outline-none text-slate-800 font-semibold placeholder:text-slate-400 text-lg"
+                        value={destination}
+                        onChange={handleLocationChange}
+                        onFocus={() => destination.length > 0 && setShowSuggestions(true)}
+                        placeholder="Explorar destinos"
+                        className="w-full bg-transparent outline-none text-slate-600 text-sm placeholder:text-slate-400 font-medium truncate"
                     />
+                    {showSuggestions && suggestions.length > 0 && (
+                        <div className="absolute top-12 left-0 w-[300px] bg-white rounded-3xl shadow-2xl border border-slate-100 py-4 z-50 overflow-hidden">
+                            {suggestions.map((item, index) => (
+                                <div
+                                    key={index}
+                                    onClick={(e) => { e.stopPropagation(); selectLocation(item); }}
+                                    className="px-6 py-3 hover:bg-slate-50 flex items-center gap-4 cursor-pointer transition-colors"
+                                >
+                                    <div className="bg-slate-100 p-2 rounded-lg text-slate-600">
+                                        <MapPin className="w-5 h-5" />
+                                    </div>
+                                    <span className="text-slate-700 font-medium text-sm">{item.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Date */}
-            <div className="flex-1 px-8 py-3 w-full md:w-auto border-b md:border-b-0 md:border-r border-slate-100">
-                <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Fechas de Viaje</label>
-                <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-full border-2 border-slate-300"></div>
-                    <input
-                        type="text"
-                        placeholder="seleccionar fechas"
-                        className="w-full bg-transparent outline-none text-slate-800 font-semibold placeholder:text-slate-400 text-lg"
+            <div className="flex-1 py-2 px-6 w-full md:w-[38%] relative border-b md:border-b-0 md:border-r border-slate-200 hover:bg-slate-50 rounded-full transition-colors group cursor-pointer">
+                <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Fechas</label>
+                <div className="w-full">
+                    <DatePicker
+                        selectsRange={true}
+                        startDate={startDate}
+                        endDate={endDate}
+                        onChange={(update) => {
+                            setDateRange(update);
+                        }}
+                        monthsShown={2}
+                        customInput={<CustomDateInput />}
+                        dateFormat="d 'de' MMM"
+                        minDate={new Date()}
+                        isClearable={true}
+                        placeholderText="Agrega fechas"
+                        className="w-full bg-transparent outline-none text-slate-600 text-sm placeholder:text-slate-400 font-medium"
+                        calendarClassName="!font-sans !shadow-2xl !rounded-3xl !border-0 !p-6 !mt-4"
+                        dayClassName={(date) => "rounded-full hover:bg-slate-100 font-medium"}
+                        popperClassName="!z-50"
+                        popperPlacement="bottom-start"
                     />
                 </div>
             </div>
 
             {/* Passengers */}
-            <div className="flex-1 px-8 py-3 flex items-center justify-between w-full md:w-auto min-w-[240px]">
-                <div className="mr-4">
-                    <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Viajeros</label>
-                    <span className="text-slate-800 font-semibold text-lg">{passengers} persona{passengers !== 1 ? 's' : ''}</span>
+            <div className="flex-1 py-2 px-6 w-full md:w-[30%] relative hover:bg-slate-50 rounded-full transition-colors group cursor-pointer flex items-center justify-between">
+                <div>
+                    <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Quién</label>
+                    <div className="text-slate-600 text-sm font-medium truncate">
+                        {passengers > 0 ? `${passengers} viajeros` : '¿Cuántos?'}
+                    </div>
                 </div>
-                <div className="flex items-center gap-3 bg-slate-50 p-1.5 rounded-full border border-slate-100">
-                    <button
-                        onClick={() => setPassengers(Math.max(1, passengers - 1))}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-white hover:bg-slate-100 text-slate-600 shadow-sm transition-all"
-                    >
-                        <Minus className="w-3 h-3" />
-                    </button>
-                    <button
-                        onClick={() => setPassengers(passengers + 1)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-brand-blue text-white shadow-sm hover:bg-blue-600 transition-all"
-                    >
-                        <Plus className="w-3 h-3" />
-                    </button>
+
+                {/* Passenger Controls */}
+                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 bg-white shadow-lg rounded-full p-1 border border-slate-100">
+                    <button onClick={(e) => { e.stopPropagation(); setPassengers(Math.max(1, passengers - 1)) }} className="p-1.5 hover:bg-slate-100 rounded-full"><Minus className="w-3 h-3 text-slate-600" /></button>
+                    <span className="text-xs font-bold w-4 text-center">{passengers}</span>
+                    <button onClick={(e) => { e.stopPropagation(); setPassengers(Math.min(5, passengers + 1)) }} className="p-1.5 hover:bg-slate-100 rounded-full"><Plus className="w-3 h-3 text-slate-600" /></button>
                 </div>
             </div>
 
             {/* Search Button */}
-            <button className="bg-brand-blue hover:bg-brand-dark text-white p-5 rounded-[2rem] shadow-lg shadow-brand-blue/30 transition-all hover:scale-105 active:scale-95 m-1">
-                <Search className="w-7 h-7" />
+            <button
+                onClick={handleSearch}
+                className="bg-[#FF385C] hover:bg-[#D90B3E] text-white p-3.5 rounded-full shadow-lg shadow-rose-500/30 transition-all hover:scale-105 active:scale-95 m-0 flex items-center gap-2 font-bold px-6 flex-shrink-0 z-10"
+            >
+                <Search className="w-5 h-5 stroke-[2.5px]" />
+                Buscar
             </button>
         </div>
     );
@@ -127,7 +246,7 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
                 </Link>
                 <div className="flex items-center gap-1.5 bg-brand-light/10 px-3 py-1.5 rounded-full">
                     <Star className="w-4 h-4 text-orange-400 fill-orange-400" />
-                    <span className="text-sm font-bold text-brand-dark">{rating}</span>
+                    <span className="text-sm font-bold text-brand-dark">{Number(rating).toFixed(1)}</span>
                 </div>
             </div>
 
@@ -140,7 +259,7 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
                 <div className="flex flex-col">
                     <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Precio por día</span>
                     <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-brand-blue">S/{price}</span>
+                        <span className="text-3xl font-bold text-brand-blue">S/{Number(price).toFixed(0)}</span>
                     </div>
                 </div>
                 <Link to={`/vehiculo/${id}`} className="btn-primary px-6 py-2.5 text-sm">
@@ -151,7 +270,7 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
     </div>
 );
 
-export default function Home() {
+export default function Inicio() {
     const [vehicles, setVehicles] = useState([]);
 
     useEffect(() => {
@@ -169,7 +288,7 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-white font-sans selection:bg-brand-blue/20 selection:text-brand-dark">
-            <Navbar />
+            <BarraNavegacion />
 
             {/* Hero Section */}
             <div className="relative h-[800px] w-full mt-0 overflow-hidden">

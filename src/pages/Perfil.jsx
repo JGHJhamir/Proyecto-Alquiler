@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import Navbar from '../components/Navbar';
+import BarraNavegacion from '../components/BarraNavegacion';
 import { Mail, Phone, User, Edit2, CreditCard } from 'lucide-react';
 
-const Profile = () => {
+const Perfil = () => {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState(null);
     const [user, setUser] = useState(null);
@@ -45,7 +45,7 @@ const Profile = () => {
 
     return (
         <div className="min-h-screen bg-slate-50">
-            <Navbar />
+            <BarraNavegacion />
 
             <div className="pt-32 pb-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-2xl mx-auto">
@@ -127,4 +127,4 @@ const Profile = () => {
     );
 };
 
-export default Profile;
+export default Perfil;

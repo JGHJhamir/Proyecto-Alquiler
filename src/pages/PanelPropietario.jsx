@@ -1,10 +1,10 @@
-import Navbar from '../components/Navbar';
+import BarraNavegacion from '../components/BarraNavegacion';
 import { DollarSign, TrendingUp, Calendar, AlertCircle } from 'lucide-react';
 
-const OwnerDashboard = () => {
+const PanelPropietario = () => {
     return (
         <div className="min-h-screen bg-slate-50">
-            <Navbar />
+            <BarraNavegacion />
             <div className="pt-32 px-6 max-w-7xl mx-auto">
                 <div className="mb-10">
                     <h1 className="text-4xl font-serif font-bold text-slate-900">Panel del Dueño</h1>
@@ -65,4 +65,4 @@ const OwnerDashboard = () => {
     );
 };
 
-export default OwnerDashboard;
+export default PanelPropietario;

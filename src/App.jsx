@@ -1,39 +1,39 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Home';
-import VehicleDetail from './pages/VehicleDetail';
-import CoastalRoutes from './pages/CoastalRoutes';
-import Payment from './pages/Payment';
-import Register from './pages/Register';
-import Login from './pages/Login';
-import AdminDashboard from './pages/AdminDashboard';
-import OwnerDashboard from './pages/OwnerDashboard';
-import ClientDashboard from './pages/ClientDashboard';
-import Profile from './pages/Profile';
-import ProtectedRoute from './components/ProtectedRoute';
+import Inicio from './pages/Inicio';
+import DetalleVehiculo from './pages/DetalleVehiculo';
+import ExplorarVehiculos from './pages/ExplorarVehiculos';
+import Pago from './pages/Pago';
+import Registro from './pages/Registro';
+import IniciarSesion from './pages/IniciarSesion';
+import PanelAdministrador from './pages/PanelAdministrador';
+import PanelPropietario from './pages/PanelPropietario';
+import PanelCliente from './pages/PanelCliente';
+import Perfil from './pages/Perfil';
+import RutaProtegida from './components/RutaProtegida';
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/vehiculo/:id" element={<VehicleDetail />} />
-        <Route path="/rutas" element={<CoastalRoutes />} />
-        <Route path="/pago/:bookingId" element={<Payment />} />
-        <Route path="/registro" element={<Register />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/" element={<Inicio />} />
+        <Route path="/vehiculo/:id" element={<DetalleVehiculo />} />
+        <Route path="/explorar" element={<ExplorarVehiculos />} />
+        <Route path="/pago/:bookingId" element={<Pago />} />
+        <Route path="/registro" element={<Registro />} />
+        <Route path="/login" element={<IniciarSesion />} />
 
         {/* Rutas Protegidas */}
-        <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-          <Route path="/admin" element={<AdminDashboard />} />
+        <Route element={<RutaProtegida allowedRoles={['admin']} />}>
+          <Route path="/admin" element={<PanelAdministrador />} />
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={['owner']} />}>
-          <Route path="/owner" element={<OwnerDashboard />} />
+        <Route element={<RutaProtegida allowedRoles={['owner']} />}>
+          <Route path="/owner" element={<PanelPropietario />} />
         </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'owner']} />}>
-          <Route path="/cliente" element={<ClientDashboard />} />
-          <Route path="/perfil" element={<Profile />} />
+        <Route element={<RutaProtegida allowedRoles={['client', 'admin', 'owner']} />}>
+          <Route path="/cliente" element={<PanelCliente />} />
+          <Route path="/perfil" element={<Perfil />} />
         </Route>
       </Routes>
     </Router>

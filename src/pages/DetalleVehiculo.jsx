@@ -1,12 +1,12 @@
-
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
 import { MapPin, Star, Share2, Heart, ArrowLeft, Shield, Gauge, Fuel, Users, Calendar, CheckCircle, AlertCircle, Tag, Loader2, X } from 'lucide-react';
 
-import PaymentModal from '../components/PaymentModal';
+import BarraNavegacion from '../components/BarraNavegacion';
+import ModalPago from '../components/ModalPago';
 
-const VehicleDetail = () => {
+const DetalleVehiculo = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [vehicle, setVehicle] = useState(null);
@@ -97,13 +97,13 @@ const VehicleDetail = () => {
             if (promo.vehicle_type_condition && promo.vehicle_type_condition !== 'Todos') {
                 // Approximate matching: map vehicle category to condition
                 const isVideoMatch = vehicle.category?.toLowerCase().includes(promo.vehicle_type_condition.toLowerCase());
-                if (!isVideoMatch) throw new Error(`Solo válido para vehículos tipo ${promo.vehicle_type_condition}`);
+                if (!isVideoMatch) throw new Error(`Solo válido para vehículos tipo ${promo.vehicle_type_condition} `);
             }
 
             // Location Condition
             if (promo.location_condition && promo.location_condition !== 'Todas') {
                 if (!vehicle.location_city?.toLowerCase().includes(promo.location_condition.toLowerCase())) {
-                    throw new Error(`Solo válido en ${promo.location_condition}`);
+                    throw new Error(`Solo válido en ${promo.location_condition} `);
                 }
             }
 
@@ -116,7 +116,7 @@ const VehicleDetail = () => {
 
             if (promo.min_rental_hours > 0 && rentalHours < promo.min_rental_hours) {
                 const minDays = Math.ceil(promo.min_rental_hours / 24);
-                throw new Error(`Requiere alquiler mínimo de ${promo.min_rental_hours} horas (${minDays} días aprox)`);
+                throw new Error(`Requiere alquiler mínimo de ${promo.min_rental_hours} horas(${minDays} días aprox)`);
             }
 
             // Apply Discount
@@ -144,6 +144,21 @@ const VehicleDetail = () => {
         }
     };
 
+    const checkAvailability = async (start, end) => {
+        const { data, error } = await supabase
+            .from('bookings')
+            .select('id')
+            .eq('vehicle_id', vehicle.id)
+            .neq('status', 'cancelled') // Ignore cancelled bookings
+            .or(`and(start_date.lte.${end},end_date.gte.${start})`);
+
+        if (error) {
+            console.error('Error checking availability:', error);
+            return false;
+        }
+        return data.length === 0;
+    };
+
     const handleBooking = async () => {
         if (!startDate || !endDate) return;
         setBookingStatus('processing');
@@ -153,6 +168,14 @@ const VehicleDetail = () => {
 
             if (!user) {
                 navigate('/login');
+                return;
+            }
+
+            // 1. Check Availability
+            const isAvailable = await checkAvailability(startDate, endDate);
+            if (!isAvailable) {
+                setBookingStatus('error');
+                alert('¡Lo sentimos! Este vehículo ya está reservado para las fechas seleccionadas. Por favor intenta con otras fechas.');
                 return;
             }
 
@@ -231,10 +254,15 @@ const VehicleDetail = () => {
                                     </div>
                                 </div>
                                 <h1 className="text-4xl md:text-6xl font-serif font-bold mb-2">{vehicle.make} {vehicle.model}</h1>
-                                <p className="flex items-center gap-2 text-white/90 font-medium">
+                                <a
+                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vehicle.location_city + ', Peru')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-2 text-white/90 font-medium hover:text-white hover:underline transition-all w-fit cursor-pointer"
+                                >
                                     <MapPin className="w-5 h-5 text-brand-blue" />
                                     {vehicle.location_city}
-                                </p>
+                                </a>
                             </div>
 
                             <div className="text-left md:text-right">
@@ -278,7 +306,7 @@ const VehicleDetail = () => {
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
                         <h2 className="text-2xl font-bold text-slate-900 mb-4 font-serif">Sobre este vehículo</h2>
                         <p className="text-slate-600 leading-relaxed text-lg">
-                            {vehicle.description || `Diseñado para dominar tanto las dunas como la carretera costera, este ${vehicle.make} ${vehicle.model} ofrece la combinación perfecta de potencia y confort. Ideal para recorrer las playas de ${vehicle.location_city} con estilo y seguridad. Equipado con suspensión reforzada, aire acondicionado y sistema de sonido premium para tus playlists playeras.`}
+                            {vehicle.description || `Diseñado para dominar tanto las dunas como la carretera costera, este ${vehicle.make} ${vehicle.model} ofrece la combinación perfecta de potencia y confort.Ideal para recorrer las playas de ${vehicle.location_city} con estilo y seguridad.Equipado con suspensión reforzada, aire acondicionado y sistema de sonido premium para tus playlists playeras.`}
                         </p>
                     </div>
                 </div>
@@ -350,7 +378,7 @@ const VehicleDetail = () => {
                                     </button>
                                 </div>
                                 {promoMessage && (
-                                    <p className={`text-xs mt-2 font-medium flex items-center gap-1.5 ${promoMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+                                    <p className={`text-xs mt-2 font-medium flex items-center gap-1.5 ${promoMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500'} `}>
                                         {promoMessage.type === 'success' ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
                                         {promoMessage.text}
                                     </p>
@@ -411,7 +439,7 @@ const VehicleDetail = () => {
                 </div>
             </div>
 
-            <PaymentModal
+            <ModalPago
                 isOpen={showPaymentModal}
                 onClose={() => setShowPaymentModal(false)}
                 booking={currentBooking}
@@ -427,4 +455,4 @@ const ChevronDown = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6" /></svg>
 );
 
-export default VehicleDetail;
+export default DetalleVehiculo;

@@ -3,7 +3,7 @@ import { supabase } from '../supabase';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Calendar, CreditCard, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
 
-const Register = () => {
+const Registro = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -221,4 +221,4 @@ const Register = () => {
     );
 };
 
-export default Register;
+export default Registro;
