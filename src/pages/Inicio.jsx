@@ -7,10 +7,10 @@ import { COASTAL_LOCATIONS } from '../constants';
 
 // --- Shared Components ---
 const SectionTitle = ({ title, subtitle }) => (
-    <div className="text-center mb-16 relative">
-        <h2 className="text-4xl md:text-5xl font-serif font-bold text-brand-dark mb-4">{title}</h2>
-        <div className="w-24 h-1.5 bg-brand-light mx-auto rounded-full mb-6"></div>
-        <p className="text-slate-600 text-lg max-w-2xl mx-auto leading-relaxed">{subtitle}</p>
+    <div className="text-center mb-10 md:mb-16 relative">
+        <h2 className="text-3xl md:text-5xl font-serif font-bold text-brand-dark mb-4">{title}</h2>
+        <div className="w-16 md:w-24 h-1.5 bg-brand-light mx-auto rounded-full mb-4 md:mb-6"></div>
+        <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-4">{subtitle}</p>
     </div>
 );
 
@@ -186,7 +186,7 @@ const SearchBar = () => {
             {/* Search Button */}
             <button
                 onClick={handleSearch}
-                className="bg-[#FF385C] hover:bg-[#D90B3E] text-white p-3.5 rounded-xl md:rounded-full shadow-lg shadow-rose-500/30 transition-all hover:scale-[1.02] md:hover:scale-105 active:scale-95 mt-2 md:mt-0 w-full md:w-auto flex items-center justify-center gap-2 font-bold px-6 flex-shrink-0 z-10"
+                className="bg-brand-blue hover:bg-brand-dark text-white p-3.5 rounded-xl md:rounded-full shadow-lg shadow-brand-blue/30 transition-all hover:scale-[1.02] md:hover:scale-105 active:scale-95 mt-2 md:mt-0 w-full md:w-auto flex items-center justify-center gap-2 font-bold px-6 flex-shrink-0 z-10"
             >
                 <Search className="w-5 h-5 stroke-[2.5px]" />
                 Buscar
@@ -300,7 +300,7 @@ export default function Inicio() {
             <BarraNavegacion />
 
             {/* Hero Section */}
-            <div className="relative h-[800px] w-full mt-0 overflow-hidden">
+            <div className="relative h-[600px] md:h-[800px] w-full mt-0 overflow-hidden">
                 <img
                     src="https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=2070&auto=format&fit=crop"
                     alt="Costa Peruana"
@@ -315,7 +315,7 @@ export default function Inicio() {
                     <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-white mb-4 md:mb-6 drop-shadow-2xl max-w-5xl leading-tight">
                         Aventuras en la Costa <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-ocean-100 to-white">y Desiertos del Perú</span>
                     </h1>
-                    <p className="text-base md:text-lg lg:text-2xl text-white/90 max-w-3xl font-light mb-8 md:mb-12 drop-shadow-md">
+                    <p className="hidden md:block text-base md:text-lg lg:text-2xl text-white/90 max-w-3xl font-light mb-8 md:mb-12 drop-shadow-md">
                         Desde las misteriosas dunas de Ica hasta las cálidas aguas de Máncora. Alquila el vehículo perfecto para tu ruta.
                     </p>
                 </div>

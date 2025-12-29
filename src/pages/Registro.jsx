@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../supabase';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Calendar, CreditCard, ArrowRight, AlertCircle, CheckCircle, Globe } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Registro = () => {
     const navigate = useNavigate();
@@ -63,6 +64,7 @@ const Registro = () => {
 
         // 1. Validate passwords match
         if (formData.password !== formData.confirmPassword) {
+            toast.error('Las contraseñas no coinciden.');
             setError('Las contraseñas no coinciden.');
             setLoading(false);
             return;
@@ -70,6 +72,7 @@ const Registro = () => {
 
         // 2. Validate Age
         if (!validateAge(formData.birthDate)) {
+            toast.error('Debes ser mayor de 18 años para registrarte.');
             setError('Debes ser mayor de 18 años para registrarte.');
             setLoading(false);
             return;
@@ -108,13 +111,16 @@ const Registro = () => {
             if (authError) throw authError;
 
             setSuccess(true);
+            toast.success('¡Cuenta creada exitosamente!');
             setTimeout(() => {
                 navigate('/login');
             }, 3000);
 
         } catch (err) {
             console.error(err);
-            setError(err.message || 'Error al registrar usuario');
+            const msg = err.message || 'Error al registrar usuario';
+            setError(msg);
+            toast.error(msg);
         } finally {
             setLoading(false);
         }

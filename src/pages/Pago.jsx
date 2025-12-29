@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom'; // Added useLocation
 import BarraNavegacion from '../components/BarraNavegacion';
 import { CheckCircle, CreditCard, Smartphone, ShieldCheck, Lock, ArrowRight, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { supabase } from '../supabase';
 import TicketReserva from '../components/TicketReserva';
 
@@ -50,19 +51,19 @@ const Pago = () => {
 
         const { number, name, expiry, cvc } = cardDetails;
         if (number.replace(/\s/g, '').length !== 16) {
-            alert('El número de tarjeta debe tener 16 dígitos');
+            toast.error('El número de tarjeta debe tener 16 dígitos');
             return false;
         }
         if (name.length < 3) {
-            alert('Ingresa el nombre del titular');
+            toast.error('Ingresa el nombre del titular');
             return false;
         }
         if (expiry.length !== 5) {
-            alert('Fecha de expiración inválida (MM/AA)');
+            toast.error('Fecha de expiración inválida (MM/AA)');
             return false;
         }
         if (cvc.length !== 3) {
-            alert('CVC inválido');
+            toast.error('CVC inválido');
             return false;
         }
         return true;
@@ -182,11 +183,12 @@ const Pago = () => {
 
             // Success Transition
             setPaymentStatus('success');
+            toast.success(selectedMethod === 'card' ? '¡Pago confirmado!' : '¡Solicitud enviada!');
 
         } catch (error) {
             console.error('Payment error:', error);
             setPaymentStatus('idle');
-            alert('Error al procesar el pago. Inténtalo de nuevo.');
+            toast.error('Error al procesar el pago. Inténtalo de nuevo.');
         }
     };
 

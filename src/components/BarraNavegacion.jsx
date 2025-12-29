@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sun, User, LogOut, Waves, Menu, X, LayoutDashboard } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
+import BottomNavigation from './BottomNavigation';
 
 const BarraNavegacion = () => {
     const navigate = useNavigate();
@@ -185,6 +186,9 @@ const BarraNavegacion = () => {
                     )}
                 </div>
             )}
+
+            {/* Bottom Navigation for Mobile */}
+            <BottomNavigation />
         </nav>
     );
 };

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../supabase';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const IniciarSesion = () => {
     const navigate = useNavigate();
@@ -73,7 +74,9 @@ const IniciarSesion = () => {
         } catch (err) {
             console.error("Login catch block:", err);
             // Show the actual message from Supabase or fallback
-            setError(err.message || 'Error al iniciar sesión.');
+            const msg = err.message || 'Error al iniciar sesión.';
+            setError(msg);
+            toast.error(msg);
         } finally {
             setLoading(false);
         }
