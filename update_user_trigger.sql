@@ -12,7 +12,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'phone', ''),
     COALESCE(NEW.raw_user_meta_data->>'dni', ''),
     COALESCE(NEW.raw_user_meta_data->>'document_type', 'dni'),
-    COALESCE(NEW.raw_user_meta_data->>'birth_date', NULL),
+    NULLIF(NEW.raw_user_meta_data->>'birth_date', '')::date,
     COALESCE(NEW.raw_user_meta_data->>'country', 'Perú'),
     'client'
   );
