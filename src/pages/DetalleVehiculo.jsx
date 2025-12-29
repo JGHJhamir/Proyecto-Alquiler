@@ -59,6 +59,36 @@ const DetalleVehiculo = () => {
         }
     }, [startDate, endDate, vehicle]);
 
+    const [rentalType, setRentalType] = useState('days'); // 'days' | 'hours'
+
+    // Reset dates when type changes
+    useEffect(() => {
+        setStartDate('');
+        setEndDate('');
+        setTotalPrice(0);
+        setDiscount(0);
+        setAppliedPromo(null);
+    }, [rentalType]);
+
+    useEffect(() => {
+        if (startDate && endDate && vehicle) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const diffTime = Math.abs(end - start);
+
+            if (rentalType === 'days') {
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                setTotalPrice(diffDays > 0 ? diffDays * vehicle.price_per_day : 0);
+            } else {
+                // Hourly calculation: Rate = Day Price / 8
+                const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+                // Use explicit price_per_hour if available, else derive it
+                const hourlyRate = vehicle.price_per_hour || (vehicle.price_per_day / 8);
+                setTotalPrice(diffHours > 0 ? diffHours * hourlyRate : 0);
+            }
+        }
+    }, [startDate, endDate, vehicle, rentalType]);
+
     // Reset discount when dates change
     useEffect(() => {
         if (appliedPromo) {
@@ -111,12 +141,11 @@ const DetalleVehiculo = () => {
             const start = new Date(startDate);
             const end = new Date(endDate);
             const diffTime = Math.abs(end - start);
-            // Convert milliseconds to hours
             const rentalHours = Math.ceil(diffTime / (1000 * 60 * 60));
 
             if (promo.min_rental_hours > 0 && rentalHours < promo.min_rental_hours) {
                 const minDays = Math.ceil(promo.min_rental_hours / 24);
-                throw new Error(`Requiere alquiler mínimo de ${promo.min_rental_hours} horas(${minDays} días aprox)`);
+                throw new Error(`Requiere alquiler mínimo de ${promo.min_rental_hours} horas(${rentalType === 'days' ? minDays + ' días aprox' : ''})`);
             }
 
             // Apply Discount
@@ -145,6 +174,7 @@ const DetalleVehiculo = () => {
     };
 
     const checkAvailability = async (start, end) => {
+        // Basic Overlap Check
         const { data, error } = await supabase
             .from('bookings')
             .select('id')
@@ -181,20 +211,29 @@ const DetalleVehiculo = () => {
 
             // Get full profile to send name in WhatsApp
             const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-            setCurrentUser(profile || { full_name: 'Usuario' }); // Fallback if profile missing
+            setCurrentUser(profile || { full_name: 'Usuario' });
+
+            // Prepare Booking Data
+            const bookingData = {
+                vehicle_id: vehicle.id,
+                user_id: user.id,
+                start_date: startDate,
+                end_date: endDate,
+                total_price: Math.max(0, totalPrice - discount),
+                status: 'pending'
+            };
+
+            // Try to add rental_type if supported (Backend will ignore extra fields if not strict, or we catch error)
+            // Ideally we'd know from context, but safe to omit for now if column missing, 
+            // OR include it and hope user ran migration. 
+            // Let's include strictly necessary fields first.
+            // If the column `rental_type` was added successfully, we should send it.
+            // Since migration tool failed, I will NOT send `rental_type` to avoid SQL error on insert.
+            // The price calculation is what matters most for the "Payment" step.
 
             const { data: booking, error } = await supabase
                 .from('bookings')
-                .insert([
-                    {
-                        vehicle_id: vehicle.id,
-                        user_id: user.id,
-                        start_date: startDate,
-                        end_date: endDate,
-                        total_price: Math.max(0, totalPrice - discount),
-                        status: 'pending'
-                    }
-                ])
+                .insert([bookingData])
                 .select()
                 .single();
 
@@ -204,8 +243,8 @@ const DetalleVehiculo = () => {
             setBookingStatus('success');
             setCurrentBooking(booking);
             setTimeout(() => {
-                setShowPaymentModal(true);
-            }, 500);
+                navigate(`/pago/${booking.id}`, { state: { booking, vehicle } });
+            }, 1000);
 
         } catch (error) {
             console.error('Error creating booking:', error);
@@ -215,6 +254,9 @@ const DetalleVehiculo = () => {
 
     if (loading) return <div className="min-h-screen grid place-items-center"><div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div></div>;
     if (!vehicle) return <div className="min-h-screen grid place-items-center text-xl">Vehículo no encontrado</div>;
+
+    // Helper to get today's string for min date
+    const todayStr = new Date().toISOString().split('T')[0];
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
@@ -254,6 +296,7 @@ const DetalleVehiculo = () => {
                                     </div>
                                 </div>
                                 <h1 className="text-4xl md:text-6xl font-serif font-bold mb-2">{vehicle.make} {vehicle.model}</h1>
+                                A
                                 <a
                                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(vehicle.location_city + ', Peru')}`}
                                     target="_blank"
@@ -266,8 +309,10 @@ const DetalleVehiculo = () => {
                             </div>
 
                             <div className="text-left md:text-right">
-                                <p className="text-sm text-white/70 font-medium uppercase tracking-wider mb-1">Precio por día</p>
-                                <p className="text-4xl md:text-5xl font-bold text-white">S/ {vehicle.price_per_day}</p>
+                                <p className="text-sm text-white/70 font-medium uppercase tracking-wider mb-1">Precio por {rentalType === 'days' ? 'día' : 'hora'}</p>
+                                <p className="text-4xl md:text-5xl font-bold text-white">
+                                    S/ {rentalType === 'days' ? vehicle.price_per_day : (vehicle.price_per_hour || (vehicle.price_per_day / 8)).toFixed(2)}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -306,7 +351,7 @@ const DetalleVehiculo = () => {
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
                         <h2 className="text-2xl font-bold text-slate-900 mb-4 font-serif">Sobre este vehículo</h2>
                         <p className="text-slate-600 leading-relaxed text-lg">
-                            {vehicle.description || `Diseñado para dominar tanto las dunas como la carretera costera, este ${vehicle.make} ${vehicle.model} ofrece la combinación perfecta de potencia y confort.Ideal para recorrer las playas de ${vehicle.location_city} con estilo y seguridad.Equipado con suspensión reforzada, aire acondicionado y sistema de sonido premium para tus playlists playeras.`}
+                            {vehicle.description || `Diseñado para dominar tanto las dunas como la carretera costera, este ${vehicle.make} ${vehicle.model} ofrece la combinación perfecta de potencia y confort. Ideal para recorrer las playas de ${vehicle.location_city} con estilo y seguridad. Equipado con suspensión reforzada, aire acondicionado y sistema de sonido premium para tus playlists playeras.`}
                         </p>
                     </div>
                 </div>
@@ -314,18 +359,36 @@ const DetalleVehiculo = () => {
                 {/* Booking Card (Sticky) */}
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-3xl p-8 shadow-xl shadow-brand-blue/5 border border-blue-100 sticky top-24">
-                        <h3 className="text-xl font-bold text-slate-900 mb-6 font-serif">Reserva tu Aventura</h3>
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-slate-900 font-serif">Reserva tu Aventura</h3>
+
+                            {/* Rental Type Toggle */}
+                            <div className="flex items-center bg-slate-100 p-1 rounded-lg">
+                                <button
+                                    onClick={() => setRentalType('days')}
+                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rentalType === 'days' ? 'bg-white text-brand-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    Días
+                                </button>
+                                <button
+                                    onClick={() => setRentalType('hours')}
+                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rentalType === 'hours' ? 'bg-white text-brand-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                >
+                                    Horas
+                                </button>
+                            </div>
+                        </div>
 
                         <div className="space-y-4 mb-8">
                             <div>
                                 <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Desde</label>
                                 <div className="relative">
                                     <input
-                                        type="date"
+                                        type={rentalType === 'days' ? "date" : "datetime-local"}
                                         className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        min={new Date().toISOString().split('T')[0]}
+                                        min={rentalType === 'days' ? todayStr : new Date().toISOString().slice(0, 16)}
                                     />
                                     <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
                                 </div>
@@ -335,11 +398,11 @@ const DetalleVehiculo = () => {
                                 <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Hasta</label>
                                 <div className="relative">
                                     <input
-                                        type="date"
+                                        type={rentalType === 'days' ? "date" : "datetime-local"}
                                         className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        min={startDate || new Date().toISOString().split('T')[0]}
+                                        min={startDate || (rentalType === 'days' ? todayStr : new Date().toISOString().slice(0, 16))}
                                         disabled={!startDate}
                                     />
                                     <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
@@ -387,12 +450,25 @@ const DetalleVehiculo = () => {
 
                             <div className="bg-ocean-50/50 p-6 rounded-2xl border border-ocean-100 mt-6 space-y-3">
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="font-medium text-slate-500">Precio x día</span>
-                                    <span className="text-slate-700 font-bold">S/ {vehicle.price_per_day}</span>
+                                    <span className="font-medium text-slate-500">
+                                        Precio x {rentalType === 'days' ? 'día' : 'hora'}
+                                    </span>
+                                    <span className="text-slate-700 font-bold">
+                                        S/ {rentalType === 'days' ? vehicle.price_per_day : (vehicle.price_per_hour || (vehicle.price_per_day / 8)).toFixed(2)}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
-                                    <span className="font-medium text-slate-500">Días</span>
-                                    <span className="text-slate-700 font-bold">{startDate && endDate ? Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) : 0}</span>
+                                    <span className="font-medium text-slate-500">
+                                        {rentalType === 'days' ? 'Días' : 'Horas'}
+                                    </span>
+                                    <span className="text-slate-700 font-bold">
+                                        {startDate && endDate
+                                            ? (rentalType === 'days'
+                                                ? Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))
+                                                : Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60))
+                                            )
+                                            : 0}
+                                    </span>
                                 </div>
                                 {discount > 0 && (
                                     <div className="flex justify-between items-center text-sm text-emerald-600 animate-in fade-in slide-in-from-top-1">
@@ -404,7 +480,7 @@ const DetalleVehiculo = () => {
                                     <span className="text-lg font-bold text-brand-dark">Total estimado</span>
                                     <div className="text-right">
                                         {discount > 0 && (
-                                            <span className="block text-xs text-slate-400 line-through mb-0.5">S/ {totalPrice}</span>
+                                            <span className="block text-xs text-slate-400 line-through mb-0.5">S/ {totalPrice.toFixed(2)}</span>
                                         )}
                                         <span className="text-2xl font-black text-brand-blue">S/ {Math.max(0, totalPrice - discount).toFixed(2)}</span>
                                     </div>

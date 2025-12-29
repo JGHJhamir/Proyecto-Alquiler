@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { Calendar, Clock, CreditCard, ChevronRight, MapPin, User, LogOut } from 'lucide-react';
+import { Calendar, Clock, CreditCard, ChevronRight, MapPin, User, LogOut, FileText, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ModalPago from '../components/ModalPago';
+import TicketReserva from '../components/TicketReserva';
 
 const PanelCliente = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [selectedBookingForPayment, setSelectedBookingForPayment] = useState(null);
+    const [selectedTicket, setSelectedTicket] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -166,6 +168,14 @@ const PanelCliente = () => {
                                                 Pagar Ahora <ChevronRight className="w-4 h-4" />
                                             </button>
                                         )}
+                                        {(booking.status === 'confirmed' || booking.status === 'completed') && (
+                                            <button
+                                                onClick={() => setSelectedTicket(booking)}
+                                                className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-200 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors"
+                                            >
+                                                <FileText className="w-4 h-4" /> Ver Ticket
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -192,6 +202,27 @@ const PanelCliente = () => {
                 vehicle={selectedBookingForPayment?.vehicles}
                 user={user}
             />
+
+            {/* Ticket Modal */}
+            {selectedTicket && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-in zoom-in slide-in-from-bottom-4 duration-300">
+                        <button
+                            onClick={() => setSelectedTicket(null)}
+                            className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full transition-colors z-10"
+                        >
+                            <X className="w-5 h-5 text-slate-400" />
+                        </button>
+                        <div className="p-6">
+                            <TicketReserva
+                                booking={selectedTicket}
+                                vehicle={selectedTicket.vehicles}
+                                user={user}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

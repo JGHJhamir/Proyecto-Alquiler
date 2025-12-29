@@ -6,10 +6,10 @@ import {
     Car, Users, Calendar, Plus, Search, BarChart3, Settings,
     X, Save, Image as ImageIcon, LayoutDashboard, Tag, ShoppingBag,
     LogOut, MoreVertical, MapPin, Filter, FileText, Briefcase, Bell, Menu,
-    Waves, Trash2, Edit, Loader2
-
+    Waves, Trash2, Edit, Loader2, CheckCircle
 } from 'lucide-react';
 import { COASTAL_LOCATIONS } from '../constants';
+import TicketReserva from '../components/TicketReserva';
 
 
 
@@ -1124,6 +1124,8 @@ const ReportsView = () => {
         totalClients: 0
     });
     const [loading, setLoading] = useState(true);
+    const [monthlyRevenue, setMonthlyRevenue] = useState([]);
+    const [statusDist, setStatusDist] = useState({ confirmed: 0, completed: 0, pending: 0, cancelled: 0 });
 
     useEffect(() => {
         const fetchReports = async () => {
@@ -1132,15 +1134,14 @@ const ReportsView = () => {
                 // Parallel fetching for efficiency
                 const [bookingsRes, vehiclesRes, profilesRes] = await Promise.all([
                     supabase.from('bookings').select('*, vehicles(make, model, image_url), profiles(full_name, email)').order('created_at', { ascending: false }),
-                    supabase.from('vehicles').select('id', { count: 'exact', head: true }), // Get total count
-                    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'client') // Get clients count
+                    supabase.from('vehicles').select('id', { count: 'exact', head: true }),
+                    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'client')
                 ]);
 
                 if (bookingsRes.error) throw bookingsRes.error;
-
                 const bookings = bookingsRes.data || [];
 
-                // 1. Calculate Revenue
+                // 1. Calculate Revenue & Stats
                 const revenue = bookings.reduce((sum, b) => sum + (Number(b.total_price) || 0), 0);
 
                 // 2. Process Top Vehicles
@@ -1157,14 +1158,36 @@ const ReportsView = () => {
                 const topVehicles = Object.values(vehicleCount).sort((a, b) => b.count - a.count).slice(0, 5);
 
                 // 3. Recent Bookings
-                const recentBookings = bookings.slice(0, 5); // Just top 5
+                const recentBookings = bookings.slice(0, 5);
+
+                // 4. Monthly Revenue Calculation
+                const revenueByMonth = {};
+                bookings.forEach(b => {
+                    if (b.status === 'confirmed' || b.status === 'completed') {
+                        const date = new Date(b.created_at);
+                        const key = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
+                        revenueByMonth[key] = (revenueByMonth[key] || 0) + (Number(b.total_price) || 0);
+                    }
+                });
+
+                // Converting to array and taking last 6 months for display
+                const monthArray = Object.entries(revenueByMonth).map(([name, val]) => ({ name, val })).slice(-6);
+                setMonthlyRevenue(monthArray);
+
+                // 5. Status Distribution
+                const dist = { confirmed: 0, completed: 0, pending: 0, cancelled: 0 };
+                bookings.forEach(b => {
+                    const st = b.status || 'pending';
+                    if (dist[st] !== undefined) dist[st]++;
+                });
+                setStatusDist(dist);
 
                 setStats({
                     topVehicles,
                     recentBookings,
                     totalRevenue: revenue,
                     totalBookings: bookings.length,
-                    activeVehicles: vehiclesRes.count || 0, // Using total vehicles as proxy for "Fleet Size" or "Active Vehicles"
+                    activeVehicles: vehiclesRes.count || 0,
                     totalClients: profilesRes.count || 0
                 });
 
@@ -1229,6 +1252,60 @@ const ReportsView = () => {
                 </div>
             </div>
 
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Bar Chart Section */}
+                <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 className="font-bold text-xl text-slate-900">Ingresos por Mes</h3>
+                    <p className="text-sm text-slate-500 mb-8">Análisis de ingresos de reservas confirmadas y finalizadas.</p>
+
+                    <div className="h-64 flex items-end gap-4 justify-center border-b border-slate-100 pb-4 relative">
+                        {monthlyRevenue.length > 0 ? monthlyRevenue.map((item, idx) => (
+                            <div key={idx} className="flex flex-col items-center gap-2 group w-1/6 min-w-[60px]">
+                                <div
+                                    className="w-full bg-blue-600 rounded-t-lg hover:bg-blue-700 transition-all relative group-hover:shadow-lg"
+                                    style={{ height: `${(item.val / Math.max(...monthlyRevenue.map(m => m.val), 1)) * 100}%`, minHeight: '4px' }}
+                                >
+                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                        S/ {item.val}
+                                    </div>
+                                </div>
+                                <span className="text-[10px] font-semibold text-slate-500 truncate w-full text-center">{item.name}</span>
+                            </div>
+                        )) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">Sin suficientes datos de ingresos.</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Donut Chart Section */}
+                <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+                    <h3 className="font-bold text-xl text-slate-900 mb-6 leading-tight">Distribución de Reservas</h3>
+
+                    <div className="flex-1 flex items-center justify-center relative">
+                        {/* Status Grid instead of Donut for better data density */}
+                        <div className="grid grid-cols-2 gap-4 w-full">
+                            <div className="text-center p-4 bg-teal-50 rounded-xl">
+                                <div className="text-2xl font-bold text-teal-600">{statusDist.confirmed}</div>
+                                <div className="text-xs text-teal-800 font-medium">Confirmadas</div>
+                            </div>
+                            <div className="text-center p-4 bg-blue-50 rounded-xl">
+                                <div className="text-2xl font-bold text-blue-600">{statusDist.completed}</div>
+                                <div className="text-xs text-blue-800 font-medium">Finalizadas</div>
+                            </div>
+                            <div className="text-center p-4 bg-amber-50 rounded-xl">
+                                <div className="text-2xl font-bold text-amber-600">{statusDist.pending}</div>
+                                <div className="text-xs text-amber-800 font-medium">Pendientes</div>
+                            </div>
+                            <div className="text-center p-4 bg-red-50 rounded-xl">
+                                <div className="text-2xl font-bold text-red-600">{statusDist.cancelled}</div>
+                                <div className="text-xs text-red-800 font-medium">Canceladas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Top Vehicles */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
@@ -1245,7 +1322,7 @@ const ReportsView = () => {
                                     <div className="text-xs text-slate-400">{v.count} reservas</div>
                                 </div>
                                 <div className="w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                    <div className="bg-brand-blue h-full rounded-full" style={{ width: `${(v.count / Math.max(1, stats.topVehicles[0]?.count)) * 100}%` }}></div>
+                                    <div className="bg-brand-blue h-full rounded-full" style={{ width: `${(v.count / Math.max(1, stats.topVehicles[0]?.count || 1)) * 100}%` }}></div>
                                 </div>
                             </div>
                         ))}
@@ -1288,6 +1365,7 @@ const BookingsView = () => {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
     const [statusFilter, setStatusFilter] = useState('all');
+    const [selectedTicket, setSelectedTicket] = useState(null);
 
     useEffect(() => {
         fetchBookings();
@@ -1300,7 +1378,7 @@ const BookingsView = () => {
                 .select(`
                     *,
                     vehicles ( make, model, image_url, year ),
-                    profiles ( full_name, email, phone, dni )
+                    profiles ( full_name, phone, dni )
                 `)
                 .order('created_at', { ascending: false });
 
@@ -1318,6 +1396,46 @@ const BookingsView = () => {
 
         setActionLoading(id);
         try {
+            // Check for Double Booking when activating
+            if (newStatus === 'confirmed') {
+                const targetBooking = bookings.find(b => b.id === id);
+                if (targetBooking) {
+                    // Check local store or fetch db for conflict
+                    const { data: conflicts } = await supabase
+                        .from('bookings')
+                        .select('id')
+                        .eq('vehicle_id', targetBooking.vehicle_id)
+                        .eq('status', 'confirmed') // Check confirmed ones
+                        .or(`start_date.lte.${targetBooking.end_date},end_date.gte.${targetBooking.start_date}`);
+                    // Logic: (StartA <= EndB) and (EndA >= StartB)
+
+                    // Note: Supabase OR with multiple conditions can be tricky.
+                    // Doing a simplified check: "Are there any bookings for this car that are confirmed?"
+                    // Then filtering in JS for precise date overlap to be safe and accurate with dates.
+
+                    const { data: candidateConflicts } = await supabase
+                        .from('bookings')
+                        .select('*')
+                        .eq('vehicle_id', targetBooking.vehicle_id)
+                        .eq('status', 'confirmed');
+
+                    if (candidateConflicts && candidateConflicts.length > 0) {
+                        const hasOverlap = candidateConflicts.some(existing => {
+                            if (existing.id === id) return false; // Ignore self
+                            const existingStart = new Date(existing.start_date);
+                            const existingEnd = new Date(existing.end_date);
+                            const targetStart = new Date(targetBooking.start_date);
+                            const targetEnd = new Date(targetBooking.end_date);
+                            return targetStart <= existingEnd && targetEnd >= existingStart;
+                        });
+
+                        if (hasOverlap) {
+                            throw new Error('❌ CONFLICTO: Ya existe una reserva CONFIRMADA para este vehículo en esas fechas.');
+                        }
+                    }
+                }
+            }
+
             const { error } = await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
             if (error) throw error;
 
@@ -1326,6 +1444,24 @@ const BookingsView = () => {
             alert('Estado actualizado correctamente.');
         } catch (error) {
             alert('Error al actualizar: ' + error.message);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleDeleteBooking = async (id) => {
+        if (!confirm('¿Estás seguro de ELIMINAR permanentemente esta reserva? Esta acción no se puede deshacer.')) return;
+
+        setActionLoading(id);
+        try {
+            const { error } = await supabase.from('bookings').delete().eq('id', id);
+            if (error) throw error;
+
+            setBookings(bookings.filter(b => b.id !== id));
+            alert('Reserva eliminada correctamente.');
+        } catch (error) {
+            console.error('Error deleting:', error);
+            alert('Error al eliminar: ' + error.message);
         } finally {
             setActionLoading(null);
         }
@@ -1456,9 +1592,27 @@ const BookingsView = () => {
                                                 Finalizar
                                             </button>
                                         )}
-                                        {booking.status === 'completed' && (
-                                            <span className="text-xs text-slate-400 font-medium italic">Archivado</span>
+
+                                        {/* View Ticket Button */}
+                                        {(booking.status === 'confirmed' || booking.status === 'completed') && (
+                                            <button
+                                                onClick={() => setSelectedTicket(booking)}
+                                                className="p-1.5 text-slate-400 hover:text-brand-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Ver Ticket Digital"
+                                            >
+                                                <FileText className="w-4 h-4" />
+                                            </button>
                                         )}
+
+                                        {/* Delete Button */}
+                                        <button
+                                            onClick={() => handleDeleteBooking(booking.id)}
+                                            disabled={actionLoading === booking.id}
+                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Eliminar Reserva permanentemente"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -1476,6 +1630,27 @@ const BookingsView = () => {
                     </tbody>
                 </table>
             </div>
+
+            {/* Ticket Modal */}
+            {selectedTicket && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-in zoom-in slide-in-from-bottom-4 duration-300">
+                        <button
+                            onClick={() => setSelectedTicket(null)}
+                            className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full transition-colors z-10"
+                        >
+                            <X className="w-5 h-5 text-slate-400" />
+                        </button>
+                        <div className="p-6">
+                            <TicketReserva
+                                booking={selectedTicket}
+                                vehicle={selectedTicket.vehicles}
+                                user={selectedTicket.profiles}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
