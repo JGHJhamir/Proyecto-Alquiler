@@ -1,11 +1,20 @@
-import { X, Smartphone } from 'lucide-react';
+import { X, Smartphone, CreditCard } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const ModalPago = ({ isOpen, onClose, booking, vehicle, user }) => {
+    const navigate = useNavigate();
+
     if (!isOpen || !booking || !vehicle) return null;
 
     const ADMIN_PHONE = '51954025029';
 
     const handlePayment = (method) => {
+        if (method === 'Card') {
+            onClose();
+            navigate(`/pago/${booking.id}`, { state: { booking, vehicle } });
+            return;
+        }
+
         const startDate = new Date(booking.start_date).toLocaleDateString();
         const endDate = new Date(booking.end_date).toLocaleDateString();
 
@@ -42,11 +51,25 @@ const ModalPago = ({ isOpen, onClose, booking, vehicle, user }) => {
                         </div>
                         <h4 className="text-xl font-bold text-slate-900">Selecciona tu método de pago</h4>
                         <p className="text-sm text-slate-500 leading-relaxed">
-                            Para confirmar tu reserva, realiza el pago a través de Yape o Plim enviando el comprobante a nuestro WhatsApp.
+                            Elige una opción para completar tu reserva.
                         </p>
                     </div>
 
                     <div className="space-y-3">
+                        <button
+                            onClick={() => handlePayment('Card')}
+                            className="w-full py-4 rounded-xl bg-brand-blue hover:bg-blue-700 text-white font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
+                        >
+                            <CreditCard className="w-6 h-6" />
+                            <span>Pagar con Tarjeta</span>
+                        </button>
+
+                        <div className="relative flex py-2 items-center">
+                            <div className="flex-grow border-t border-slate-200"></div>
+                            <span className="flex-shrink-0 mx-4 text-slate-400 text-xs font-bold uppercase">O paga con billetera digital</span>
+                            <div className="flex-grow border-t border-slate-200"></div>
+                        </div>
+
                         <button
                             onClick={() => handlePayment('Yape')}
                             className="w-full py-4 rounded-xl bg-[#742284] hover:bg-[#601a6e] text-white font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
@@ -63,7 +86,7 @@ const ModalPago = ({ isOpen, onClose, booking, vehicle, user }) => {
                     </div>
 
                     <p className="text-xs text-slate-400">
-                        Serás redirigido a WhatsApp para enviar los detalles de tu reserva automáticamente.
+                        Al pagar con tarjeta recibes confirmación inmediata. Yape/Plin requieren verificación manual.
                     </p>
                 </div>
             </div>

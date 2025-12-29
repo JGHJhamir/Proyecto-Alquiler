@@ -177,6 +177,9 @@ const Pago = () => {
 
             if (error) throw error;
 
+            // Update local state so Ticket reflects changes immediately
+            setBooking(prev => ({ ...prev, ...updateData }));
+
             // Success Transition
             setPaymentStatus('success');
 
