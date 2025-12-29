@@ -40,8 +40,8 @@ const TicketReserva = ({ booking, vehicle, user }) => {
             `${vehicle.make} ${vehicle.model} (${vehicle.year})\n` +
             `Categoria: ${vehicle.category}\n\n` +
             `--- FECHAS ---\n` +
-            `Inicio: ${new Date(booking.start_date).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' })}\n` +
-            `Fin: ${new Date(booking.end_date).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' })}\n\n` +
+            `Inicio: ${booking.start_date ? new Date(booking.start_date).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' }) : 'Pendiente'}\n` +
+            `Fin: ${booking.end_date ? new Date(booking.end_date).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' }) : 'Pendiente'}\n\n` +
             `--- UBICACION ---\n` +
             `${vehicle.location_city}, Peru\n\n` +
             `--- PAGO ---\n` +
@@ -104,12 +104,12 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                             <Calendar className="w-4 h-4" />
                             <div className="text-xs">
                                 <span className="block font-bold text-slate-700">Inicio</span>
-                                {new Date(booking.start_date).toLocaleString()}
+                                {booking.start_date ? new Date(booking.start_date).toLocaleString() : '---'}
                             </div>
                         </div>
                         <div className="text-right text-xs">
                             <span className="block font-bold text-slate-700">Fin</span>
-                            {new Date(booking.end_date).toLocaleString()}
+                            {booking.end_date ? new Date(booking.end_date).toLocaleString() : '---'}
                         </div>
                     </div>
 

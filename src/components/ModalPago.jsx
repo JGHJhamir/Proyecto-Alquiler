@@ -9,27 +9,47 @@ const ModalPago = ({ isOpen, onClose, booking, vehicle, user }) => {
     const ADMIN_PHONE = '51954025029';
 
     const handlePayment = (method) => {
-        if (method === 'Card') {
+        try {
+            if (method === 'Card') {
+                onClose();
+                navigate(`/pago/${booking.id}`, { state: { booking, vehicle } });
+                return;
+            }
+
+            // Safe date parsing
+            const formatDate = (dateStr) => {
+                if (!dateStr) return 'Fecha pendiente';
+                try {
+                    return new Date(dateStr).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                } catch (e) {
+                    return dateStr;
+                }
+            };
+
+            const startDate = formatDate(booking.start_date);
+            const endDate = formatDate(booking.end_date);
+
+            // Safe content generation
+            const bookingId = booking.id ? booking.id.toString().slice(0, 8) : '---';
+            const vehicleName = vehicle ? `${vehicle.make || ''} ${vehicle.model || ''}`.trim() : 'Vehículo';
+            const userName = user?.full_name || 'Invitado';
+
+            // Format: "Hola soy el usuario [Nombre]..."
+            const message = `Hola, soy el usuario *${userName}* y deseo completar el pago de mi reserva 📝%0A%0A` +
+                `🆔 *ID Reserva:* ${bookingId}...%0A` +
+                `🚘 *Vehículo:* ${vehicleName}%0A` +
+                `📅 *Fechas:* ${startDate} al ${endDate}%0A` +
+                `💰 *Monto a Pagar:* S/ ${booking.total_price}%0A` +
+                `📲 *Método de Pago:* ${method}%0A%0A` +
+                `Quedo a la espera de la confirmación.`;
+
+            const whatsappUrl = `https://wa.me/${ADMIN_PHONE}?text=${message}`;
+            window.open(whatsappUrl, '_blank');
             onClose();
-            navigate(`/pago/${booking.id}`, { state: { booking, vehicle } });
-            return;
+        } catch (error) {
+            console.error("Error generating WhatsApp message:", error);
+            alert("Hubo un error al generar el enlace de pago. Por favor intenta de nuevo.");
         }
-
-        const startDate = new Date(booking.start_date).toLocaleDateString();
-        const endDate = new Date(booking.end_date).toLocaleDateString();
-
-        // Format: "Hola soy el usuario [Nombre]..."
-        const message = `Hola, soy el usuario *${user?.full_name || 'Invitado'}* y deseo completar el pago de mi reserva 📝%0A%0A` +
-            `🆔 *ID Reserva:* ${booking.id.slice(0, 8)}...%0A` +
-            `🚘 *Vehículo:* ${vehicle.make} ${vehicle.model}%0A` +
-            `📅 *Fechas:* ${startDate} al ${endDate}%0A` +
-            `💰 *Monto a Pagar:* S/ ${booking.total_price}%0A` +
-            `📲 *Método de Pago:* ${method}%0A%0A` +
-            `Quedo a la espera de la confirmación.`;
-
-        const whatsappUrl = `https://wa.me/${ADMIN_PHONE}?text=${message}`;
-        window.open(whatsappUrl, '_blank');
-        onClose(); // Optional: close modal after click or keep open
     };
 
     return (
@@ -78,7 +98,7 @@ const ModalPago = ({ isOpen, onClose, booking, vehicle, user }) => {
                         </button>
 
                         <button
-                            onClick={() => handlePayment('Plim')}
+                            onClick={() => handlePayment('Plin')}
                             className="w-full py-4 rounded-xl bg-[#00C3E3] hover:bg-[#00acc9] text-white font-bold text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2"
                         >
                             <span>Plin S/ {booking.total_price}</span>
