@@ -107,10 +107,10 @@ const SearchBar = () => {
     );
 
     return (
-        <div className="bg-white rounded-full shadow-2xl pl-8 pr-2 py-2 max-w-4xl mx-auto flex flex-col md:flex-row items-center border border-slate-100 transform -translate-y-1/2 relative z-50">
+        <div className="bg-white rounded-3xl md:rounded-full shadow-2xl p-4 md:pl-8 md:pr-2 md:py-2 max-w-4xl mx-auto flex flex-col md:flex-row items-stretch md:items-center border border-slate-100 transform -translate-y-12 md:-translate-y-1/2 relative z-50">
 
             {/* Location */}
-            <div className="flex-1 py-2 pr-6 w-full md:w-[32%] relative border-b md:border-b-0 md:border-r border-slate-200 hover:bg-slate-50 rounded-full transition-colors group cursor-pointer">
+            <div className="flex-1 py-3 md:py-2 md:pr-6 w-full md:w-[32%] relative border-b border-slate-100 md:border-b-0 md:border-r md:border-slate-200 hover:bg-slate-50 md:rounded-full transition-colors group cursor-pointer">
                 <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Dónde</label>
                 <div className="relative">
                     <input
@@ -122,7 +122,7 @@ const SearchBar = () => {
                         className="w-full bg-transparent outline-none text-slate-600 text-sm placeholder:text-slate-400 font-medium truncate"
                     />
                     {showSuggestions && suggestions.length > 0 && (
-                        <div className="absolute top-12 left-0 w-[300px] bg-white rounded-3xl shadow-2xl border border-slate-100 py-4 z-50 overflow-hidden">
+                        <div className="absolute top-12 left-0 w-full md:w-[300px] bg-white rounded-3xl shadow-2xl border border-slate-100 py-4 z-50 overflow-hidden">
                             {suggestions.map((item, index) => (
                                 <div
                                     key={index}
@@ -141,7 +141,7 @@ const SearchBar = () => {
             </div>
 
             {/* Date */}
-            <div className="flex-1 py-2 px-6 w-full md:w-[38%] relative border-b md:border-b-0 md:border-r border-slate-200 hover:bg-slate-50 rounded-full transition-colors group cursor-pointer">
+            <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[38%] relative border-b border-slate-100 md:border-b-0 md:border-r md:border-slate-200 hover:bg-slate-50 md:rounded-full transition-colors group cursor-pointer">
                 <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Fechas</label>
                 <div className="w-full">
                     <DatePicker
@@ -167,7 +167,7 @@ const SearchBar = () => {
             </div>
 
             {/* Passengers */}
-            <div className="flex-1 py-2 px-6 w-full md:w-[30%] relative hover:bg-slate-50 rounded-full transition-colors group cursor-pointer flex items-center justify-between">
+            <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[30%] relative hover:bg-slate-50 md:rounded-full transition-colors group cursor-pointer flex items-center justify-between">
                 <div>
                     <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Quién</label>
                     <div className="text-slate-600 text-sm font-medium truncate">
@@ -176,7 +176,7 @@ const SearchBar = () => {
                 </div>
 
                 {/* Passenger Controls */}
-                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute right-4 bg-white shadow-lg rounded-full p-1 border border-slate-100">
+                <div className="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 md:right-4 bg-white shadow-sm md:shadow-lg rounded-full p-1 border border-slate-100">
                     <button onClick={(e) => { e.stopPropagation(); setPassengers(Math.max(1, passengers - 1)) }} className="p-1.5 hover:bg-slate-100 rounded-full"><Minus className="w-3 h-3 text-slate-600" /></button>
                     <span className="text-xs font-bold w-4 text-center">{passengers}</span>
                     <button onClick={(e) => { e.stopPropagation(); setPassengers(Math.min(5, passengers + 1)) }} className="p-1.5 hover:bg-slate-100 rounded-full"><Plus className="w-3 h-3 text-slate-600" /></button>
@@ -186,7 +186,7 @@ const SearchBar = () => {
             {/* Search Button */}
             <button
                 onClick={handleSearch}
-                className="bg-[#FF385C] hover:bg-[#D90B3E] text-white p-3.5 rounded-full shadow-lg shadow-rose-500/30 transition-all hover:scale-105 active:scale-95 m-0 flex items-center gap-2 font-bold px-6 flex-shrink-0 z-10"
+                className="bg-[#FF385C] hover:bg-[#D90B3E] text-white p-3.5 rounded-xl md:rounded-full shadow-lg shadow-rose-500/30 transition-all hover:scale-[1.02] md:hover:scale-105 active:scale-95 mt-2 md:mt-0 w-full md:w-auto flex items-center justify-center gap-2 font-bold px-6 flex-shrink-0 z-10"
             >
                 <Search className="w-5 h-5 stroke-[2.5px]" />
                 Buscar
@@ -309,13 +309,13 @@ export default function Inicio() {
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-hero-gradient" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-                    <span className="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-sm font-bold tracking-widest uppercase mb-6">
+                    <span className="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs md:text-sm font-bold tracking-widest uppercase mb-4 md:mb-6">
                         Vive el Perú
                     </span>
-                    <h1 className="text-5xl md:text-7xl font-serif font-bold text-white mb-6 drop-shadow-2xl max-w-5xl leading-tight">
+                    <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-white mb-4 md:mb-6 drop-shadow-2xl max-w-5xl leading-tight">
                         Aventuras en la Costa <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-ocean-100 to-white">y Desiertos del Perú</span>
                     </h1>
-                    <p className="text-lg md:text-2xl text-white/90 max-w-3xl font-light mb-12 drop-shadow-md">
+                    <p className="text-base md:text-lg lg:text-2xl text-white/90 max-w-3xl font-light mb-8 md:mb-12 drop-shadow-md">
                         Desde las misteriosas dunas de Ica hasta las cálidas aguas de Máncora. Alquila el vehículo perfecto para tu ruta.
                     </p>
                 </div>
