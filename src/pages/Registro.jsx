@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../supabase';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Calendar, CreditCard, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
+import { User, Mail, Lock, Calendar, CreditCard, ArrowRight, AlertCircle, CheckCircle, Globe } from 'lucide-react';
 
 const Registro = () => {
     const navigate = useNavigate();
@@ -12,13 +12,37 @@ const Registro = () => {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
+        confirmPassword: '',
         fullName: '',
+        documentType: 'dni',
         dni: '',
-        birthDate: ''
+        birthDate: '',
+        country: 'Perú'
     });
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+
+        // Auto-select document type based on country
+        if (name === 'country') {
+            // DNI is only for Peru, all other countries use Passport
+            const newDocumentType = value === 'Perú' ? 'dni' : 'passport';
+            setFormData({ ...formData, country: value, documentType: newDocumentType, dni: '' });
+            return;
+        }
+
+        // Apply specific validations based on document type
+        if (name === 'dni') {
+            if (formData.documentType === 'dni') {
+                // Only allow numbers and max 8 digits for DNI
+                if (!/^\d*$/.test(value) || value.length > 8) return;
+            } else {
+                // Passport: alphanumeric, max 12 characters
+                if (value.length > 12) return;
+            }
+        }
+
+        setFormData({ ...formData, [name]: value });
     };
 
     const validateAge = (dateString) => {
@@ -37,18 +61,33 @@ const Registro = () => {
         setError('');
         setLoading(true);
 
-        // 1. Validate Age
+        // 1. Validate passwords match
+        if (formData.password !== formData.confirmPassword) {
+            setError('Las contraseñas no coinciden.');
+            setLoading(false);
+            return;
+        }
+
+        // 2. Validate Age
         if (!validateAge(formData.birthDate)) {
             setError('Debes ser mayor de 18 años para registrarte.');
             setLoading(false);
             return;
         }
 
-        // 2. Validate DNI (Simple length check)
-        if (formData.dni.length < 8) {
-            setError('El DNI debe tener al menos 8 dígitos.');
-            setLoading(false);
-            return;
+        // 3. Validate Document
+        if (formData.documentType === 'dni') {
+            if (formData.dni.length !== 8) {
+                setError('El DNI debe tener exactamente 8 dígitos.');
+                setLoading(false);
+                return;
+            }
+        } else {
+            if (formData.dni.length < 6 || formData.dni.length > 12) {
+                setError('El pasaporte debe tener entre 6 y 12 caracteres.');
+                setLoading(false);
+                return;
+            }
         }
 
         try {
@@ -59,7 +98,9 @@ const Registro = () => {
                     data: {
                         full_name: formData.fullName,
                         dni: formData.dni,
-                        birth_date: formData.birthDate
+                        document_type: formData.documentType,
+                        birth_date: formData.birthDate,
+                        country: formData.country
                     }
                 }
             });
@@ -100,13 +141,14 @@ const Registro = () => {
             {/* Left Side - Image */}
             <div className="hidden md:block w-1/2 bg-slate-900 relative overflow-hidden">
                 <img
-                    src="https://images.unsplash.com/photo-1519046904884-53103b34b271?q=80&w=2070&auto=format&fit=crop"
-                    alt="Desert adventure"
-                    className="absolute inset-0 w-full h-full object-cover opacity-60"
+                    src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop"
+                    alt="Coastal Peru Adventure"
+                    className="absolute inset-0 w-full h-full object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent"></div>
                 <div className="absolute inset-0 flex flex-col justify-end p-12 text-white z-10">
-                    <h1 className="text-5xl font-serif font-bold mb-4">Empieza tu Viaje</h1>
-                    <p className="text-lg text-white/80 max-w-md">
+                    <h1 className="text-5xl font-serif font-bold mb-4 drop-shadow-lg">Empieza tu Viaje</h1>
+                    <p className="text-lg text-white/90 max-w-md leading-relaxed">
                         Únete a JIAR PlayaRent y descubre las mejores rutas costeras del Perú con nuestra flota premium.
                     </p>
                 </div>
@@ -142,30 +184,55 @@ const Registro = () => {
                                 />
                             </div>
 
-                            <div className="grid grid-cols-2 gap-5">
-                                <div className="relative group">
-                                    <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-brand-blue transition-colors" />
-                                    <input
-                                        type="text"
-                                        name="dni"
-                                        placeholder="DNI / Pasaporte"
-                                        required
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all font-medium text-slate-700"
-                                        value={formData.dni}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                                <div className="relative group">
-                                    <Calendar className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-brand-blue transition-colors" />
-                                    <input
-                                        type="date"
-                                        name="birthDate"
-                                        required
-                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all font-medium text-slate-700"
-                                        value={formData.birthDate}
-                                        onChange={handleChange}
-                                    />
-                                </div>
+                            <div className="relative group">
+                                <Globe className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-brand-blue transition-colors" />
+                                <select
+                                    name="country"
+                                    required
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all font-medium text-slate-700 appearance-none cursor-pointer"
+                                    value={formData.country}
+                                    onChange={handleChange}
+                                >
+                                    <option value="Perú">🇵🇪 Perú</option>
+                                    <option value="Argentina">🇦🇷 Argentina</option>
+                                    <option value="Bolivia">🇧🇴 Bolivia</option>
+                                    <option value="Brasil">🇧🇷 Brasil</option>
+                                    <option value="Chile">🇨🇱 Chile</option>
+                                    <option value="Colombia">🇨🇴 Colombia</option>
+                                    <option value="Ecuador">🇪🇨 Ecuador</option>
+                                    <option value="Paraguay">🇵🇾 Paraguay</option>
+                                    <option value="Uruguay">🇺🇾 Uruguay</option>
+                                    <option value="Venezuela">🇻🇪 Venezuela</option>
+                                    <option value="Estados Unidos">🇺🇸 Estados Unidos</option>
+                                    <option value="España">🇪🇸 España</option>
+                                    <option value="Otro">🌎 Otro</option>
+                                </select>
+                            </div>
+
+                            <div className="relative group">
+                                <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-brand-blue transition-colors" />
+                                <input
+                                    type="text"
+                                    name="dni"
+                                    placeholder={formData.documentType === 'dni' ? 'DNI: 12345678' : 'Pasaporte: ABC123456'}
+                                    required
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all font-medium text-slate-700"
+                                    value={formData.dni}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="relative group">
+                                <Calendar className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-brand-blue transition-colors" />
+                                <input
+                                    type="date"
+                                    name="birthDate"
+                                    required
+                                    placeholder="Fecha de Nacimiento"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all font-medium text-slate-700"
+                                    value={formData.birthDate}
+                                    onChange={handleChange}
+                                />
                             </div>
 
                             <div className="relative group">
@@ -191,6 +258,20 @@ const Registro = () => {
                                     minLength={6}
                                     className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all font-medium text-slate-700"
                                     value={formData.password}
+                                    onChange={handleChange}
+                                />
+                            </div>
+
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-brand-blue transition-colors" />
+                                <input
+                                    type="password"
+                                    name="confirmPassword"
+                                    placeholder="Confirmar Contraseña"
+                                    required
+                                    minLength={6}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all font-medium text-slate-700"
+                                    value={formData.confirmPassword}
                                     onChange={handleChange}
                                 />
                             </div>

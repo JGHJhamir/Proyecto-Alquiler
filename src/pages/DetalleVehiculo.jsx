@@ -29,6 +29,7 @@ const DetalleVehiculo = () => {
     const [appliedPromo, setAppliedPromo] = useState(null);
     const [promoLoading, setPromoLoading] = useState(false);
     const [promoMessage, setPromoMessage] = useState(null); // { type: 'success' | 'error', text: '' }
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         const fetchVehicle = async () => {
@@ -42,6 +43,13 @@ const DetalleVehiculo = () => {
             setLoading(false);
         };
         fetchVehicle();
+
+        // Check authentication
+        const checkAuth = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setIsAuthenticated(!!user);
+        };
+        checkAuth();
     }, [id]);
 
     useEffect(() => {
@@ -320,7 +328,7 @@ const DetalleVehiculo = () => {
             </div>
 
             {/* Content Grid */}
-            <div className="max-w-7xl mx-auto px-6 -mt-10 relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
                 {/* Main Details */}
                 <div className="lg:col-span-2 space-y-8">
                     {/* Specs */}
@@ -358,7 +366,7 @@ const DetalleVehiculo = () => {
 
                 {/* Booking Card (Sticky) */}
                 <div className="lg:col-span-1">
-                    <div className="bg-white rounded-3xl p-8 shadow-xl shadow-brand-blue/5 border border-blue-100 sticky top-24">
+                    <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl shadow-brand-blue/5 border border-blue-100 lg:sticky lg:top-24">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-900 font-serif">Reserva tu Aventura</h3>
 
@@ -500,11 +508,16 @@ const DetalleVehiculo = () => {
                             </div>
                         ) : (
                             <button
-                                onClick={handleBooking}
+                                onClick={isAuthenticated ? handleBooking : () => navigate('/login', { state: { from: `/vehiculo/${id}` } })}
                                 disabled={!startDate || !endDate || bookingStatus === 'processing'}
-                                className="w-full btn-primary py-4 text-lg shadow-lg hover:shadow-brand-blue/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+                                className="w-full btn-primary py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-brand-blue/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
                             >
-                                {bookingStatus === 'processing' ? 'Procesando...' : 'Confirmar Reserva'}
+                                {bookingStatus === 'processing'
+                                    ? 'Procesando...'
+                                    : isAuthenticated
+                                        ? 'Reservar y Pagar'
+                                        : 'Iniciar Sesión para Reservar'
+                                }
                             </button>
                         )}
 

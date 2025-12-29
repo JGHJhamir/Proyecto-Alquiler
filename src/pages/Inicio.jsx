@@ -195,24 +195,20 @@ const SearchBar = () => {
     );
 };
 
-const PromotionCard = ({ title, discount, description, subtitle }) => (
-    <div className="group bg-ocean-50/50 hover:bg-gradient-to-br hover:from-white hover:to-ocean-50 border border-ocean-100 p-8 rounded-[2rem] flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-brand-blue/10 hover:-translate-y-2 cursor-pointer h-full relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 h-32 bg-brand-light/10 rounded-full blur-3xl -mr-16 -mt-16 transition-all group-hover:bg-brand-light/20"></div>
+const PromotionCard = ({ title, discount, discountType, code }) => (
+    <div className="group bg-gradient-to-br from-ocean-50 to-white hover:from-white hover:to-ocean-50 border border-ocean-200 p-6 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-brand-light/10 rounded-full blur-2xl -mr-12 -mt-12"></div>
 
         <div className="relative z-10">
-            <h3 className="text-xl font-bold text-brand-dark mb-4 font-serif">{title}</h3>
-            <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-5xl font-extrabold text-brand-blue tracking-tight">
-                    {discount}
+            <h3 className="text-lg font-bold text-brand-dark mb-2 font-serif">{title}</h3>
+            <div className="flex items-baseline gap-2 mb-3">
+                <span className="text-3xl font-extrabold text-brand-blue">
+                    {discountType === 'percentage' ? `${discount}%` : `S/${discount}`}
                 </span>
-                <span className="text-lg font-bold text-brand-blue/60 uppercase tracking-widest">OFF</span>
+                <span className="text-sm font-bold text-brand-blue/60 uppercase">OFF</span>
             </div>
-            <p className="text-slate-600 leading-relaxed mb-8 font-medium">{description}</p>
-        </div>
-        <div className="pt-6 border-t border-ocean-100/50 flex justify-between items-center relative z-10">
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">{subtitle}</p>
-            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-brand-blue shadow-sm group-hover:translate-x-2 transition-transform">
-                <ArrowRight className="w-5 h-5" />
+            <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 inline-block">
+                <span className="text-xs font-mono font-bold text-brand-blue">{code}</span>
             </div>
         </div>
     </div>
@@ -272,18 +268,31 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
 
 export default function Inicio() {
     const [vehicles, setVehicles] = useState([]);
+    const [promotions, setPromotions] = useState([]);
 
     useEffect(() => {
-        const fetchVehicles = async () => {
-            const { data, error } = await supabase
+        const fetchData = async () => {
+            // Fetch vehicles
+            const { data: vehiclesData, error: vehiclesError } = await supabase
                 .from('vehicles')
                 .select('*');
 
-            if (error) console.error('Error fetching vehicles:', error);
-            else setVehicles(data || []);
+            if (vehiclesError) console.error('Error fetching vehicles:', vehiclesError);
+            else setVehicles(vehiclesData || []);
+
+            // Fetch active promotions (limit to 3)
+            const { data: promosData, error: promosError } = await supabase
+                .from('promotions')
+                .select('*')
+                .eq('is_active', true)
+                .order('created_at', { ascending: false })
+                .limit(3);
+
+            if (promosError) console.error('Error fetching promotions:', promosError);
+            else setPromotions(promosData || []);
         };
 
-        fetchVehicles();
+        fetchData();
     }, []);
 
     return (
@@ -318,32 +327,27 @@ export default function Inicio() {
             </div>
 
             {/* Promotions Section */}
-            <section className="max-w-7xl mx-auto px-6 py-32">
+            <section className="max-w-7xl mx-auto px-6 py-20">
                 <SectionTitle
-                    title="Promociones Costeras"
+                    title="Promociones Activas"
                     subtitle="Descuentos exclusivos para tus rutas por la Panamericana Sur y Norte."
                 />
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <PromotionCard
-                        title="Dunas de Ica"
-                        discount="15%"
-                        description="Domina el desierto. 15% de descuento en areneros tubulares (buggies)."
-                        subtitle="Válido en Huacachina"
-                    />
-                    <PromotionCard
-                        title="Verano en Paracas"
-                        discount="S/80"
-                        description="Recorre la Reserva Nacional. Ahorra S/80 en alquileres de 4x4."
-                        subtitle="Incluye pase a la reserva"
-                    />
-                    <PromotionCard
-                        title="Norte de Ensueño"
-                        discount="20%"
-                        description="20% OFF en camionetas para explorar Máncora, Vichayito y Punta Sal."
-                        subtitle="Reservas anticipada"
-                    />
-                </div>
+                {promotions.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {promotions.map((promo) => (
+                            <PromotionCard
+                                key={promo.id}
+                                title={promo.name}
+                                discount={promo.discount_value}
+                                discountType={promo.discount_type}
+                                code={promo.code}
+                            />
+                        ))}
+                    </div>
+                ) : (
+                    <p className="text-center text-slate-400 py-8">No hay promociones activas en este momento.</p>
+                )}
             </section>
 
             {/* Fleet Section */}

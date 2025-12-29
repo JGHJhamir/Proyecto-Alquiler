@@ -354,105 +354,183 @@ const ClientModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitt
     );
 };
 
-const DashboardView = ({ users }) => (
-    <div className="animate-fade-in-up space-y-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-36">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ingresos Totales</span>
-                        <div className="flex items-baseline gap-1 mt-2">
-                            <h3 className="text-3xl font-bold text-slate-900">S/ 990.00</h3>
-                        </div>
-                    </div>
-                    <span className="text-slate-400 font-serif italic">$</span>
-                </div>
-                <p className="text-xs text-slate-400">Ingresos totales históricos</p>
-            </div>
+const DashboardView = ({ users }) => {
+    const [stats, setStats] = useState({
+        totalRevenue: 0,
+        totalBookings: 0,
+        totalVehicles: 0,
+        bookingsByStatus: { confirmed: 0, completed: 0, active: 0, cancelled: 0 }
+    });
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-36">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Reservas</span>
-                        <h3 className="text-3xl font-bold text-slate-900 mt-2">5</h3>
-                    </div>
-                    <span className="text-brand-blue text-xs font-bold bg-blue-50 px-2 py-1 rounded-full">↗</span>
-                </div>
-                <p className="text-xs text-slate-400">En todo el historial</p>
-            </div>
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                // Fetch all bookings
+                const { data: bookings } = await supabase.from('bookings').select('total_price, status');
 
-            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-36">
-                <div className="flex justify-between items-start">
-                    <div>
-                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Vehículos</span>
-                        <h3 className="text-3xl font-bold text-slate-900 mt-2">42</h3>
-                    </div>
-                    <Car className="w-5 h-5 text-slate-300" />
-                </div>
-                <p className="text-xs text-slate-400">Flota activa actualmente</p>
-            </div>
-        </div>
+                // Fetch all vehicles
+                const { data: vehicles } = await supabase.from('vehicles').select('id');
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Bar Chart Section */}
-            <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                <h3 className="font-bold text-xl text-slate-900">Ingresos por Mes</h3>
-                <p className="text-sm text-slate-500 mb-8">Análisis de ingresos de reservas finalizadas, en curso o confirmadas.</p>
+                // Calculate stats
+                const totalRevenue = bookings?.reduce((sum, b) => sum + (b.total_price || 0), 0) || 0;
+                const totalBookings = bookings?.length || 0;
+                const totalVehicles = vehicles?.length || 0;
 
-                <div className="h-64 flex items-end gap-8 justify-center border-b border-slate-100 pb-4 relative">
-                    {/* Y-Axis Labels (Simulated) */}
-                    <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-slate-400">
-                        <span>S/0.6k</span>
-                        <span>S/0.45k</span>
-                        <span>S/0.3k</span>
-                        <span>S/0.15k</span>
-                        <span>S/0k</span>
-                    </div>
+                // Count by status
+                const byStatus = {
+                    confirmed: bookings?.filter(b => b.status === 'confirmed').length || 0,
+                    completed: bookings?.filter(b => b.status === 'completed').length || 0,
+                    active: bookings?.filter(b => b.status === 'active').length || 0,
+                    cancelled: bookings?.filter(b => b.status === 'cancelled').length || 0
+                };
 
-                    {/* Bars */}
-                    <div className="flex flex-col items-center gap-2 group w-1/3 max-w-[120px]">
-                        <div className="w-full bg-blue-600 rounded-t-lg hover:bg-blue-700 transition-colors h-48 relative group-hover:shadow-lg">
-                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                S/ 580
+                setStats({
+                    totalRevenue,
+                    totalBookings,
+                    totalVehicles,
+                    bookingsByStatus: byStatus
+                });
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
+
+    return (
+        <div className="animate-fade-in-up space-y-8">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-36">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Ingresos Totales</span>
+                            <div className="flex items-baseline gap-1 mt-2">
+                                <h3 className="text-3xl font-bold text-slate-900">S/ {stats.totalRevenue.toFixed(2)}</h3>
                             </div>
                         </div>
-                        <span className="text-xs font-semibold text-slate-500">Jul 2024</span>
+                        <span className="text-slate-400 font-serif italic">$</span>
                     </div>
+                    <p className="text-xs text-slate-400">Ingresos totales históricos</p>
+                </div>
 
-                    <div className="flex flex-col items-center gap-2 group w-1/3 max-w-[120px]">
-                        <div className="w-full bg-blue-600 rounded-t-lg hover:bg-blue-700 transition-colors h-40 relative group-hover:shadow-lg">
-                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                S/ 410
-                            </div>
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-36">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Reservas</span>
+                            <h3 className="text-3xl font-bold text-slate-900 mt-2">{stats.totalBookings}</h3>
                         </div>
-                        <span className="text-xs font-semibold text-slate-500">Dic 2025</span>
+                        <span className="text-brand-blue text-xs font-bold bg-blue-50 px-2 py-1 rounded-full">↗</span>
                     </div>
+                    <p className="text-xs text-slate-400">En todo el historial</p>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-36">
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Vehículos</span>
+                            <h3 className="text-3xl font-bold text-slate-900 mt-2">{stats.totalVehicles}</h3>
+                        </div>
+                        <Car className="w-5 h-5 text-slate-300" />
+                    </div>
+                    <p className="text-xs text-slate-400">Flota activa actualmente</p>
                 </div>
             </div>
 
-            {/* Donut Chart Section */}
-            <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
-                <h3 className="font-bold text-xl text-slate-900 mb-6 leading-tight">Distribución de Reservas por Estado</h3>
+            {/* Charts Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Bar Chart Section */}
+                <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+                    <h3 className="font-bold text-xl text-slate-900">Ingresos por Mes</h3>
+                    <p className="text-sm text-slate-500 mb-8">Análisis de ingresos de reservas finalizadas, en curso o confirmadas.</p>
 
-                <div className="flex-1 flex items-center justify-center">
-                    {/* CSS Donut Chart */}
-                    <div className="relative w-48 h-48 rounded-full border-[16px] border-slate-900 border-r-transparent rotate-45 flex items-center justify-center">
-                        <div className="absolute inset-0 rounded-full border-[16px] border-brand-blue border-t-transparent border-l-transparent -rotate-12"></div>
+                    <div className="h-64 flex items-center justify-center border border-slate-100 rounded-xl bg-slate-50">
+                        <p className="text-slate-400 text-sm">Análisis de ingresos mensuales</p>
                     </div>
                 </div>
 
-                <div className="mt-8 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 justify-center">
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500"></span> Confirmada (2)</div>
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-600"></span> Finalizada (1)</div>
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-100"></span> En curso (1)</div>
-                    <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500"></span> Cancelada (1)</div>
+                {/* Donut Chart Section */}
+                <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
+                    <h3 className="font-bold text-xl text-slate-900 mb-6 leading-tight">Distribución de Reservas por Estado</h3>
+
+                    <div className="flex-1 flex items-center justify-center">
+                        {/* Dynamic SVG Donut Chart */}
+                        {(() => {
+                            const total = stats.totalBookings || 1;
+                            const confirmed = stats.bookingsByStatus.confirmed;
+                            const completed = stats.bookingsByStatus.completed;
+                            const active = stats.bookingsByStatus.active;
+                            const cancelled = stats.bookingsByStatus.cancelled;
+
+                            // Calculate percentages and angles
+                            const confirmedPercent = (confirmed / total) * 100;
+                            const completedPercent = (completed / total) * 100;
+                            const activePercent = (active / total) * 100;
+                            const cancelledPercent = (cancelled / total) * 100;
+
+                            // SVG circle parameters
+                            const size = 200;
+                            const strokeWidth = 20;
+                            const radius = (size - strokeWidth) / 2;
+                            const circumference = 2 * Math.PI * radius;
+
+                            // Calculate stroke dash offsets for each segment
+                            let currentOffset = 0;
+                            const segments = [
+                                { percent: confirmedPercent, color: '#14b8a6', label: 'Confirmada' },
+                                { percent: completedPercent, color: '#2563eb', label: 'Finalizada' },
+                                { percent: activePercent, color: '#e2e8f0', label: 'En curso' },
+                                { percent: cancelledPercent, color: '#ef4444', label: 'Cancelada' }
+                            ];
+
+                            return (
+                                <svg width={size} height={size} className="transform -rotate-90">
+                                    <circle
+                                        cx={size / 2}
+                                        cy={size / 2}
+                                        r={radius}
+                                        fill="none"
+                                        stroke="#f1f5f9"
+                                        strokeWidth={strokeWidth}
+                                    />
+                                    {segments.map((segment, index) => {
+                                        if (segment.percent === 0) return null;
+                                        const dashLength = (segment.percent / 100) * circumference;
+                                        const dashOffset = currentOffset;
+                                        currentOffset += dashLength;
+
+                                        return (
+                                            <circle
+                                                key={index}
+                                                cx={size / 2}
+                                                cy={size / 2}
+                                                r={radius}
+                                                fill="none"
+                                                stroke={segment.color}
+                                                strokeWidth={strokeWidth}
+                                                strokeDasharray={`${dashLength} ${circumference - dashLength}`}
+                                                strokeDashoffset={-dashOffset}
+                                                strokeLinecap="round"
+                                            />
+                                        );
+                                    })}
+                                </svg>
+                            );
+                        })()}
+                    </div>
+
+                    <div className="mt-8 flex flex-wrap gap-x-4 gap-y-2 text-xs text-slate-600 justify-center">
+                        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-teal-500"></span> Confirmada ({stats.bookingsByStatus.confirmed})</div>
+                        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-600"></span> Finalizada ({stats.bookingsByStatus.completed})</div>
+                        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-100"></span> En curso ({stats.bookingsByStatus.active})</div>
+                        <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-red-500"></span> Cancelada ({stats.bookingsByStatus.cancelled})</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, onDeleteMultiple, onEdit, activeMenu, setActiveMenu }) => {
     const [vehicles, setVehicles] = useState([]);
@@ -615,7 +693,7 @@ const ClientsView = ({ users, onEdit, onDelete, onAdd, onSeed, activeMenu, setAc
             </h2>
             <div className="flex gap-2">
                 <button onClick={onSeed} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold px-2 hover:underline transition-all">
-                    + Demo Clientes
+                    + Clientes de Prueba
                 </button>
                 <button onClick={onAdd} className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
                     <Plus className="w-4 h-4" /> Añadir Cliente
@@ -1377,7 +1455,7 @@ const BookingsView = () => {
                 .from('bookings')
                 .select(`
                     *,
-                    vehicles ( make, model, image_url, year ),
+                    vehicles ( make, model, image_url, year, location_city, category ),
                     profiles ( full_name, phone, dni )
                 `)
                 .order('created_at', { ascending: false });
@@ -1545,7 +1623,6 @@ const BookingsView = () => {
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="font-medium text-slate-900 text-sm">{booking.profiles?.full_name || 'Usuario'}</div>
-                                    <div className="text-xs text-slate-500">{booking.profiles?.email}</div>
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="text-sm text-slate-600 flex flex-col">

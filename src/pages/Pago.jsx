@@ -12,6 +12,7 @@ const Pago = () => {
     const [vehicle, setVehicle] = useState(location.state?.vehicle || null);
     const [selectedMethod, setSelectedMethod] = useState('card');
     const [paymentStatus, setPaymentStatus] = useState('idle'); // idle, processing, success
+    const [user, setUser] = useState(null);
 
     // Promo Code State
     const [promoCode, setPromoCode] = useState('');
@@ -69,12 +70,25 @@ const Pago = () => {
 
     // Initial Setup & Fetch
     useEffect(() => {
-        if (location.state?.booking?.total_price) {
-            setFinalPrice(location.state.booking.total_price);
-        }
+        const fetchUserAndData = async () => {
+            // Fetch user profile
+            const { data: { user: authUser } } = await supabase.auth.getUser();
+            if (authUser) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', authUser.id)
+                    .single();
+                setUser(profile || authUser);
+            }
 
-        if (!booking && !vehicle && bookingId !== 'demo') {
-            const fetchData = async () => {
+            // Set final price from location state
+            if (location.state?.booking?.total_price) {
+                setFinalPrice(location.state.booking.total_price);
+            }
+
+            // Fetch booking and vehicle if not in location state
+            if (!booking && !vehicle && bookingId !== 'demo') {
                 const { data: bookingData } = await supabase.from('bookings').select('*').eq('id', bookingId).single();
                 if (bookingData) {
                     setBooking(bookingData);
@@ -82,9 +96,10 @@ const Pago = () => {
                     const { data: vehicleData } = await supabase.from('vehicles').select('*').eq('id', bookingData.vehicle_id).single();
                     setVehicle(vehicleData);
                 }
-            };
-            fetchData();
-        }
+            }
+        };
+
+        fetchUserAndData();
     }, [bookingId, booking, vehicle, location.state]);
 
     const handleApplyPromo = async () => {
@@ -192,7 +207,7 @@ const Pago = () => {
 
                 {/* Digital Ticket Display */}
                 <div className="mb-8 w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-300">
-                    <TicketReserva booking={booking} vehicle={vehicle} user={null} />
+                    <TicketReserva booking={booking} vehicle={vehicle} user={user} />
                 </div>
 
                 <div className="flex flex-col gap-3 w-full max-w-xs">
@@ -332,7 +347,7 @@ const Pago = () => {
                                     <Smartphone className="w-5 h-5 flex-shrink-0" />
                                     <div>
                                         <p className="font-bold mb-1">Pago con Yape/Plin</p>
-                                        <p className="opacity-90">Escanea el QR (simulado) y tu reserva quedará pendiente de aprobación.</p>
+                                        <p className="opacity-90">Escanea el QR y tu reserva quedará pendiente de aprobación.</p>
                                     </div>
                                 </div>
                             )}
