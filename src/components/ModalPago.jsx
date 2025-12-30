@@ -8,12 +8,23 @@ const ModalPago = ({ isOpen, onClose, booking, vehicle, user }) => {
 
     const ADMIN_PHONE = '51954025029';
 
-    const handlePayment = (method) => {
+    const handlePayment = async (method) => {
         try {
             if (method === 'Card') {
                 onClose();
                 navigate(`/pago/${booking.id}`, { state: { booking, vehicle } });
                 return;
+            }
+
+            // Update booking status to 'awaiting_confirmation' for Yape/Plin
+            const { error } = await supabase
+                .from('bookings')
+                .update({ status: 'awaiting_confirmation' })
+                .eq('id', booking.id);
+
+            if (error) {
+                console.error("Error updating booking status:", error);
+                // Optionally continue or show error. Continuing to WhatsApp as fallback.
             }
 
             // Safe date parsing
@@ -46,6 +57,8 @@ const ModalPago = ({ isOpen, onClose, booking, vehicle, user }) => {
             const whatsappUrl = `https://wa.me/${ADMIN_PHONE}?text=${message}`;
             window.open(whatsappUrl, '_blank');
             onClose();
+            // Refresh parent via reload or callback if provided (PanelCliente should auto-update if using realtime or refetch)
+            window.location.reload(); // Simple refresh to show new status
         } catch (error) {
             console.error("Error generating WhatsApp message:", error);
             alert("Hubo un error al generar el enlace de pago. Por favor intenta de nuevo.");

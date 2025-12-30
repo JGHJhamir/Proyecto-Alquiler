@@ -226,14 +226,16 @@ const PanelCliente = () => {
 
                                                     {/* Status Badge */}
                                                     <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${booking.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                                                            booking.status === 'completed' ? 'bg-blue-50 text-brand-blue border-blue-100' :
-                                                                booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
+                                                        booking.status === 'completed' ? 'bg-blue-50 text-brand-blue border-blue-100' :
+                                                            booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
+                                                                booking.status === 'awaiting_confirmation' ? 'bg-orange-50 text-orange-700 border-orange-100' :
                                                                     'bg-amber-50 text-amber-700 border-amber-100'
                                                         }`}>
                                                         {booking.status === 'confirmed' ? 'Confirmada' :
                                                             booking.status === 'completed' ? 'Finalizada' :
                                                                 booking.status === 'cancelled' ? 'Cancelada' :
-                                                                    'Pendiente'}
+                                                                    booking.status === 'awaiting_confirmation' ? 'Validando Pago' :
+                                                                        'Pendiente'}
                                                     </div>
                                                 </div>
 
@@ -266,6 +268,15 @@ const PanelCliente = () => {
                                                             className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-lg shadow-brand-blue/20 flex items-center gap-2"
                                                         >
                                                             Pagar Ahora <ChevronRight className="w-4 h-4" />
+                                                        </button>
+                                                    )}
+
+                                                    {booking.status === 'awaiting_confirmation' && (
+                                                        <button
+                                                            disabled
+                                                            className="bg-orange-100 text-orange-700 px-4 py-2 rounded-lg text-sm font-semibold cursor-not-allowed flex items-center gap-2"
+                                                        >
+                                                            <Clock className="w-4 h-4" /> Validando...
                                                         </button>
                                                     )}
                                                 </div>
