@@ -269,12 +269,10 @@ const DetalleVehiculo = () => {
 
             if (error) throw error;
 
-            // Success: Open Modal
+            // Success: Open Payment Modal
             setBookingStatus('success');
             setCurrentBooking(booking);
-            setTimeout(() => {
-                navigate(`/pago/${booking.id}`, { state: { booking, vehicle } });
-            }, 1000);
+            setShowPaymentModal(true); // Open modal instead of redirecting
 
         } catch (error) {
             console.error('Error creating booking:', error);
