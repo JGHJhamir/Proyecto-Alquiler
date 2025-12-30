@@ -5,6 +5,8 @@ import { MapPin, Star, Share2, Heart, ArrowLeft, Shield, Gauge, Fuel, Users, Cal
 
 import BarraNavegacion from '../components/BarraNavegacion';
 import ModalPago from '../components/ModalPago';
+import StepIndicator from '../components/StepIndicator';
+import DateRangePicker from '../components/DateRangePicker';
 
 const DetalleVehiculo = () => {
     const { id } = useParams();
@@ -30,6 +32,10 @@ const DetalleVehiculo = () => {
     const [promoLoading, setPromoLoading] = useState(false);
     const [promoMessage, setPromoMessage] = useState(null); // { type: 'success' | 'error', text: '' }
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    // Step State
+    const [currentStep, setCurrentStep] = useState(1); // 1: Fechas, 2: Detalles, 3: Pago
+    const [showCalendar, setShowCalendar] = useState(false);
 
     useEffect(() => {
         const fetchVehicle = async () => {
@@ -266,6 +272,19 @@ const DetalleVehiculo = () => {
     // Helper to get today's string for min date
     const todayStr = new Date().toISOString().split('T')[0];
 
+    // Calculate current step based on state (for visual indicator only)
+    const getCurrentStep = () => {
+        if (!startDate || !endDate) return 1; // Selecting dates
+        if (bookingStatus === 'processing' || bookingStatus === 'success') return 3; // Payment
+        return 2; // Details/Review
+    };
+
+    const steps = [
+        { label: 'Fechas' },
+        { label: 'Detalles' },
+        { label: 'Confirmar' }
+    ];
+
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
             {/* Top Navigation */}
@@ -367,6 +386,11 @@ const DetalleVehiculo = () => {
                 {/* Booking Card (Sticky) */}
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl shadow-brand-blue/5 border border-blue-100 lg:sticky lg:top-24">
+                        {/* Step Indicator */}
+                        <div className="mb-6 pb-6 border-b border-slate-100">
+                            <StepIndicator steps={steps} currentStep={getCurrentStep()} />
+                        </div>
+
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-xl font-bold text-slate-900 font-serif">Reserva tu Aventura</h3>
 
@@ -389,7 +413,10 @@ const DetalleVehiculo = () => {
 
                         <div className="space-y-4 mb-8">
                             <div>
-                                <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Desde</label>
+                                <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    Desde
+                                    {startDate && <CheckCircle className="w-3 h-3 text-emerald-500" />}
+                                </label>
                                 <div className="relative">
                                     <input
                                         type={rentalType === 'days' ? "date" : "datetime-local"}
@@ -403,7 +430,10 @@ const DetalleVehiculo = () => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Hasta</label>
+                                <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2 flex items-center gap-2">
+                                    Hasta
+                                    {endDate && <CheckCircle className="w-3 h-3 text-emerald-500" />}
+                                </label>
                                 <div className="relative">
                                     <input
                                         type={rentalType === 'days' ? "date" : "datetime-local"}
@@ -490,7 +520,9 @@ const DetalleVehiculo = () => {
                                         {discount > 0 && (
                                             <span className="block text-xs text-slate-400 line-through mb-0.5">S/ {totalPrice.toFixed(2)}</span>
                                         )}
-                                        <span className="text-2xl font-black text-brand-blue">S/ {Math.max(0, totalPrice - discount).toFixed(2)}</span>
+                                        <span className="text-2xl font-black text-brand-blue transition-all duration-300 animate-in fade-in">
+                                            S/ {Math.max(0, totalPrice - discount).toFixed(2)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -507,18 +539,38 @@ const DetalleVehiculo = () => {
                                 Error al reservar
                             </div>
                         ) : (
-                            <button
-                                onClick={isAuthenticated ? handleBooking : () => navigate('/login', { state: { from: `/vehiculo/${id}` } })}
-                                disabled={!startDate || !endDate || bookingStatus === 'processing'}
-                                className="w-full btn-primary py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-brand-blue/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
-                            >
-                                {bookingStatus === 'processing'
-                                    ? 'Procesando...'
-                                    : isAuthenticated
-                                        ? 'Reservar y Pagar'
-                                        : 'Iniciar Sesión para Reservar'
-                                }
-                            </button>
+                            <>
+                                <button
+                                    onClick={isAuthenticated ? handleBooking : () => navigate('/login', { state: { from: `/vehiculo/${id}` } })}
+                                    disabled={!startDate || !endDate || bookingStatus === 'processing'}
+                                    className="w-full btn-primary py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-brand-blue/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+                                >
+                                    {bookingStatus === 'processing'
+                                        ? (
+                                            <span className="flex items-center justify-center gap-2">
+                                                <Loader2 className="w-5 h-5 animate-spin" />
+                                                Procesando...
+                                            </span>
+                                        )
+                                        : isAuthenticated
+                                            ? (
+                                                <span className="flex items-center justify-center gap-2">
+                                                    <CheckCircle className="w-5 h-5" />
+                                                    Confirmar y Pagar
+                                                </span>
+                                            )
+                                            : 'Iniciar Sesión para Reservar'
+                                    }
+                                </button>
+
+                                {/* Helpful hint */}
+                                {!startDate || !endDate ? (
+                                    <p className="text-center text-xs text-slate-500 mt-3 flex items-center justify-center gap-1">
+                                        <Calendar className="w-3 h-3" />
+                                        Selecciona las fechas para continuar
+                                    </p>
+                                ) : null}
+                            </>
                         )}
 
                         <p className="text-center text-xs text-slate-400 mt-4">
