@@ -62,14 +62,19 @@ const DetalleVehiculo = () => {
     // Fetch available promotions
     useEffect(() => {
         const fetchPromos = async () => {
-            const { data } = await supabase
-                .from('promotions')
-                .select('*')
-                .eq('is_active', true)
-                .gte('end_date', new Date().toISOString())
-                .limit(3);
+            try {
+                const { data, error } = await supabase
+                    .from('promotions')
+                    .select('*')
+                    .eq('is_active', true)
+                    .gte('end_date', new Date().toISOString())
+                    .limit(3);
 
-            if (data) setAvailablePromos(data);
+                if (data && !error) setAvailablePromos(data);
+            } catch (err) {
+                console.error('Error fetching promos:', err);
+                // Silently fail - promos are optional
+            }
         };
         fetchPromos();
     }, []);
@@ -625,7 +630,10 @@ const DetalleVehiculo = () => {
 
             <ModalPago
                 isOpen={showPaymentModal}
-                onClose={() => setShowPaymentModal(false)}
+                onClose={() => {
+                    setShowPaymentModal(false);
+                    setBookingStatus('idle'); // Reset status to allow new bookings
+                }}
                 booking={currentBooking}
                 vehicle={vehicle}
                 user={currentUser}
