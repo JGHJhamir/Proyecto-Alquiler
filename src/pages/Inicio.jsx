@@ -36,24 +36,35 @@ const SearchBar = () => {
     useEffect(() => {
         const fetchLocations = async () => {
             try {
-                const { data, error } = await supabase
+                // 1. Fetch defined locations (Master List)
+                const { data: dbLocations, error: locError } = await supabase
+                    .from('locations')
+                    .select('name, department');
+
+                // 2. Fetch cities with actual vehicles (Inventory)
+                const { data: vehicleData, error: vError } = await supabase
                     .from('vehicles')
                     .select('location_city');
 
-                if (error) throw error;
+                if (locError || vError) throw new Error('Error loading location data');
 
-                const cities = new Set(data.map(v => v.location_city));
+                const vehicleCities = new Set(vehicleData.map(v => v.location_city));
                 const locations = [];
+                const activeDepartments = new Set();
 
-                Object.entries(COASTAL_LOCATIONS).forEach(([dept, deptCities]) => {
-                    const availableDeptCities = deptCities.filter(city => cities.has(city));
-
-                    if (availableDeptCities.length > 0) {
-                        locations.push({ type: 'department', name: dept, label: dept });
-                        availableDeptCities.forEach(city => {
-                            locations.push({ type: 'city', name: city, label: `${city}, ${dept}` });
-                        });
+                // 3. Build valid list (Intersection of DB Locations AND Active Inventory)
+                dbLocations.forEach(loc => {
+                    // Normalize check to avoid accent/case mismatches if possible, 
+                    // but strict match is safer for data integrity. Assuming exact match for now.
+                    if (vehicleCities.has(loc.name)) {
+                        locations.push({ type: 'city', name: loc.name, label: `${loc.name}, ${loc.department}` });
+                        activeDepartments.add(loc.department);
                     }
+                });
+
+                // Add active departments
+                activeDepartments.forEach(dept => {
+                    locations.push({ type: 'department', name: dept, label: dept });
                 });
 
                 setAvailableLocations(locations);

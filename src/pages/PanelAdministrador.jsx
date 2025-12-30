@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BarraNavegacion from '../components/BarraNavegacion';
 import { supabase } from '../supabase';
+import ReportesView from '../components/ReportesView';
 import {
     Car, Users, Calendar, Plus, Search, BarChart3, Settings,
     X, Save, Image as ImageIcon, LayoutDashboard, Tag, ShoppingBag,
@@ -15,24 +16,21 @@ import TicketReserva from '../components/TicketReserva';
 
 const VIEW_TITLES = {
     dashboard: 'Panel de Control',
-    operaciones: 'Operaciones',
     reservas: 'Reservas',
     clients: 'Gestión de Clientes',
     vehicles: 'Vehículos',
     locations: 'Ubicaciones',
-    team: 'Equipo',
     promotions: 'Promociones',
     reports: 'Reportes'
 };
 
 const UserIconMap = {
     dashboard: LayoutDashboard,
-    operaciones: Settings,
+    dashboard: LayoutDashboard,
     reservas: Calendar,
     clients: Users,
     vehicles: Car,
     locations: MapPin,
-    team: Users,
     promotions: Tag,
     reports: BarChart3
 };
@@ -45,6 +43,9 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
         { id: 'reservas', label: 'Reservas', icon: Calendar },
         { id: 'clients', label: 'Clientes', icon: Users },
         { id: 'vehicles', label: 'Vehículos', icon: Car },
+        { id: 'locations', label: 'Ubicaciones', icon: MapPin },
+        { id: 'promotions', label: 'Promociones', icon: Tag },
+        { id: 'reports', label: 'Reportes', icon: FileText },
     ];
 
     const handleLogout = async () => {
@@ -337,6 +338,7 @@ const ClientModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitt
                             >
                                 <option value="client">Cliente</option>
                                 <option value="admin">Administrador</option>
+                                <option value="owner">Propietario</option>
                             </select>
                         </div>
                     </div>
@@ -536,6 +538,10 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedVehicles, setSelectedVehicles] = useState([]);
+    const [visibleColumns, setVisibleColumns] = useState({
+        vehicle: true, category: true, location: true, prices: true, status: true
+    });
+    const [showColumnMenu, setShowColumnMenu] = useState(false);
 
     const fetchVehicles = async () => {
         setLoading(true);
@@ -584,6 +590,33 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
                     <button onClick={onClearDB} className="text-red-500 hover:text-red-700 text-xs font-semibold px-4 hover:underline transition-all">
                         Limpiar Todo
                     </button>
+
+                    <div className="relative">
+                        <button onClick={() => setShowColumnMenu(!showColumnMenu)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 flex items-center gap-2">
+                            Columnas <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {showColumnMenu && (
+                            <div className="absolute right-0 top-12 z-50 w-48 bg-white rounded-lg shadow-xl border border-slate-100 p-2 animate-fade-in-up">
+                                <div className="text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">Mostrar</div>
+                                {Object.entries({
+                                    category: 'Categoría',
+                                    location: 'Ubicación',
+                                    prices: 'Precios',
+                                    status: 'Estado'
+                                }).map(([key, label]) => (
+                                    <label key={key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded cursor-pointer text-sm text-slate-700 select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={visibleColumns[key]}
+                                            onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
+                                            className="rounded border-slate-300 w-4 h-4 accent-brand-blue"
+                                        />
+                                        {label}
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     <button onClick={onAddClick} className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
                         <Plus className="w-4 h-4" /> Añadir Vehículo
                     </button>
@@ -603,10 +636,10 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
                                 />
                             </th>
                             <th className="px-6 py-3">Vehículo</th>
-                            <th className="px-6 py-3">Categoría</th>
-                            <th className="px-6 py-3">Ubicación</th>
-                            <th className="px-6 py-3">Precios</th>
-                            <th className="px-6 py-3 text-right">Estado</th>
+                            {visibleColumns.category && <th className="px-6 py-3">Categoría</th>}
+                            {visibleColumns.location && <th className="px-6 py-3">Ubicación</th>}
+                            {visibleColumns.prices && <th className="px-6 py-3">Precios</th>}
+                            {visibleColumns.status && <th className="px-6 py-3 text-right">Estado</th>}
                             <th className="px-4 py-3 text-right"></th>
                         </tr>
                     </thead>
@@ -640,22 +673,28 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4"><span className="text-sm text-slate-600">{car.category}</span></td>
-                                <td className="px-6 py-4 flex items-center gap-1.5 text-sm text-slate-600">
-                                    <MapPin className="w-3.5 h-3.5 text-slate-400" /> {car.location_city}
-                                </td>
-                                <td className="px-6 py-4 font-semibold text-slate-900 text-sm">
-                                    <div className="flex flex-col">
-                                        {car.price_per_day > 0 && <span>S/ {Math.round(car.price_per_day)}/día</span>}
-                                        {car.price_per_hour > 0 && <span className="text-xs text-slate-500">S/ {Math.round(car.price_per_hour)}/hora</span>}
-                                        {!car.price_per_day && !car.price_per_hour && <span className="text-slate-400 text-xs">Sin precio</span>}
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
-                                        Disponible
-                                    </span>
-                                </td>
+                                {visibleColumns.category && <td className="px-6 py-4"><span className="text-sm text-slate-600">{car.category}</span></td>}
+                                {visibleColumns.location && (
+                                    <td className="px-6 py-4 flex items-center gap-1.5 text-sm text-slate-600">
+                                        <MapPin className="w-3.5 h-3.5 text-slate-400" /> {car.location_city}
+                                    </td>
+                                )}
+                                {visibleColumns.prices && (
+                                    <td className="px-6 py-4 font-semibold text-slate-900 text-sm">
+                                        <div className="flex flex-col">
+                                            {car.price_per_day > 0 && <span>S/ {Math.round(car.price_per_day)}/día</span>}
+                                            {car.price_per_hour > 0 && <span className="text-xs text-slate-500">S/ {Math.round(car.price_per_hour)}/hora</span>}
+                                            {!car.price_per_day && !car.price_per_hour && <span className="text-slate-400 text-xs">Sin precio</span>}
+                                        </div>
+                                    </td>
+                                )}
+                                {visibleColumns.status && (
+                                    <td className="px-6 py-4 text-right">
+                                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                                            Disponible
+                                        </span>
+                                    </td>
+                                )}
                                 <td className="px-4 py-4 text-right relative">
                                     <button onClick={() => setActiveMenu(activeMenu === car.id ? null : car.id)} className="text-slate-400 hover:text-brand-blue p-2 rounded-full hover:bg-slate-100 transition-colors">
                                         <MoreVertical className="w-4 h-4" />
@@ -685,96 +724,131 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
     );
 };
 
-const ClientsView = ({ users, onEdit, onDelete, onAdd, onSeed, activeMenu, setActiveMenu }) => (
-    <div className="space-y-6 animate-fade-in-up">
-        <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <Users className="w-6 h-6" /> Gestión de Clientes
-            </h2>
-            <div className="flex gap-2">
-                <button onClick={onSeed} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold px-2 hover:underline transition-all">
-                    + Clientes de Prueba
-                </button>
-                <button onClick={onAdd} className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
-                    <Plus className="w-4 h-4" /> Añadir Cliente
-                </button>
-            </div>
-        </div>
+const ClientsView = ({ users, onEdit, onDelete, onAdd, onSeed, activeMenu, setActiveMenu }) => {
+    const [visibleColumns, setVisibleColumns] = useState({
+        name: true, email: true, phone: true, dni: true, role: true, actions: true
+    });
+    const [showColumnMenu, setShowColumnMenu] = useState(false);
 
-        <div className="flex gap-4">
-            <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input type="text" placeholder="Filtrar por email..." className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none" />
+    return (
+        <div className="space-y-6 animate-fade-in-up">
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Users className="w-6 h-6" /> Gestión de Clientes
+                </h2>
+                <div className="flex gap-2">
+                    <button onClick={onSeed} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold px-2 hover:underline transition-all">
+                        + Clientes de Prueba
+                    </button>
+                    <button onClick={onAdd} className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
+                        <Plus className="w-4 h-4" /> Añadir Cliente
+                    </button>
+                </div>
             </div>
-            <button className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 flex items-center gap-2">
-                Columnas <MoreVertical className="w-3 h-3" />
-            </button>
-        </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
-            <table className="w-full text-left">
-                <thead className="bg-slate-50 border-b border-slate-200">
-                    <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                        <th className="p-4 w-8"><input type="checkbox" className="rounded border-slate-300" /></th>
-                        <th className="px-6 py-3">Nombre</th>
-                        <th className="px-6 py-3">Email</th>
-                        <th className="px-6 py-3">Celular</th>
-                        <th className="px-6 py-3">DNI/Pasaporte</th>
-                        <th className="px-6 py-3">Role</th>
-                        <th className="px-4 py-3 text-right"></th>
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                    {users.map((user, idx) => (
-                        <tr key={idx} className="hover:bg-blue-50/50 transition-colors">
-                            <td className="p-4"><input type="checkbox" className="rounded border-slate-300" /></td>
-                            <td className="px-6 py-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-slate-100 text-brand-blue text-xs flex items-center justify-center font-bold border border-slate-200">
-                                        {user.full_name?.charAt(0).toUpperCase() || '?'}
-                                    </div>
-                                    <span className="font-medium text-slate-700 text-sm">{user.full_name}</span>
-                                </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-slate-600">{user.email || 'email@example.com'}</td>
-                            <td className="px-6 py-4 text-sm text-slate-600">{user.phone || '-'}</td>
-                            <td className="px-6 py-4 text-sm text-slate-600">{user.dni || '-'}</td>
-                            <td className="px-6 py-4">
-                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                                    {user.role || 'client'}
-                                </span>
-                            </td>
-                            <td className="px-4 py-4 text-right relative">
-                                <button onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)} className="text-slate-400 hover:text-brand-blue p-2 rounded-full hover:bg-slate-100 transition-colors">
-                                    <MoreVertical className="w-4 h-4" />
-                                </button>
-                                {/* Dropdown Menu */}
-                                {activeMenu === user.id && (
-                                    <div className="absolute right-8 top-12 w-32 bg-white rounded-lg shadow-lg border border-slate-100 z-10 overflow-hidden animate-fade-in-up">
-                                        <button onClick={() => { onEdit(user); setActiveMenu(null); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                            <Edit className="w-3.5 h-3.5 text-slate-400" /> Editar
-                                        </button>
-                                        <button onClick={() => { onDelete(user.id); setActiveMenu(null); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                            <LogOut className="w-3.5 h-3.5" /> Eliminar
-                                        </button>
-                                    </div>
-                                )}
-                            </td>
+            <div className="flex gap-4">
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input type="text" placeholder="Filtrar por email..." className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none" />
+                </div>
+                <div className="relative">
+                    <button
+                        onClick={() => setShowColumnMenu(!showColumnMenu)}
+                        className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
+                    >
+                        Columnas <MoreVertical className="w-3 h-3" />
+                    </button>
+                    {showColumnMenu && (
+                        <div className="absolute right-0 top-12 z-50 w-48 bg-white rounded-lg shadow-xl border border-slate-100 p-2 animate-fade-in-up">
+                            <div className="text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">Mostrar</div>
+                            {Object.entries({
+                                email: 'Email',
+                                phone: 'Celular',
+                                dni: 'DNI/Pasaporte',
+                                role: 'Rol'
+                            }).map(([key, label]) => (
+                                <label key={key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded cursor-pointer text-sm text-slate-700 select-none">
+                                    <input
+                                        type="checkbox"
+                                        checked={visibleColumns[key]}
+                                        onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
+                                        className="rounded border-slate-300 w-4 h-4 accent-brand-blue"
+                                    />
+                                    {label}
+                                </label>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
+                <table className="w-full text-left">
+                    <thead className="bg-slate-50 border-b border-slate-200">
+                        <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                            <th className="p-4 w-8"><input type="checkbox" className="rounded border-slate-300" /></th>
+                            <th className="px-6 py-3">Nombre</th>
+                            {visibleColumns.email && <th className="px-6 py-3">Email</th>}
+                            {visibleColumns.phone && <th className="px-6 py-3">Celular</th>}
+                            {visibleColumns.dni && <th className="px-6 py-3">DNI/Pasaporte</th>}
+                            {visibleColumns.role && <th className="px-6 py-3">Role</th>}
+                            <th className="px-4 py-3 text-right"></th>
                         </tr>
-                    ))}
-                    {users.length === 0 && <tr><td colSpan="7" className="p-8 text-center text-slate-400 text-sm">No hay clientes.</td></tr>}
-                </tbody>
-            </table>
-        </div>
-        <div className="flex justify-between items-center text-xs text-slate-500 px-2">
-            <span>0 de {users.length} fila(s) seleccionadas.</span>
-            <div className="flex gap-2">
-                <button className="px-3 py-1.5 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50">Anterior</button>
-                <button className="px-3 py-1.5 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50">Siguiente</button>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {users.map((user, idx) => (
+                            <tr key={idx} className="hover:bg-blue-50/50 transition-colors">
+                                <td className="p-4"><input type="checkbox" className="rounded border-slate-300" /></td>
+                                <td className="px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-slate-100 text-brand-blue text-xs flex items-center justify-center font-bold border border-slate-200">
+                                            {user.full_name?.charAt(0).toUpperCase() || '?'}
+                                        </div>
+                                        <span className="font-medium text-slate-700 text-sm">{user.full_name}</span>
+                                    </div>
+                                </td>
+                                {visibleColumns.email && <td className="px-6 py-4 text-sm text-slate-600">{user.email || 'email@example.com'}</td>}
+                                {visibleColumns.phone && <td className="px-6 py-4 text-sm text-slate-600">{user.phone || '-'}</td>}
+                                {visibleColumns.dni && <td className="px-6 py-4 text-sm text-slate-600">{user.dni || '-'}</td>}
+                                {visibleColumns.role && (
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                            {user.role || 'client'}
+                                        </span>
+                                    </td>
+                                )}
+                                <td className="px-4 py-4 text-right relative">
+                                    <button onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)} className="text-slate-400 hover:text-brand-blue p-2 rounded-full hover:bg-slate-100 transition-colors">
+                                        <MoreVertical className="w-4 h-4" />
+                                    </button>
+                                    {/* Dropdown Menu */}
+                                    {activeMenu === user.id && (
+                                        <div className="absolute right-8 top-12 w-32 bg-white rounded-lg shadow-lg border border-slate-100 z-10 overflow-hidden animate-fade-in-up">
+                                            <button onClick={() => { onEdit(user); setActiveMenu(null); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                                                <Edit className="w-3.5 h-3.5 text-slate-400" /> Editar
+                                            </button>
+                                            <button onClick={() => { onDelete(user.id); setActiveMenu(null); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                                <LogOut className="w-3.5 h-3.5" /> Eliminar
+                                            </button>
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                        {users.length === 0 && <tr><td colSpan="7" className="p-8 text-center text-slate-400 text-sm">No hay clientes.</td></tr>}
+                    </tbody>
+                </table>
+            </div>
+            <div className="flex justify-between items-center text-xs text-slate-500 px-2">
+                <span>0 de {users.length} fila(s) seleccionadas.</span>
+                <div className="flex gap-2">
+                    <button className="px-3 py-1.5 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50">Anterior</button>
+                    <button className="px-3 py-1.5 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50">Siguiente</button>
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 const PlaceholderView = ({ title, icon: Icon }) => (
     <div className="text-center py-20 animate-fade-in-up">
@@ -974,6 +1048,14 @@ const PromotionsView = () => {
     const [currentPromoId, setCurrentPromoId] = useState(null);
     const [formData, setFormData] = useState({});
 
+    // Column Visibility State
+    const [visibleColumns, setVisibleColumns] = useState({
+        name: true, code: true, discount: true, expiry: true, status: true, actions: true
+    });
+    const [showColumnMenu, setShowColumnMenu] = useState(false);
+
+
+
     // Search and Pagination State
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -1094,8 +1176,40 @@ const PromotionsView = () => {
                         <input
                             type="text"
                             placeholder="Filtrar por nombre..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none text-slate-700"
                         />
+                    </div>
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowColumnMenu(!showColumnMenu)}
+                            className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
+                        >
+                            Columnas <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {showColumnMenu && (
+                            <div className="absolute right-0 top-12 z-50 w-48 bg-white rounded-lg shadow-xl border border-slate-100 p-2 animate-fade-in-up">
+                                <div className="text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">Mostrar</div>
+                                {Object.entries({
+                                    name: 'Nombre',
+                                    code: 'Código',
+                                    discount: 'Descuento',
+                                    expiry: 'Vencimiento',
+                                    status: 'Estado'
+                                }).map(([key, label]) => (
+                                    <label key={key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded cursor-pointer text-sm text-slate-700 select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={visibleColumns[key]}
+                                            onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
+                                            className="rounded border-slate-300 w-4 h-4 accent-brand-blue"
+                                        />
+                                        {label}
+                                    </label>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -1104,10 +1218,10 @@ const PromotionsView = () => {
                         <thead className="bg-slate-50 border-b border-slate-200">
                             <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
                                 <th className="px-6 py-4">Nombre</th>
-                                <th className="px-6 py-4">Código</th>
-                                <th className="px-6 py-4">Descuento</th>
-                                <th className="px-6 py-4">Vencimiento</th>
-                                <th className="px-6 py-4">Estado</th>
+                                {visibleColumns.code && <th className="px-6 py-4">Código</th>}
+                                {visibleColumns.discount && <th className="px-6 py-4">Descuento</th>}
+                                {visibleColumns.expiry && <th className="px-6 py-4">Vencimiento</th>}
+                                {visibleColumns.status && <th className="px-6 py-4">Estado</th>}
                                 <th className="px-6 py-4 text-right">Acciones</th>
                             </tr>
                         </thead>
@@ -1115,22 +1229,30 @@ const PromotionsView = () => {
                             {currentItems.map((promo) => (
                                 <tr key={promo.id} className="hover:bg-blue-50/50 transition-colors group">
                                     <td className="px-6 py-4 font-medium text-slate-900">{promo.name}</td>
-                                    <td className="px-6 py-4">
-                                        <span className="bg-blue-50 text-brand-blue px-2 py-1 rounded-md text-xs font-mono border border-blue-100 font-bold">
-                                            {promo.code}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 font-bold text-emerald-600">
-                                        {promo.discount_type === 'percentage' ? `${promo.discount_value}%` : `S/ ${promo.discount_value}`}
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-600">
-                                        {promo.end_date ? new Date(promo.end_date).toLocaleDateString() : 'Indefinido'}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${promo.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                                            {promo.is_active ? 'Activa' : 'Inactiva'}
-                                        </span>
-                                    </td>
+                                    {visibleColumns.code && (
+                                        <td className="px-6 py-4">
+                                            <span className="bg-blue-50 text-brand-blue px-2 py-1 rounded-md text-xs font-mono border border-blue-100 font-bold">
+                                                {promo.code}
+                                            </span>
+                                        </td>
+                                    )}
+                                    {visibleColumns.discount && (
+                                        <td className="px-6 py-4 font-bold text-emerald-600">
+                                            {promo.discount_type === 'percentage' ? `${promo.discount_value}%` : `S/ ${promo.discount_value}`}
+                                        </td>
+                                    )}
+                                    {visibleColumns.expiry && (
+                                        <td className="px-6 py-4 text-slate-600">
+                                            {promo.end_date ? new Date(promo.end_date).toLocaleDateString() : 'Indefinido'}
+                                        </td>
+                                    )}
+                                    {visibleColumns.status && (
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold ${promo.is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                                                {promo.is_active ? 'Activa' : 'Inactiva'}
+                                            </span>
+                                        </td>
+                                    )}
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button
@@ -1442,8 +1564,20 @@ const BookingsView = () => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
-    const [statusFilter, setStatusFilter] = useState('all');
     const [selectedTicket, setSelectedTicket] = useState(null);
+
+    // New State for Redesign
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all'); // Keeping this for logic but maybe moving UI
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    // Column Visibility State
+    const [visibleColumns, setVisibleColumns] = useState({
+        vehicle: true, client: true, dates: true, total: true, status: true, actions: true
+    });
+    const [showColumnMenu, setShowColumnMenu] = useState(false);
 
     useEffect(() => {
         fetchBookings();
@@ -1455,7 +1589,7 @@ const BookingsView = () => {
                 .from('bookings')
                 .select(`
                     *,
-                    vehicles ( make, model, image_url, year, location_city, category ),
+                    vehicles ( make, model, image_url, year ),
                     profiles ( full_name, phone, dni )
                 `)
                 .order('created_at', { ascending: false });
@@ -1478,19 +1612,6 @@ const BookingsView = () => {
             if (newStatus === 'confirmed') {
                 const targetBooking = bookings.find(b => b.id === id);
                 if (targetBooking) {
-                    // Check local store or fetch db for conflict
-                    const { data: conflicts } = await supabase
-                        .from('bookings')
-                        .select('id')
-                        .eq('vehicle_id', targetBooking.vehicle_id)
-                        .eq('status', 'confirmed') // Check confirmed ones
-                        .or(`start_date.lte.${targetBooking.end_date},end_date.gte.${targetBooking.start_date}`);
-                    // Logic: (StartA <= EndB) and (EndA >= StartB)
-
-                    // Note: Supabase OR with multiple conditions can be tricky.
-                    // Doing a simplified check: "Are there any bookings for this car that are confirmed?"
-                    // Then filtering in JS for precise date overlap to be safe and accurate with dates.
-
                     const { data: candidateConflicts } = await supabase
                         .from('bookings')
                         .select('*')
@@ -1499,7 +1620,7 @@ const BookingsView = () => {
 
                     if (candidateConflicts && candidateConflicts.length > 0) {
                         const hasOverlap = candidateConflicts.some(existing => {
-                            if (existing.id === id) return false; // Ignore self
+                            if (existing.id === id) return false;
                             const existingStart = new Date(existing.start_date);
                             const existingEnd = new Date(existing.end_date);
                             const targetStart = new Date(targetBooking.start_date);
@@ -1516,8 +1637,8 @@ const BookingsView = () => {
 
             const { error } = await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
             if (error) throw error;
+            await logAction('UPDATE_BOOKING_STATUS', { booking_id: id, new_status: newStatus });
 
-            // Optimistic update
             setBookings(bookings.map(b => b.id === id ? { ...b, status: newStatus } : b));
             alert('Estado actualizado correctamente.');
         } catch (error) {
@@ -1528,184 +1649,309 @@ const BookingsView = () => {
     };
 
     const handleDeleteBooking = async (id) => {
-        if (!confirm('¿Estás seguro de ELIMINAR permanentemente esta reserva? Esta acción no se puede deshacer.')) return;
-
+        if (!confirm('¿Estás seguro de ELIMINAR permanentemente esta reserva?')) return;
         setActionLoading(id);
         try {
             const { error } = await supabase.from('bookings').delete().eq('id', id);
             if (error) throw error;
-
+            await logAction('DELETE_BOOKING', { booking_id: id });
             setBookings(bookings.filter(b => b.id !== id));
-            alert('Reserva eliminada correctamente.');
         } catch (error) {
-            console.error('Error deleting:', error);
-            alert('Error al eliminar: ' + error.message);
+            console.error(error);
+            alert('Error al eliminar');
         } finally {
             setActionLoading(null);
         }
     };
 
-    const filteredBookings = statusFilter === 'all'
-        ? bookings
-        : bookings.filter(b => b.status === statusFilter);
-
-    // Status Badge Component
-    const StatusBadge = ({ status }) => {
-        const styles = {
-            pending: 'bg-amber-100 text-amber-800 border-amber-200',
-            confirmed: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-            cancelled: 'bg-red-100 text-red-800 border-red-200',
-            completed: 'bg-blue-100 text-blue-800 border-blue-200'
-        };
-        const labels = {
-            pending: 'Pendiente',
-            confirmed: 'Confirmado',
-            cancelled: 'Cancelado',
-            completed: 'Finalizado'
-        };
-        return (
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${styles[status] || styles.pending}`}>
-                {labels[status] || status}
-            </span>
-        );
+    // Bulk Actions
+    const handleBulkDelete = async () => {
+        if (!confirm(`¿Eliminar ${selectedIds.length} reservas seleccionadas?`)) return;
+        try {
+            const { error } = await supabase.from('bookings').delete().in('id', selectedIds);
+            if (error) throw error;
+            await logAction('DELETE_BOOKINGS_BULK', { count: selectedIds.length, ids: selectedIds });
+            setBookings(bookings.filter(b => !selectedIds.includes(b.id)));
+            setSelectedIds([]);
+        } catch (e) {
+            alert(e.message);
+        }
     };
 
-    if (loading) return <div className="p-8 text-center text-slate-400">Cargando reservas...</div>;
+    const handleSelectAll = (e) => {
+        if (e.target.checked) setSelectedIds(bookings.map(b => b.id));
+        else setSelectedIds([]);
+    };
+
+    const handleSelectOne = (id) => {
+        if (selectedIds.includes(id)) setSelectedIds(selectedIds.filter(i => i !== id));
+        else setSelectedIds([...selectedIds, id]);
+    };
+
+    // Filtering and Pagination Logic
+    const filteredBookings = bookings.filter(b => {
+        const matchesStatus = statusFilter === 'all' || b.status === statusFilter;
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+            (b.profiles?.full_name?.toLowerCase().includes(searchLower) || '') ||
+            (b.vehicles?.model?.toLowerCase().includes(searchLower) || '') ||
+            (b.vehicles?.make?.toLowerCase().includes(searchLower) || '');
+        return matchesStatus && matchesSearch;
+    });
+
+    const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+    const paginatedBookings = filteredBookings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // Initial reset when filter changes
+    useEffect(() => { setCurrentPage(1); }, [searchTerm, statusFilter]);
+
+    // Status Badge
+    const StatusBadge = ({ status }) => {
+        const styles = {
+            pending: 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20',
+            confirmed: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20',
+            cancelled: 'bg-red-50 text-red-700 ring-1 ring-red-600/20',
+            completed: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20'
+        };
+        const labels = { pending: 'Pendiente', confirmed: 'Confirmado', cancelled: 'Cancelado', completed: 'Finalizado' };
+        return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status] || styles.pending}`}>{labels[status] || status}</span>;
+    };
+
+    if (loading) return <div className="p-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-brand-blue" /></div>;
 
     return (
         <div className="space-y-6 animate-fade-in-up">
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <Calendar className="w-6 h-6" /> Gestión de Reservas
-                </h2>
-                <div className="flex bg-white rounded-lg border border-slate-200 p-1">
-                    {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(status => (
-                        <button
-                            key={status}
-                            onClick={() => setStatusFilter(status)}
-                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${statusFilter === status ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-                                }`}
-                        >
-                            {status === 'all' ? 'Ver Todo' :
-                                status === 'pending' ? 'Pendientes' :
-                                    status === 'confirmed' ? 'Activos' :
-                                        status === 'completed' ? 'Finalizados' : 'Cancelados'}
-                        </button>
-                    ))}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+
+                {/* Header */}
+                <div className="mb-8">
+                    <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <Calendar className="w-6 h-6" /> Gestión de Reservas
+                    </h2>
+                    <p className="text-slate-500 text-sm mt-1">Administra todas las solicitudes y reservas de vehículos.</p>
                 </div>
-            </div>
 
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
-                <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                        <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                            <th className="px-6 py-3">Vehículo</th>
-                            <th className="px-6 py-3">Cliente</th>
-                            <th className="px-6 py-3">Fechas</th>
-                            <th className="px-6 py-3">Total</th>
-                            <th className="px-6 py-3">Estado</th>
-                            <th className="px-6 py-3 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {filteredBookings.map((booking) => (
-                            <tr key={booking.id} className="hover:bg-slate-50 transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden">
-                                            <img src={booking.vehicles?.image_url} alt="" className="w-full h-full object-cover" />
-                                        </div>
-                                        <div>
-                                            <div className="font-bold text-slate-900 text-sm">{booking.vehicles?.make} {booking.vehicles?.model}</div>
-                                            <div className="text-xs text-slate-500">{booking.vehicles?.year}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="font-medium text-slate-900 text-sm">{booking.profiles?.full_name || 'Usuario'}</div>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="text-sm text-slate-600 flex flex-col">
-                                        <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(booking.start_date).toLocaleDateString()}</span>
-                                        <span className="text-xs text-slate-400 ml-4">al {new Date(booking.end_date).toLocaleDateString()}</span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 font-bold text-slate-900 text-sm">
-                                    S/ {booking.total_price}
-                                </td>
-                                <td className="px-6 py-4">
-                                    <StatusBadge status={booking.status} />
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <div className="flex justify-end gap-2">
-                                        {booking.status === 'pending' && (
-                                            <>
-                                                <button
-                                                    onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
-                                                    disabled={actionLoading === booking.id}
-                                                    className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 transition-colors flex items-center gap-1 shadow-sm"
-                                                    title="Confirmar Pago y Alquiler"
-                                                >
-                                                    {actionLoading === booking.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle className="w-3 h-3" />}
-                                                    Aprobar
-                                                </button>
-                                                <button
-                                                    onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
-                                                    disabled={actionLoading === booking.id}
-                                                    className="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors"
-                                                    title="Rechazar Reserva"
-                                                >
-                                                    Rechazar
-                                                </button>
-                                            </>
-                                        )}
-                                        {booking.status === 'confirmed' && (
-                                            <button
-                                                onClick={() => handleUpdateStatus(booking.id, 'completed')}
-                                                disabled={actionLoading === booking.id}
-                                                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm"
-                                                title="Marcar como Finalizado (Vehículo devuelto)"
-                                            >
-                                                Finalizar
-                                            </button>
-                                        )}
+                {/* Toolbar */}
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+                    <div className="relative w-full sm:w-96">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por cliente o vehículo..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none transition-all placeholder:text-slate-400"
+                        />
+                    </div>
 
-                                        {/* View Ticket Button */}
-                                        {(booking.status === 'confirmed' || booking.status === 'completed') && (
-                                            <button
-                                                onClick={() => setSelectedTicket(booking)}
-                                                className="p-1.5 text-slate-400 hover:text-brand-blue hover:bg-blue-50 rounded-lg transition-colors"
-                                                title="Ver Ticket Digital"
-                                            >
-                                                <FileText className="w-4 h-4" />
-                                            </button>
-                                        )}
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="px-3 py-2.5 rounded-lg border border-slate-200 text-sm bg-white focus:border-brand-blue outline-none cursor-pointer"
+                        >
+                            <option value="all">Todos los estados</option>
+                            <option value="pending">Pendientes</option>
+                            <option value="confirmed">Confirmados</option>
+                            <option value="completed">Finalizados</option>
+                            <option value="cancelled">Cancelados</option>
+                        </select>
 
-                                        {/* Delete Button */}
-                                        <button
-                                            onClick={() => handleDeleteBooking(booking.id)}
-                                            disabled={actionLoading === booking.id}
-                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Eliminar Reserva permanentemente"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        {filteredBookings.length === 0 && (
-                            <tr>
-                                <td colSpan="6" className="p-12 text-center text-slate-400">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Calendar className="w-8 h-8 opacity-20" />
-                                        <p className="text-sm">No hay reservas en este estado.</p>
-                                    </div>
-                                </td>
-                            </tr>
+                        {selectedIds.length > 0 && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="px-4 py-2.5 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors flex items-center gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" /> Eliminar ({selectedIds.length})
+                            </button>
                         )}
-                    </tbody>
-                </table>
+
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowColumnMenu(!showColumnMenu)}
+                                className="px-4 py-2.5 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 flex items-center gap-2 whitespace-nowrap"
+                            >
+                                Columnas <MoreVertical className="w-4 h-4" />
+                            </button>
+                            {showColumnMenu && (
+                                <div className="absolute right-0 top-12 z-50 w-48 bg-white rounded-lg shadow-xl border border-slate-100 p-2 animate-fade-in-up">
+                                    <div className="text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">Mostrar</div>
+                                    {Object.entries({
+                                        vehicle: 'Vehículo',
+                                        client: 'Cliente',
+                                        dates: 'Fechas',
+                                        total: 'Total',
+                                        status: 'Estado'
+                                    }).map(([key, label]) => (
+                                        <label key={key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded cursor-pointer text-sm text-slate-700 select-none">
+                                            <input
+                                                type="checkbox"
+                                                checked={visibleColumns[key]}
+                                                onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
+                                                className="rounded border-slate-300 w-4 h-4 accent-brand-blue"
+                                            />
+                                            {label}
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto border border-slate-100 rounded-lg">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50 border-b border-slate-200">
+                            <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                                <th className="p-4 w-10 text-center">
+                                    <input
+                                        type="checkbox"
+                                        className="rounded border-slate-300 w-4 h-4 accent-brand-blue cursor-pointer"
+                                        onChange={handleSelectAll}
+                                        checked={paginatedBookings.length > 0 && selectedIds.length === paginatedBookings.length}
+                                    />
+                                </th>
+                                <th className="px-6 py-4">Vehículo</th>
+                                {visibleColumns.client && <th className="px-6 py-4">Cliente</th>}
+                                {visibleColumns.dates && <th className="px-6 py-4">Fechas</th>}
+                                {visibleColumns.total && <th className="px-6 py-4">Total</th>}
+                                {visibleColumns.status && <th className="px-6 py-4">Estado</th>}
+                                <th className="px-6 py-4 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {paginatedBookings.map((booking) => (
+                                <tr key={booking.id} className={`hover:bg-slate-50 transition-colors ${selectedIds.includes(booking.id) ? 'bg-blue-50/30' : ''}`}>
+                                    <td className="p-4 text-center">
+                                        <input
+                                            type="checkbox"
+                                            className="rounded border-slate-300 w-4 h-4 accent-brand-blue cursor-pointer"
+                                            checked={selectedIds.includes(booking.id)}
+                                            onChange={() => handleSelectOne(booking.id)}
+                                        />
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
+                                                <img src={booking.vehicles?.image_url} alt="" className="w-full h-full object-cover" />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-slate-900 text-sm">{booking.vehicles?.make} {booking.vehicles?.model}</div>
+                                                <div className="text-xs text-slate-500">{booking.vehicles?.year}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    {visibleColumns.client && (
+                                        <td className="px-6 py-4">
+                                            <div className="font-medium text-slate-900 text-sm">{booking.profiles?.full_name || 'Desconocido'}</div>
+                                        </td>
+                                    )}
+                                    {visibleColumns.dates && (
+                                        <td className="px-6 py-4">
+                                            <div className="text-xs text-slate-600 flex flex-col">
+                                                <span className="font-medium">{new Date(booking.start_date).toLocaleDateString()}</span>
+                                                <span className="text-slate-400">al {new Date(booking.end_date).toLocaleDateString()}</span>
+                                            </div>
+                                        </td>
+                                    )}
+                                    {visibleColumns.total && (
+                                        <td className="px-6 py-4 font-bold text-slate-900 text-sm">
+                                            S/ {booking.total_price}
+                                        </td>
+                                    )}
+                                    {visibleColumns.status && (
+                                        <td className="px-6 py-4">
+                                            <StatusBadge status={booking.status} />
+                                        </td>
+                                    )}
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex justify-end gap-1">
+                                            {booking.status === 'pending' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
+                                                        disabled={actionLoading === booking.id}
+                                                        className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                        title="Aprobar"
+                                                    >
+                                                        <CheckCircle className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
+                                                        disabled={actionLoading === booking.id}
+                                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                        title="Rechazar"
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </>
+                                            )}
+                                            {booking.status === 'confirmed' && (
+                                                <button
+                                                    onClick={() => handleUpdateStatus(booking.id, 'completed')}
+                                                    className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                                                >
+                                                    Finalizar
+                                                </button>
+                                            )}
+
+                                            {(booking.status === 'confirmed' || booking.status === 'completed') && (
+                                                <button
+                                                    onClick={() => setSelectedTicket(booking)}
+                                                    className="p-1.5 text-slate-400 hover:text-brand-blue hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="Ver Ticket"
+                                                >
+                                                    <FileText className="w-4 h-4" />
+                                                </button>
+                                            )}
+
+                                            <button
+                                                onClick={() => handleDeleteBooking(booking.id)}
+                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                            {paginatedBookings.length === 0 && (
+                                <tr>
+                                    <td colSpan="7" className="p-12 text-center text-slate-400">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <Search className="w-8 h-8 opacity-20" />
+                                            <p className="text-sm">No se encontraron reservas con estos filtros.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination Footer */}
+                <div className="mt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 gap-4">
+                    <span>
+                        Mostrando {bookings.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {Math.min(currentPage * itemsPerPage, filteredBookings.length)} de {filteredBookings.length} reservas
+                    </span>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Anterior
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className="px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
             </div>
 
             {/* Ticket Modal */}
@@ -1730,6 +1976,280 @@ const BookingsView = () => {
             )}
         </div>
     );
+};
+
+const LocationsView = () => {
+    const [locations, setLocations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedIds, setSelectedIds] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
+
+    // Column Visibility
+    const [visibleColumns, setVisibleColumns] = useState({
+        name: true, region: true, actions: true
+    });
+    const [showColumnMenu, setShowColumnMenu] = useState(false);
+
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formData, setFormData] = useState({ name: '', department: '' });
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        fetchLocations();
+    }, []);
+
+    const fetchLocations = async () => {
+        try {
+            const { data, error } = await supabase.from('locations').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            setLocations(data || []);
+        } catch (error) {
+            console.error('Error fetching locations:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('¿Estás seguro de eliminar esta ubicación?')) return;
+        try {
+            const { error } = await supabase.from('locations').delete().eq('id', id);
+            if (error) throw error;
+            setLocations(locations.filter(l => l.id !== id));
+        } catch (error) {
+            alert('Error al eliminar: ' + error.message);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            const { error } = await supabase.from('locations').insert([{
+                name: formData.name,
+                department: formData.department
+            }]);
+
+            if (error) throw error;
+
+            await fetchLocations();
+            setIsModalOpen(false);
+            setFormData({ name: '', department: '' });
+            alert('Ubicación agregada correctamente.');
+        } catch (error) {
+            alert('Error al guardar: ' + error.message);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Filter and Pagination
+    const filteredLocations = locations.filter(l =>
+        l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        l.department.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const totalPages = Math.ceil(filteredLocations.length / itemsPerPage);
+    const paginatedLocations = filteredLocations.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    if (loading) return <div className="p-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-brand-blue" /></div>;
+
+    return (
+        <div className="space-y-6 animate-fade-in-up">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                            <MapPin className="w-6 h-6" /> Gestión de Ubicaciones
+                        </h2>
+                        <p className="text-slate-500 text-sm mt-1">Añade, edita y administra las playas y lugares disponibles.</p>
+                    </div>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20"
+                    >
+                        <Plus className="w-4 h-4" /> Añadir Ubicación
+                    </button>
+                </div>
+
+                {/* Toolbar */}
+                <div className="flex justify-between items-center mb-6">
+                    <div className="relative w-full max-w-md">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Filtrar por nombre..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none transition-all placeholder:text-slate-400"
+                        />
+                    </div>
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowColumnMenu(!showColumnMenu)}
+                            className="px-4 py-2.5 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
+                        >
+                            Columnas <MoreVertical className="w-4 h-4" />
+                        </button>
+                        {showColumnMenu && (
+                            <div className="absolute right-0 top-12 z-50 w-48 bg-white rounded-lg shadow-xl border border-slate-100 p-2 animate-fade-in-up">
+                                <div className="text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">Mostrar</div>
+                                {Object.entries({
+                                    region: 'Región'
+                                }).map(([key, label]) => (
+                                    <label key={key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded cursor-pointer text-sm text-slate-700 select-none">
+                                        <input
+                                            type="checkbox"
+                                            checked={visibleColumns[key]}
+                                            onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
+                                            className="rounded border-slate-300 w-4 h-4 accent-brand-blue"
+                                        />
+                                        {label}
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto border border-slate-100 rounded-lg">
+                    <table className="w-full text-left">
+                        <thead className="bg-slate-50 border-b border-slate-200">
+                            <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                                <th className="p-4 w-10 text-center">
+                                    <input type="checkbox" className="rounded border-slate-300 w-4 h-4 accent-brand-blue cursor-pointer" />
+                                </th>
+                                <th className="px-6 py-4">Nombre</th>
+                                {visibleColumns.region && <th className="px-6 py-4">Región</th>}
+                                <th className="px-6 py-4 text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                            {paginatedLocations.map((loc) => (
+                                <tr key={loc.id} className="hover:bg-slate-50 transition-colors">
+                                    <td className="p-4 text-center">
+                                        <input type="checkbox" className="rounded border-slate-300 w-4 h-4 accent-brand-blue cursor-pointer" />
+                                    </td>
+                                    <td className="px-6 py-4 font-medium text-slate-900">{loc.name}</td>
+                                    {visibleColumns.region && <td className="px-6 py-4 text-slate-600">{loc.department}</td>}
+                                    <td className="px-6 py-4 text-right">
+                                        <button
+                                            onClick={() => handleDelete(loc.id)}
+                                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {paginatedLocations.length === 0 && (
+                                <tr>
+                                    <td colSpan="4" className="p-12 text-center text-slate-400">
+                                        No hay ubicaciones registradas.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="mt-4 flex justify-between items-center text-xs text-slate-500">
+                    <span>
+                        Mostrando {paginatedLocations.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} - {Math.min(currentPage * itemsPerPage, filteredLocations.length)} de {filteredLocations.length} filas
+                    </span>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                        >
+                            Anterior
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages || totalPages === 0}
+                            className="px-3 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Add Location Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95">
+                        <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                            <h3 className="text-lg font-bold text-slate-900">Añadir Nueva Ubicación</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700">Nombre</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Ej: Máncora"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-brand-blue outline-none transition-all"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700">Región</label>
+                                <select
+                                    required
+                                    value={formData.department}
+                                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-brand-blue outline-none transition-all bg-white"
+                                >
+                                    <option value="">Selecciona una región</option>
+                                    {Object.keys(COASTAL_LOCATIONS).map(dept => (
+                                        <option key={dept} value={dept}>{dept}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="pt-4">
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-70"
+                                >
+                                    {submitting ? 'Guardando...' : 'Crear Ubicación'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// (ReportesView logic moved to shared component)
+
+// Helper for Audit Logging
+const logAction = async (action, details) => {
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            await supabase.from("audit_logs").insert([{
+                user_id: user.id,
+                action,
+                details
+            }]);
+        }
+    } catch (e) { console.error("Log failed", e); }
 };
 
 const PanelAdministrador = () => {
@@ -1808,6 +2328,7 @@ const PanelAdministrador = () => {
             await supabase.from('bookings').delete().eq('vehicle_id', id);
             const { error } = await supabase.from('vehicles').delete().eq('id', id);
             if (error) throw error;
+            await logAction('DELETE_VEHICLE', { vehicle_id: id });
             alert('¡Vehículo eliminado!');
             window.location.reload();
         } catch (error) {
@@ -1824,6 +2345,8 @@ const PanelAdministrador = () => {
 
             const { error: vehicleError } = await supabase.from('vehicles').delete().in('id', ids);
             if (vehicleError) throw vehicleError;
+
+            await logAction('DELETE_VEHICLES_BULK', { count: ids.length, ids });
 
             alert('¡Vehículos eliminados correctamente!');
             window.location.reload();
@@ -1937,6 +2460,7 @@ const PanelAdministrador = () => {
         try {
             const { error } = await supabase.from('profiles').delete().eq('id', id);
             if (error) throw error;
+            await logAction('DELETE_CLIENT_PROFILE', { profile_id: id });
             alert('Usuario eliminado correctamente.');
             setUsers(users.filter(u => u.id !== id));
         } catch (error) {
@@ -1959,6 +2483,7 @@ const PanelAdministrador = () => {
                 }).eq('id', editingClientId);
 
                 if (error) throw error;
+                await logAction('UPDATE_CLIENT_PROFILE', { profile_id: editingClientId, ...clientFormData });
                 alert('Cliente actualizado correctamente');
 
                 // Optimistic Update
@@ -1975,6 +2500,7 @@ const PanelAdministrador = () => {
                     updated_at: new Date()
                 }]);
                 if (error) throw error;
+                await logAction('CREATE_CLIENT_PROFILE', { full_name: clientFormData.full_name });
                 alert('Perfil de cliente creado.');
                 window.location.reload();
             }
@@ -2127,11 +2653,13 @@ const PanelAdministrador = () => {
                 // Don't overwrite owner_id on edit to avoid permission issues
                 const { error } = await supabase.from('vehicles').update(vehicleData).eq('id', editingId);
                 if (error) throw error;
+                await logAction('UPDATE_VEHICLE', { vehicle_id: editingId, make: vehicleData.make, model: vehicleData.model });
                 alert('¡Vehículo actualizado!');
             } else {
                 // Determine owner for new vehicle
                 const { error } = await supabase.from('vehicles').insert([{ ...vehicleData, owner_id: user.id, rating: 5.0 }]);
                 if (error) throw error;
+                await logAction('CREATE_VEHICLE', { make: vehicleData.make, model: vehicleData.model });
                 alert('¡Vehículo guardado!');
             }
 
@@ -2152,6 +2680,7 @@ const PanelAdministrador = () => {
             case 'promotions': return <PromotionsView />;
             case 'reports': return <ReportsView />;
             case 'reservas': return <BookingsView />;
+            case 'locations': return <LocationsView />;
             default: return <PlaceholderView title={VIEW_TITLES[activeView]} icon={UserIconMap[activeView] || LayoutDashboard} />;
         }
     };
@@ -2216,3 +2745,5 @@ const PanelAdministrador = () => {
 };
 
 export default PanelAdministrador;
+
+

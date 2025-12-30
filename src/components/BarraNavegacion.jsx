@@ -66,7 +66,7 @@ const BarraNavegacion = () => {
 
             {/* Desktop Nav Links */}
             <div className="hidden md:flex items-center gap-10 text-slate-600 font-medium">
-                <Link to="/" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Flota 4x4</Link>
+                <Link to="/" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Inicio</Link>
                 <Link to="/explorar" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Explorar Flota</Link>
             </div>
 
@@ -155,7 +155,7 @@ const BarraNavegacion = () => {
             {/* Mobile Navigation Menu */}
             {isMobileNavOpen && (
                 <div className="absolute top-20 left-0 right-0 bg-white border-b border-slate-100 shadow-xl p-6 md:hidden flex flex-col gap-4 animate-in slide-in-from-top-2 fade-in z-40">
-                    <Link to="/" onClick={() => setIsMobileNavOpen(false)} className="text-lg font-bold text-slate-800 hover:text-brand-blue py-2 border-b border-slate-50">Flota 4x4</Link>
+                    <Link to="/" onClick={() => setIsMobileNavOpen(false)} className="text-lg font-bold text-slate-800 hover:text-brand-blue py-2 border-b border-slate-50">Inicio</Link>
                     <Link to="/explorar" onClick={() => setIsMobileNavOpen(false)} className="text-lg font-bold text-slate-800 hover:text-brand-blue py-2 border-b border-slate-50">Explorar Flota</Link>
 
                     {user ? (

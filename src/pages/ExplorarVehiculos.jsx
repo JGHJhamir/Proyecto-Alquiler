@@ -104,19 +104,25 @@ const ExplorarVehiculos = () => {
         });
     };
 
-    // Department Mapping
-    const DEPARTMENT_MAP = {
-        "tumbes": ["Tumbes", "Contralmirante Villar", "Zarumilla", "Punta Sal", "Zorritos"],
-        "piura": ["Piura", "Talara", "Paita", "Sechura", "Sullana", "Morropón", "Ayabaca", "Huancabamba", "Máncora", "Mancora", "Vichayito", "Los Organos", "Cabo Blanco"],
-        "lambayeque": ["Chiclayo", "Lambayeque", "Ferreñafe", "Pimentel"],
-        "la libertad": ["Trujillo", "Chepén", "Pacasmayo", "Virú", "Ascope", "Huanchaco", "Chicama"],
-        "ancash": ["Santa", "Casma", "Huarmey", "Huaraz", "Chimbote", "Tortugas"],
-        "lima": ["Lima", "Barranca", "Cañete", "Huaral", "Huaura", "Asia", "Lunahuaná", "Lunahuana", "Miraflores", "San Isidro"],
-        "ica": ["Ica", "Chincha", "Pisco", "Nazca", "Palpa", "Paracas", "Huacachina"],
-        "arequipa": ["Arequipa", "Camaná", "Islay", "Caravelí", "Mollendo", "Mejía"],
-        "moquegua": ["Ilo", "Mariscal Nieto", "General Sánchez Cerro"],
-        "tacna": ["Tacna", "Jorge Basadre"]
-    };
+    // State for Dynamic Locations (Database)
+    const [locationMap, setLocationMap] = useState({});
+
+    // Fetch Locations Structure on Mount
+    useEffect(() => {
+        const fetchLocationMap = async () => {
+            const { data } = await supabase.from('locations').select('name, department');
+            if (data) {
+                const map = {};
+                data.forEach(loc => {
+                    const dept = loc.department; // Keep case (e.g. "Piura")
+                    if (!map[dept]) map[dept] = [];
+                    map[dept].push(loc.name);
+                });
+                setLocationMap(map);
+            }
+        };
+        fetchLocationMap();
+    }, []);
 
     useEffect(() => {
         const fetchAndFilterVehicles = async () => {
@@ -153,15 +159,17 @@ const ExplorarVehiculos = () => {
                 const term = destination.toLowerCase().trim();
                 let targetCities = [];
 
-                // Check Department Match
-                const matchedDept = Object.keys(DEPARTMENT_MAP).find(d => d.includes(term) || term.includes(d));
+                // Check Department Match using Dynamic Map
+                // key is like "Piura", term might be "piura"
+                const matchedDept = Object.keys(locationMap).find(d => d.toLowerCase().includes(term) || term.includes(d.toLowerCase()));
                 if (matchedDept) {
-                    targetCities = DEPARTMENT_MAP[matchedDept];
+                    targetCities = locationMap[matchedDept];
                 }
 
                 results = results.filter(vehicle => {
                     const vCity = vehicle.location_city?.toLowerCase() || '';
                     const directCityMatch = vCity.includes(term);
+                    // Check if vehicle city is in the target department list
                     const deptMatch = targetCities.some(cityInDept => vCity.includes(cityInDept.toLowerCase()));
                     return directCityMatch || deptMatch;
                 });
@@ -207,12 +215,12 @@ const ExplorarVehiculos = () => {
         };
 
         fetchAndFilterVehicles();
-    }, [destination, filters]); // Re-run when dependencies change
+    }, [destination, filters, locationMap]); // Re-run when locationMap loads
 
     // Calculate available locations based on ALL vehicles (not just filtered ones)
     const availableCities = new Set(vehicles.map(v => v.location_city));
-    const availableDepartments = Object.keys(COASTAL_LOCATIONS).filter(dept =>
-        COASTAL_LOCATIONS[dept].some(city => availableCities.has(city))
+    const availableDepartments = Object.keys(locationMap).filter(dept =>
+        locationMap[dept].some(city => availableCities.has(city))
     );
 
     return (
@@ -260,7 +268,7 @@ const ExplorarVehiculos = () => {
                                             <option value="">Cualquiera</option>
                                             {(!filters.department
                                                 ? Array.from(availableCities).sort()
-                                                : COASTAL_LOCATIONS[filters.department].filter(city => availableCities.has(city))
+                                                : (locationMap[filters.department] || []).filter(city => availableCities.has(city))
                                             ).map(city => (
                                                 <option key={city} value={city}>{city}</option>
                                             ))}
