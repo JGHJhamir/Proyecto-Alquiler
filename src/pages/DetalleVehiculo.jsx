@@ -36,6 +36,7 @@ const DetalleVehiculo = () => {
     // Step State
     const [currentStep, setCurrentStep] = useState(1); // 1: Fechas, 2: Detalles, 3: Pago
     const [showCalendar, setShowCalendar] = useState(false);
+    const [availablePromos, setAvailablePromos] = useState([]);
 
     useEffect(() => {
         const fetchVehicle = async () => {
@@ -57,6 +58,21 @@ const DetalleVehiculo = () => {
         };
         checkAuth();
     }, [id]);
+
+    // Fetch available promotions
+    useEffect(() => {
+        const fetchPromos = async () => {
+            const { data } = await supabase
+                .from('promotions')
+                .select('*')
+                .eq('is_active', true)
+                .gte('end_date', new Date().toISOString())
+                .limit(3);
+
+            if (data) setAvailablePromos(data);
+        };
+        fetchPromos();
+    }, []);
 
     useEffect(() => {
         if (startDate && endDate && vehicle) {
@@ -484,6 +500,35 @@ const DetalleVehiculo = () => {
                                         {promoMessage.text}
                                     </p>
                                 )}
+
+                                {/* Available Promos Suggestions */}
+                                {!appliedPromo && availablePromos.length > 0 && startDate && endDate && (
+                                    <div className="mt-3 space-y-2">
+                                        <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Cupones disponibles:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {availablePromos.map((promo) => (
+                                                <button
+                                                    key={promo.id}
+                                                    onClick={() => {
+                                                        setPromoCode(promo.code);
+                                                        setTimeout(() => handleApplyPromo(), 100);
+                                                    }}
+                                                    className="group relative bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 hover:border-emerald-400 rounded-lg px-3 py-2 text-left transition-all hover:shadow-md active:scale-95"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <Tag className="w-3 h-3 text-emerald-600" />
+                                                        <span className="font-bold text-xs text-emerald-700">{promo.code}</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-emerald-600 mt-0.5">
+                                                        {promo.discount_type === 'percentage'
+                                                            ? `${promo.discount_value}% OFF`
+                                                            : `S/ ${promo.discount_value} OFF`}
+                                                    </p>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="bg-ocean-50/50 p-6 rounded-2xl border border-ocean-100 mt-6 space-y-3">
@@ -587,6 +632,42 @@ const DetalleVehiculo = () => {
                 vehicle={vehicle}
                 user={currentUser}
             />
+
+            {/* Floating Summary Bar (Mobile Only) */}
+            {startDate && endDate && (
+                <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-brand-blue shadow-2xl p-4 lg:hidden z-50 animate-in slide-in-from-bottom-5">
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                            <p className="text-xs text-slate-500 font-medium">Total estimado</p>
+                            <div className="flex items-baseline gap-2">
+                                {discount > 0 && (
+                                    <span className="text-sm text-slate-400 line-through">S/ {totalPrice.toFixed(2)}</span>
+                                )}
+                                <span className="text-2xl font-black text-brand-blue">
+                                    S/ {Math.max(0, totalPrice - discount).toFixed(2)}
+                                </span>
+                            </div>
+                        </div>
+                        <button
+                            onClick={isAuthenticated ? handleBooking : () => navigate('/login', { state: { from: `/vehiculo/${id}` } })}
+                            disabled={bookingStatus === 'processing'}
+                            className="btn-primary px-6 py-3 text-sm shadow-lg hover:shadow-brand-blue/30 active:scale-95 disabled:opacity-50 flex items-center gap-2"
+                        >
+                            {bookingStatus === 'processing' ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Procesando...
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle className="w-4 h-4" />
+                                    Reservar
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
