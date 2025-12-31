@@ -553,7 +553,7 @@ const DetalleVehiculo = () => {
                                 {/* Payment Content */}
                                 <div className="mb-6">
                                     {selectedPaymentMethod === 'card' ? (
-                                        <div className="space-y-4">
+                                        <div key="view-card" className="space-y-4 animate-in fade-in slide-in-from-right-2">
                                             <div className="relative">
                                                 <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
                                                 <input
@@ -612,7 +612,11 @@ const DetalleVehiculo = () => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="bg-slate-50 rounded-2xl p-6 text-center border border-slate-100">
+                                        <div
+                                            key="view-yape"
+                                            className="bg-slate-50 rounded-2xl p-6 text-center border border-slate-100 animate-in fade-in slide-in-from-right-2 notranslate"
+                                            translate="no"
+                                        >
                                             <img src="/yape-qr.png" alt="Yape QR" className="w-48 h-48 mx-auto rounded-xl shadow-lg mb-4 border-4 border-white" />
                                             <p className="font-bold text-slate-900 mb-1">Escanea para Yapear</p>
                                             <p className="text-2xl font-black text-[#742284] mb-4">S/ {Math.max(0, totalPrice - discount).toFixed(2)}</p>
