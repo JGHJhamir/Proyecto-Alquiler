@@ -827,20 +827,21 @@ const DetalleVehiculo = () => {
                                 <button
                                     onClick={isAuthenticated ? handleBooking : () => navigate('/login', { state: { from: `/vehiculo/${id}` } })}
                                     disabled={!startDate || !endDate || bookingStatus === 'processing'}
-                                    className={`w-full btn-primary py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-brand-blue/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden ${startDate && endDate ? 'hidden lg:block' : ''}`}
+                                    className={`w-full btn-primary py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-brand-blue/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden notranslate ${startDate && endDate ? 'hidden lg:block' : ''}`}
+                                    translate="no"
                                 >
                                     {bookingStatus === 'processing'
                                         ? (
                                             <span className="flex items-center justify-center gap-2">
                                                 <Loader2 className="w-5 h-5 animate-spin" />
-                                                Procesando...
+                                                <span>Procesando...</span>
                                             </span>
                                         )
                                         : isAuthenticated
                                             ? (
                                                 <span className="flex items-center justify-center gap-2">
                                                     <CheckCircle className="w-5 h-5" />
-                                                    Continuar
+                                                    <span>Continuar</span>
                                                 </span>
                                             )
                                             : 'Iniciar Sesión para Reservar'
@@ -866,7 +867,10 @@ const DetalleVehiculo = () => {
 
             {/* Floating Summary Bar (Mobile Only) */}
             {startDate && endDate && bookingStatus !== 'completed' && (
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-brand-blue shadow-2xl p-4 lg:hidden z-50 animate-in slide-in-from-bottom-5">
+                <div
+                    className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-brand-blue shadow-2xl p-4 lg:hidden z-50 animate-in slide-in-from-bottom-5 notranslate"
+                    translate="no"
+                >
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex-1">
                             <p className="text-xs text-slate-500 font-medium">Total estimado</p>
@@ -889,15 +893,17 @@ const DetalleVehiculo = () => {
                             className={`btn-primary px-6 py-3 text-sm shadow-lg hover:shadow-brand-blue/30 active:scale-95 disabled:opacity-50 flex items-center gap-2 ${currentStep === 3 && selectedPaymentMethod === 'yape' ? 'bg-[#25D366] hover:bg-[#128C7E]' : ''}`}
                         >
                             {bookingStatus === 'processing' ? (
-                                <>
+                                <span className="flex items-center gap-2">
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    Procesando...
-                                </>
+                                    <span>Procesando...</span>
+                                </span>
                             ) : (
-                                <>
+                                <span className="flex items-center gap-2">
                                     {currentStep === 3 ? (selectedPaymentMethod === 'yape' ? <Smartphone className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />) : <CheckCircle className="w-4 h-4" />}
-                                    {currentStep === 3 ? (selectedPaymentMethod === 'yape' ? 'Enviar' : 'Pagar') : 'Continuar'}
-                                </>
+                                    <span>
+                                        {currentStep === 3 ? (selectedPaymentMethod === 'yape' ? 'Enviar' : 'Pagar') : 'Continuar'}
+                                    </span>
+                                </span>
                             )}
                         </button>
                     </div>
