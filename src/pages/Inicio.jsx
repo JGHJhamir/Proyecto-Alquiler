@@ -364,8 +364,8 @@ export default function Inicio() {
             {/* Hero Section - Immersive Video/Image */}
             <div className="relative h-[85vh] w-full overflow-hidden">
                 <img
-                    src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"
-                    alt="Costa Peruana Lujo"
+                    src="https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?q=80&w=2070&auto=format&fit=crop"
+                    alt="Costa Peruana Lujo Atardecer"
                     className="w-full h-full object-cover scale-105 animate-[kenburns_30s_infinite_alternate]"
                 />
 
