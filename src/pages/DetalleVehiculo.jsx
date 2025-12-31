@@ -494,7 +494,7 @@ const DetalleVehiculo = () => {
 
 
                         {bookingStatus === 'completed' ? (
-                            <div className="animate-in fade-in zoom-in-95 duration-500">
+                            <div key="step-complete" className="animate-in fade-in zoom-in-95 duration-500">
                                 <div className="text-center mb-6">
                                     <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg ${currentBooking?.status === 'confirmed' ? 'bg-emerald-100 shadow-emerald-500/20' : 'bg-amber-100 shadow-amber-500/20'}`}>
                                         {currentBooking?.status === 'confirmed' ? <CheckCircle className="w-8 h-8 text-emerald-600" /> : <Clock className="w-8 h-8 text-amber-600" />}
@@ -531,7 +531,7 @@ const DetalleVehiculo = () => {
                                 </div>
                             </div>
                         ) : currentStep === 3 ? (
-                            <div className="animate-in fade-in slide-in-from-right-5">
+                            <div key="step-payment" className="animate-in fade-in slide-in-from-right-5">
                                 <h3 className="text-xl font-bold text-slate-900 font-serif mb-6">Método de Pago</h3>
 
                                 {/* Payment Tabs */}
@@ -657,7 +657,7 @@ const DetalleVehiculo = () => {
                                 </button>
                             </div>
                         ) : (
-                            <>
+                            <div key="step-dates" className="animate-in fade-in slide-in-from-left-5">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-bold text-slate-900 font-serif">Reserva tu Aventura</h3>
 
@@ -854,7 +854,7 @@ const DetalleVehiculo = () => {
                                         Selecciona las fechas para continuar
                                     </p>
                                 ) : null}
-                            </>
+                            </div>
                         )}
 
                         <p className="text-center text-xs text-slate-400 mt-4">
