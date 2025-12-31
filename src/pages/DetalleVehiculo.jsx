@@ -552,103 +552,101 @@ const DetalleVehiculo = () => {
 
                                 {/* Payment Content */}
                                 <div className="mb-6">
-                                    {selectedPaymentMethod === 'card' ? (
-                                        <div key="view-card" className="space-y-4 animate-in fade-in slide-in-from-right-2">
+                                    {/* Card View - Always rendered, hidden if not selected */}
+                                    <div key="view-card" className={`space-y-4 animate-in fade-in slide-in-from-right-2 ${selectedPaymentMethod === 'card' ? '' : 'hidden'}`}>
+                                        <div className="relative">
+                                            <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Número de Tarjeta"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all font-mono placeholder:font-sans"
+                                                maxLength={19}
+                                                value={cardDetails.number}
+                                                onChange={(e) => {
+                                                    const v = e.target.value.replace(/\D/g, '').match(/.{1,4}/g)?.join(' ') || '';
+                                                    if (v.length <= 19) setCardDetails({ ...cardDetails, number: v });
+                                                }}
+                                            />
+                                        </div>
+                                        <div className="relative">
+                                            <Users className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Nombre del Titular"
+                                                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all uppercase"
+                                                value={cardDetails.name}
+                                                onChange={(e) => setCardDetails({ ...cardDetails, name: e.target.value.toUpperCase() })}
+                                            />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
                                             <div className="relative">
-                                                <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
+                                                <Calendar className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
                                                 <input
                                                     type="text"
-                                                    placeholder="Número de Tarjeta"
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all font-mono placeholder:font-sans"
-                                                    maxLength={19}
-                                                    value={cardDetails.number}
+                                                    placeholder="MM/AA"
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all text-center"
+                                                    maxLength={5}
+                                                    value={cardDetails.expiry}
                                                     onChange={(e) => {
-                                                        const v = e.target.value.replace(/\D/g, '').match(/.{1,4}/g)?.join(' ') || '';
-                                                        if (v.length <= 19) setCardDetails({ ...cardDetails, number: v });
+                                                        let v = e.target.value.replace(/\D/g, '');
+                                                        if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2, 4);
+                                                        setCardDetails({ ...cardDetails, expiry: v });
                                                     }}
                                                 />
                                             </div>
                                             <div className="relative">
-                                                <Users className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
+                                                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
                                                 <input
                                                     type="text"
-                                                    placeholder="Nombre del Titular"
-                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all uppercase"
-                                                    value={cardDetails.name}
-                                                    onChange={(e) => setCardDetails({ ...cardDetails, name: e.target.value.toUpperCase() })}
+                                                    placeholder="CVC"
+                                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all text-center font-mono placeholder:font-sans"
+                                                    maxLength={3}
+                                                    value={cardDetails.cvc}
+                                                    onChange={(e) => setCardDetails({ ...cardDetails, cvc: e.target.value.replace(/\D/g, '') })}
                                                 />
                                             </div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div className="relative">
-                                                    <Calendar className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="MM/AA"
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all text-center"
-                                                        maxLength={5}
-                                                        value={cardDetails.expiry}
-                                                        onChange={(e) => {
-                                                            let v = e.target.value.replace(/\D/g, '');
-                                                            if (v.length >= 2) v = v.slice(0, 2) + '/' + v.slice(2, 4);
-                                                            setCardDetails({ ...cardDetails, expiry: v });
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div className="relative">
-                                                    <Lock className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="CVC"
-                                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-11 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all text-center font-mono placeholder:font-sans"
-                                                        maxLength={3}
-                                                        value={cardDetails.cvc}
-                                                        onChange={(e) => setCardDetails({ ...cardDetails, cvc: e.target.value.replace(/\D/g, '') })}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="text-xs text-slate-400 flex items-center gap-1 mt-2">
-                                                <ShieldCheck className="w-3 h-3 text-emerald-500" />
-                                                Pagos procesados de forma segura con encriptación SSL.
-                                            </div>
                                         </div>
-                                    ) : (
-                                        <div
-                                            key="view-yape"
-                                            className="bg-slate-50 rounded-2xl p-6 text-center border border-slate-100 animate-in fade-in slide-in-from-right-2 notranslate"
-                                            translate="no"
-                                        >
-                                            <img src="/yape-qr.png" alt="Yape QR" className="w-48 h-48 mx-auto rounded-xl shadow-lg mb-4 border-4 border-white" />
-                                            <p className="font-bold text-slate-900 mb-1">Escanea para Yapear</p>
-                                            <p className="text-2xl font-black text-[#742284] mb-4">S/ {Math.max(0, totalPrice - discount).toFixed(2)}</p>
-                                            <p className="text-sm text-slate-500">
-                                                1. Escanea el código QR<br />
-                                                2. Realiza el pago por el monto total<br />
-                                                3. Haz clic en "Enviar Comprobante"
-                                            </p>
+                                        <div className="text-xs text-slate-400 flex items-center gap-1 mt-2">
+                                            <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                                            Pagos procesados de forma segura con encriptación SSL.
                                         </div>
-                                    )}
+                                    </div>
+
+                                    {/* Yape View - Always rendered, hidden if not selected */}
+                                    <div
+                                        key="view-yape"
+                                        className={`bg-slate-50 rounded-2xl p-6 text-center border border-slate-100 animate-in fade-in slide-in-from-right-2 notranslate ${selectedPaymentMethod === 'yape' ? '' : 'hidden'}`}
+                                        translate="no"
+                                    >
+                                        <img src="/yape-qr.png" alt="Yape QR" className="w-48 h-48 mx-auto rounded-xl shadow-lg mb-4 border-4 border-white" />
+                                        <p className="font-bold text-slate-900 mb-1">Escanea para Yapear</p>
+                                        <p className="text-2xl font-black text-[#742284] mb-4">S/ {Math.max(0, totalPrice - discount).toFixed(2)}</p>
+                                        <p className="text-sm text-slate-500">
+                                            1. Escanea el código QR<br />
+                                            2. Realiza el pago por el monto total<br />
+                                            3. Haz clic en "Enviar Comprobante"
+                                        </p>
+                                    </div>
                                 </div>
 
                                 <button
                                     onClick={handleFinalizePayment}
                                     disabled={bookingStatus === 'processing'}
-                                    className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed hidden lg:flex items-center justify-center gap-2 ${selectedPaymentMethod === 'yape' ? 'bg-[#25D366] hover:bg-[#128C7E] text-white' : 'bg-brand-blue hover:bg-blue-700 text-white'}`}
+                                    className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed hidden lg:flex items-center justify-center gap-2 notranslate ${selectedPaymentMethod === 'yape' ? 'bg-[#25D366] hover:bg-[#128C7E] text-white' : 'bg-brand-blue hover:bg-blue-700 text-white'}`}
+                                    translate="no"
                                 >
                                     {bookingStatus === 'processing' ? (
-                                        <>
+                                        <span className="flex items-center gap-2">
                                             <Loader2 className="w-5 h-5 animate-spin" />
-                                            Procesando...
-                                        </>
-                                    ) : selectedPaymentMethod === 'yape' ? (
-                                        <>
-                                            <Smartphone className="w-5 h-5" />
-                                            Enviar Comprobante
-                                        </>
+                                            <span>Procesando...</span>
+                                        </span>
                                     ) : (
-                                        <>
-                                            <CreditCard className="w-5 h-5" />
-                                            Pagar S/ {Math.max(0, totalPrice - discount).toFixed(2)}
-                                        </>
+                                        <span className="flex items-center gap-2">
+                                            {selectedPaymentMethod === 'yape' ? <Smartphone className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                                            <span>
+                                                {selectedPaymentMethod === 'yape' ? 'Enviar Comprobante' : `Pagar S/ ${Math.max(0, totalPrice - discount).toFixed(2)}`}
+                                            </span>
+                                        </span>
                                     )}
                                 </button>
 
