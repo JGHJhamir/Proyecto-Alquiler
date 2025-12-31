@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import BarraNavegacion from '../components/BarraNavegacion';
+
 import { supabase } from '../supabase';
 import ReportesView from '../components/ReportesView';
 import {
@@ -26,7 +26,7 @@ const VIEW_TITLES = {
 
 const UserIconMap = {
     dashboard: LayoutDashboard,
-    dashboard: LayoutDashboard,
+
     reservas: Calendar,
     clients: Users,
     vehicles: Car,
@@ -325,6 +325,25 @@ const ClientModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitt
                                 <input type="text"
                                     value={formData.dni}
                                     onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">País</label>
+                                <input type="text"
+                                    value={formData.country || ''}
+                                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                                    placeholder="Perú"
+                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">Fecha Nacimiento</label>
+                                <input type="date"
+                                    value={formData.birth_date || ''}
+                                    onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
                                     className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
                                 />
                             </div>
@@ -1314,251 +1333,7 @@ const PromotionsView = () => {
     );
 };
 
-const ReportsView = () => {
-    const [stats, setStats] = useState({
-        topVehicles: [],
-        recentBookings: [],
-        totalRevenue: 0,
-        totalBookings: 0,
-        activeVehicles: 0,
-        totalClients: 0
-    });
-    const [loading, setLoading] = useState(true);
-    const [monthlyRevenue, setMonthlyRevenue] = useState([]);
-    const [statusDist, setStatusDist] = useState({ confirmed: 0, completed: 0, pending: 0, cancelled: 0 });
 
-    useEffect(() => {
-        const fetchReports = async () => {
-            setLoading(true);
-            try {
-                // Parallel fetching for efficiency
-                const [bookingsRes, vehiclesRes, profilesRes] = await Promise.all([
-                    supabase.from('bookings').select('*, vehicles(make, model, image_url), profiles(full_name, email)').order('created_at', { ascending: false }),
-                    supabase.from('vehicles').select('id', { count: 'exact', head: true }),
-                    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'client')
-                ]);
-
-                if (bookingsRes.error) throw bookingsRes.error;
-                const bookings = bookingsRes.data || [];
-
-                // 1. Calculate Revenue & Stats
-                const revenue = bookings.reduce((sum, b) => sum + (Number(b.total_price) || 0), 0);
-
-                // 2. Process Top Vehicles
-                const vehicleCount = {};
-                bookings.forEach(b => {
-                    if (b.vehicle_id && b.vehicles) {
-                        const vid = b.vehicle_id;
-                        if (!vehicleCount[vid]) {
-                            vehicleCount[vid] = { ...b.vehicles, count: 0, id: vid };
-                        }
-                        vehicleCount[vid].count += 1;
-                    }
-                });
-                const topVehicles = Object.values(vehicleCount).sort((a, b) => b.count - a.count).slice(0, 5);
-
-                // 3. Recent Bookings
-                const recentBookings = bookings.slice(0, 5);
-
-                // 4. Monthly Revenue Calculation
-                const revenueByMonth = {};
-                bookings.forEach(b => {
-                    if (b.status === 'confirmed' || b.status === 'completed') {
-                        const date = new Date(b.created_at);
-                        const key = `${date.toLocaleString('default', { month: 'short' })} ${date.getFullYear()}`;
-                        revenueByMonth[key] = (revenueByMonth[key] || 0) + (Number(b.total_price) || 0);
-                    }
-                });
-
-                // Converting to array and taking last 6 months for display
-                const monthArray = Object.entries(revenueByMonth).map(([name, val]) => ({ name, val })).slice(-6);
-                setMonthlyRevenue(monthArray);
-
-                // 5. Status Distribution
-                const dist = { confirmed: 0, completed: 0, pending: 0, cancelled: 0 };
-                bookings.forEach(b => {
-                    const st = b.status || 'pending';
-                    if (dist[st] !== undefined) dist[st]++;
-                });
-                setStatusDist(dist);
-
-                setStats({
-                    topVehicles,
-                    recentBookings,
-                    totalRevenue: revenue,
-                    totalBookings: bookings.length,
-                    activeVehicles: vehiclesRes.count || 0,
-                    totalClients: profilesRes.count || 0
-                });
-
-            } catch (err) {
-                console.error("Error loading reports:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchReports();
-    }, []);
-
-    if (loading) return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-brand-blue" /></div>;
-
-    return (
-        <div className="space-y-8 animate-fade-in-up">
-            <h2 className="text-xl font-bold font-serif text-slate-900 flex items-center gap-2">
-                <BarChart3 className="w-6 h-6" /> Reportes Administrativos
-            </h2>
-
-            {/* Summary Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Ingresos Totales</span>
-                            <h3 className="text-2xl font-bold text-slate-900 mt-1">S/ {stats.totalRevenue.toFixed(2)}</h3>
-                        </div>
-                        <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600"><span className="font-serif italic font-bold">$</span></div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Reservas</span>
-                            <h3 className="text-2xl font-bold text-slate-900 mt-1">{stats.totalBookings}</h3>
-                        </div>
-                        <div className="p-2 bg-blue-50 rounded-lg text-brand-blue"><Calendar className="w-5 h-5" /></div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Flota Total</span>
-                            <h3 className="text-2xl font-bold text-slate-900 mt-1">{stats.activeVehicles}</h3>
-                        </div>
-                        <div className="p-2 bg-indigo-50 rounded-lg text-indigo-600"><Car className="w-5 h-5" /></div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-32 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start">
-                        <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Clientes</span>
-                            <h3 className="text-2xl font-bold text-slate-900 mt-1">{stats.totalClients}</h3>
-                        </div>
-                        <div className="p-2 bg-orange-50 rounded-lg text-orange-600"><Users className="w-5 h-5" /></div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Bar Chart Section */}
-                <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 className="font-bold text-xl text-slate-900">Ingresos por Mes</h3>
-                    <p className="text-sm text-slate-500 mb-8">Análisis de ingresos de reservas confirmadas y finalizadas.</p>
-
-                    <div className="h-64 flex items-end gap-4 justify-center border-b border-slate-100 pb-4 relative">
-                        {monthlyRevenue.length > 0 ? monthlyRevenue.map((item, idx) => (
-                            <div key={idx} className="flex flex-col items-center gap-2 group w-1/6 min-w-[60px]">
-                                <div
-                                    className="w-full bg-blue-600 rounded-t-lg hover:bg-blue-700 transition-all relative group-hover:shadow-lg"
-                                    style={{ height: `${(item.val / Math.max(...monthlyRevenue.map(m => m.val), 1)) * 100}%`, minHeight: '4px' }}
-                                >
-                                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
-                                        S/ {item.val}
-                                    </div>
-                                </div>
-                                <span className="text-[10px] font-semibold text-slate-500 truncate w-full text-center">{item.name}</span>
-                            </div>
-                        )) : (
-                            <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">Sin suficientes datos de ingresos.</div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Donut Chart Section */}
-                <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
-                    <h3 className="font-bold text-xl text-slate-900 mb-6 leading-tight">Distribución de Reservas</h3>
-
-                    <div className="flex-1 flex items-center justify-center relative">
-                        {/* Status Grid instead of Donut for better data density */}
-                        <div className="grid grid-cols-2 gap-4 w-full">
-                            <div className="text-center p-4 bg-teal-50 rounded-xl">
-                                <div className="text-2xl font-bold text-teal-600">{statusDist.confirmed}</div>
-                                <div className="text-xs text-teal-800 font-medium">Confirmadas</div>
-                            </div>
-                            <div className="text-center p-4 bg-blue-50 rounded-xl">
-                                <div className="text-2xl font-bold text-blue-600">{statusDist.completed}</div>
-                                <div className="text-xs text-blue-800 font-medium">Finalizadas</div>
-                            </div>
-                            <div className="text-center p-4 bg-amber-50 rounded-xl">
-                                <div className="text-2xl font-bold text-amber-600">{statusDist.pending}</div>
-                                <div className="text-xs text-amber-800 font-medium">Pendientes</div>
-                            </div>
-                            <div className="text-center p-4 bg-red-50 rounded-xl">
-                                <div className="text-2xl font-bold text-red-600">{statusDist.cancelled}</div>
-                                <div className="text-xs text-red-800 font-medium">Canceladas</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Top Vehicles */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 className="font-bold text-lg text-slate-900 mb-4">Vehículos Más Populares</h3>
-                    <div className="space-y-4">
-                        {stats.topVehicles.map((v, i) => (
-                            <div key={v.id} className="flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-colors">
-                                <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${i === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-slate-100 text-slate-500'}`}>
-                                    {i + 1}
-                                </span>
-                                <img src={v.image_url} alt={v.model} className="w-10 h-10 rounded-lg object-cover bg-slate-100" />
-                                <div className="flex-1">
-                                    <div className="font-semibold text-sm text-slate-900">{v.make} {v.model}</div>
-                                    <div className="text-xs text-slate-400">{v.count} reservas</div>
-                                </div>
-                                <div className="w-24 bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                                    <div className="bg-brand-blue h-full rounded-full" style={{ width: `${(v.count / Math.max(1, stats.topVehicles[0]?.count || 1)) * 100}%` }}></div>
-                                </div>
-                            </div>
-                        ))}
-                        {stats.topVehicles.length === 0 && <p className="text-sm text-slate-400 text-center py-4">No hay datos suficientes.</p>}
-                    </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                    <h3 className="font-bold text-lg text-slate-900 mb-4">Actividad Reciente</h3>
-                    <div className="space-y-0 divide-y divide-slate-50">
-                        {stats.recentBookings.map((b) => (
-                            <div key={b.id} className="flex items-center gap-4 py-3 hover:bg-slate-50 px-2 -mx-2 rounded-lg transition-colors">
-                                <div className={`w-2 h-2 rounded-full ${b.status === 'confirmed' ? 'bg-teal-500' : b.status === 'pending' ? 'bg-amber-500' : 'bg-slate-300'}`}></div>
-                                <div className="flex-1">
-                                    <div className="flex justify-between">
-                                        <span className="font-medium text-sm text-slate-900">
-                                            {b.profiles?.full_name || 'Usuario desconocido'}
-                                        </span>
-                                        <span className="text-xs text-slate-400">
-                                            {new Date(b.created_at).toLocaleDateString()}
-                                        </span>
-                                    </div>
-                                    <div className="text-xs text-slate-500 mt-0.5">
-                                        Reservó <span className="font-medium">{b.vehicles?.make} {b.vehicles?.model}</span> por <span className="font-medium">S/ {b.total_price}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        {stats.recentBookings.length === 0 && <p className="text-sm text-slate-400 text-center py-4">Sin actividad reciente.</p>}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const BookingsView = () => {
     const [bookings, setBookings] = useState([]);
@@ -2450,6 +2225,8 @@ const PanelAdministrador = () => {
             email: client.email || '',
             phone: client.phone || '',
             dni: client.dni || '',
+            country: client.country || 'Perú',
+            birth_date: client.birth_date || '',
             role: client.role || 'client'
         });
         setIsClientModalOpen(true);
@@ -2478,7 +2255,9 @@ const PanelAdministrador = () => {
                     full_name: clientFormData.full_name,
                     phone: clientFormData.phone,
                     dni: clientFormData.dni,
-                    role: clientFormData.role
+                    role: clientFormData.role,
+                    country: clientFormData.country,
+                    birth_date: clientFormData.birth_date || null
                     // Email cannot be updated here straightforwardly as it's linked to Auth
                 }).eq('id', editingClientId);
 
@@ -2497,6 +2276,8 @@ const PanelAdministrador = () => {
                     dni: clientFormData.dni,
                     role: clientFormData.role,
                     email: clientFormData.email, // Just for record keeping if possible
+                    country: clientFormData.country,
+                    birth_date: clientFormData.birth_date || null,
                     updated_at: new Date()
                 }]);
                 if (error) throw error;
@@ -2678,7 +2459,7 @@ const PanelAdministrador = () => {
             case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false }); setIsModalOpen(true); }} onClearDB={handleClearDatabase} onSeed={handleSeedDatabase} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'clients': return <ClientsView users={users} onEdit={handleEditClient} onDelete={handleDeleteClient} onAdd={() => { setEditingClientId(null); setClientFormData({ full_name: '', email: '', phone: '', dni: '', role: 'client' }); setIsClientModalOpen(true); }} onSeed={handleSeedClients} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'promotions': return <PromotionsView />;
-            case 'reports': return <ReportsView />;
+            case 'reports': return <ReportesView />;
             case 'reservas': return <BookingsView />;
             case 'locations': return <LocationsView />;
             default: return <PlaceholderView title={VIEW_TITLES[activeView]} icon={UserIconMap[activeView] || LayoutDashboard} />;

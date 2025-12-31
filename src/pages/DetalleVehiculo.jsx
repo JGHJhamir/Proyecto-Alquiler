@@ -221,7 +221,7 @@ const DetalleVehiculo = () => {
             .select('id')
             .eq('vehicle_id', vehicle.id)
             .neq('status', 'cancelled') // Ignore cancelled bookings
-            .or(`and(start_date.lte.${end}, end_date.gte.${start})`);
+            .or(`and(start_date.lte."${end}", end_date.gte."${start}")`);
 
         if (error) {
             console.error('Error checking availability:', error);

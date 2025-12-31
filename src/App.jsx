@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Toaster } from 'sonner';
 import RutaProtegida from './components/RutaProtegida';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy loading pages
 const Inicio = lazy(() => import('./pages/Inicio'));
@@ -26,30 +27,32 @@ function App() {
   return (
     <Router>
       <Toaster position="top-center" richColors />
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          <Route path="/" element={<Inicio />} />
-          <Route path="/vehiculo/:id" element={<DetalleVehiculo />} />
-          <Route path="/explorar" element={<ExplorarVehiculos />} />
-          <Route path="/pago/:bookingId" element={<Pago />} />
-          <Route path="/registro" element={<Registro />} />
-          <Route path="/login" element={<IniciarSesion />} />
+      <ErrorBoundary>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/" element={<Inicio />} />
+            <Route path="/vehiculo/:id" element={<DetalleVehiculo />} />
+            <Route path="/explorar" element={<ExplorarVehiculos />} />
+            <Route path="/pago/:bookingId" element={<Pago />} />
+            <Route path="/registro" element={<Registro />} />
+            <Route path="/login" element={<IniciarSesion />} />
 
-          {/* Rutas Protegidas */}
-          <Route element={<RutaProtegida allowedRoles={['admin']} />}>
-            <Route path="/admin" element={<PanelAdministrador />} />
-          </Route>
+            {/* Rutas Protegidas */}
+            <Route element={<RutaProtegida allowedRoles={['admin']} />}>
+              <Route path="/admin" element={<PanelAdministrador />} />
+            </Route>
 
-          <Route element={<RutaProtegida allowedRoles={['owner']} />}>
-            <Route path="/owner" element={<PanelPropietario />} />
-          </Route>
+            <Route element={<RutaProtegida allowedRoles={['owner']} />}>
+              <Route path="/owner" element={<PanelPropietario />} />
+            </Route>
 
-          <Route element={<RutaProtegida allowedRoles={['client', 'admin', 'owner']} />}>
-            <Route path="/cliente" element={<PanelCliente />} />
-            <Route path="/perfil" element={<Perfil />} />
-          </Route>
-        </Routes>
-      </Suspense>
+            <Route element={<RutaProtegida allowedRoles={['client', 'admin', 'owner']} />}>
+              <Route path="/cliente" element={<PanelCliente />} />
+              <Route path="/perfil" element={<Perfil />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </Router>
   )
 }

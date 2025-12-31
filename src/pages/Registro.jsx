@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../supabase';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Calendar, CreditCard, ArrowRight, AlertCircle, CheckCircle, Globe } from 'lucide-react';
+import { User, Mail, Lock, Calendar, CreditCard, ArrowRight, AlertCircle, CheckCircle, Globe, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Registro = () => {
@@ -18,7 +18,9 @@ const Registro = () => {
         documentType: 'dni',
         dni: '',
         birthDate: '',
-        country: 'Perú'
+        birthDate: '',
+        country: 'Perú',
+        phone: ''
     });
 
     const handleChange = (e) => {
@@ -41,6 +43,16 @@ const Registro = () => {
                 // Passport: alphanumeric, max 12 characters
                 if (value.length > 12) return;
             }
+        }
+
+        // Phone Validation
+        if (name === 'phone') {
+            // Only allow numbers
+            if (!/^\d*$/.test(value)) return;
+            // Limit to 9 digits if country is Peru
+            if (formData.country === 'Perú' && value.length > 9) return;
+            // General limit for other countries (e.g. 15)
+            if (value.length > 15) return;
         }
 
         setFormData({ ...formData, [name]: value });
@@ -93,6 +105,13 @@ const Registro = () => {
             }
         }
 
+        // 4. Validate Phone for Peru
+        if (formData.country === 'Perú' && formData.phone.length !== 9) {
+            setError('El celular debe tener 9 dígitos.');
+            setLoading(false);
+            return;
+        }
+
         try {
             const { data, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
@@ -103,7 +122,8 @@ const Registro = () => {
                         dni: formData.dni,
                         document_type: formData.documentType,
                         birth_date: formData.birthDate,
-                        country: formData.country
+                        country: formData.country,
+                        phone: formData.phone
                     }
                 }
             });
@@ -213,6 +233,19 @@ const Registro = () => {
                                     <option value="España">🇪🇸 España</option>
                                     <option value="Otro">🌎 Otro</option>
                                 </select>
+                            </div>
+
+                            <div className="relative group">
+                                <Phone className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 group-focus-within:text-brand-blue transition-colors" />
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    placeholder="Número de Celular"
+                                    required
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/10 transition-all font-medium text-slate-700"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                />
                             </div>
 
                             <div className="relative group">

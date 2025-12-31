@@ -1,12 +1,101 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import BarraNavegacion from '../components/BarraNavegacion';
-import { Mail, Phone, User, Edit2, CreditCard } from 'lucide-react';
+import { Mail, Phone, User, Edit2, CreditCard, X, Save, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
+const EditProfileModal = ({ isOpen, onClose, profile, onUpdate }) => {
+    const [formData, setFormData] = useState({
+        full_name: '',
+        phone: '',
+        dni: ''
+    });
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (profile) {
+            setFormData({
+                full_name: profile.full_name || '',
+                phone: profile.phone || '',
+                dni: profile.dni || ''
+            });
+        }
+    }, [profile]);
+
+    if (!isOpen) return null;
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await onUpdate(formData);
+            onClose();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden animate-in zoom-in-95">
+                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                    <h3 className="text-lg font-bold text-slate-900">Editar Perfil</h3>
+                    <button onClick={onClose} className="p-1 hover:bg-slate-100 rounded-full transition-colors">
+                        <X className="w-5 h-5 text-slate-400" />
+                    </button>
+                </div>
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-semibold text-slate-700">Nombre Completo</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.full_name}
+                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                            className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-brand-blue outline-none transition-all"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-semibold text-slate-700">Celular</label>
+                        <input
+                            type="tel"
+                            value={formData.phone}
+                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                            className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-brand-blue outline-none transition-all"
+                            placeholder="+51 900 000 000"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <label className="text-sm font-semibold text-slate-700">DNI / Pasaporte</label>
+                        <input
+                            type="text"
+                            value={formData.dni}
+                            onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+                            className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-brand-blue outline-none transition-all"
+                        />
+                    </div>
+                    <div className="pt-4">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-2.5 bg-brand-blue hover:bg-blue-700 text-white font-bold rounded-lg transition-colors shadow-lg shadow-blue-600/20 disabled:opacity-70 flex items-center justify-center gap-2"
+                        >
+                            {loading ? 'Guardando...' : <><Save className="w-4 h-4" /> Guardar Cambios</>}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
 
 const Perfil = () => {
     const [loading, setLoading] = useState(true);
     const [profile, setProfile] = useState(null);
     const [user, setUser] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         const getProfile = async () => {
@@ -33,7 +122,25 @@ const Perfil = () => {
         };
 
         getProfile();
+        getProfile();
     }, []);
+
+    const handleUpdateProfile = async (newData) => {
+        try {
+            const { error } = await supabase
+                .from('profiles')
+                .update(newData)
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            setProfile({ ...profile, ...newData });
+            toast.success('Perfil actualizado correctamente');
+        } catch (error) {
+            toast.error('Error al actualizar el perfil: ' + error.message);
+            throw error;
+        }
+    };
 
     if (loading) {
         return (
@@ -92,7 +199,7 @@ const Perfil = () => {
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold text-slate-900 uppercase mb-0.5">Celular</p>
-                                    <p className="text-slate-500 text-sm">+51 987 654 321</p>
+                                    <p className="text-slate-500 text-sm">{profile?.phone || 'No registrado'}</p>
                                 </div>
                             </div>
 
@@ -110,7 +217,10 @@ const Perfil = () => {
 
                         {/* Action Footer */}
                         <div className="px-8 pb-8">
-                            <button className="w-full flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-xl text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-all">
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="w-full flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-xl text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-all"
+                            >
                                 <Edit2 className="w-4 h-4" />
                                 Editar Perfil
                             </button>
@@ -123,6 +233,13 @@ const Perfil = () => {
                     </p>
                 </div>
             </div>
+
+            <EditProfileModal
+                isOpen={isEditing}
+                onClose={() => setIsEditing(false)}
+                profile={profile}
+                onUpdate={handleUpdateProfile}
+            />
         </div>
     );
 };
