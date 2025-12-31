@@ -1,6 +1,10 @@
 -- Enable RLS on profiles if not already enabled
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies to avoid conflicts
+DROP POLICY IF EXISTS "Admins can update any profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
+
 -- Allow Admins to UPDATE any profile
 -- This policy checks if the user performing the update has the 'admin' role
 CREATE POLICY "Admins can update any profile" ON public.profiles
