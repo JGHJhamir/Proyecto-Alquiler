@@ -8,7 +8,7 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  
+
   body {
     @apply font-sans text-slate-900 antialiased;
   }
@@ -16,20 +16,36 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-brand-blue text-white font-semibold rounded-full px-6 py-3 
-           transition-all duration-300 shadow-lg shadow-brand-blue/30
-           hover:bg-blue-700 hover:shadow-xl hover:shadow-brand-blue/40 hover:-translate-y-0.5
-           active:scale-95 active:shadow-md;
+    @apply relative overflow-hidden bg-brand-dark text-white font-bold rounded-xl px-8 py-3.5 transition-all duration-300 shadow-lg shadow-brand-dark/25 hover:shadow-xl hover:shadow-brand-dark/40 hover:-translate-y-0.5 active:scale-95 active:shadow-md border border-white/10;
+  }
+
+  /* Shimmer effect for primary button */
+  .btn-primary::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-150%] skew-x-12 transition-transform duration-1000 ease-in-out;
+  }
+
+  .btn-primary:hover::after {
+    @apply translate-x-[150%];
   }
 
   .btn-secondary {
-    @apply bg-white text-slate-700 font-semibold rounded-full px-6 py-3
-           border border-slate-200 transition-all duration-300
-           hover:bg-slate-50 hover:border-slate-300 hover:shadow-md hover:-translate-y-0.5
-           active:scale-95;
+    @apply bg-white/80 backdrop-blur-sm text-brand-dark font-bold rounded-xl px-8 py-3.5 border border-slate-200/60 transition-all duration-300 hover:bg-white hover:border-brand-gold/50 hover:text-brand-gold hover:shadow-glow hover:-translate-y-0.5 active:scale-95;
+  }
+
+  .btn-gold {
+    @apply bg-gradient-to-r from-brand-gold to-[#C6A355] text-white font-bold rounded-xl px-8 py-3.5 shadow-lg shadow-brand-gold/25 transition-all duration-300 hover:shadow-glow hover:-translate-y-0.5 active:scale-95;
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+    @apply transition-all duration-500 hover:shadow-card hover:-translate-y-1 hover:border-brand-gold/20;
+  }
+
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-md border border-white/40 shadow-glass;
+  }
+
+  .text-gradient-gold {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-gold to-[#B8860B];
   }
 }

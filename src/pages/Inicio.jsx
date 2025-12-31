@@ -6,15 +6,23 @@ import BarraNavegacion from '../components/BarraNavegacion'; // Import shared Na
 import { COASTAL_LOCATIONS } from '../constants';
 
 // --- Shared Components ---
-const SectionTitle = ({ title, subtitle }) => (
-    <div className="text-center mb-10 md:mb-16 relative">
-        <h2 className="text-3xl md:text-5xl font-serif font-bold text-brand-dark mb-4">{title}</h2>
-        <div className="w-16 md:w-24 h-1.5 bg-brand-light mx-auto rounded-full mb-4 md:mb-6"></div>
-        <p className="text-slate-600 text-base md:text-lg max-w-2xl mx-auto leading-relaxed px-4">{subtitle}</p>
+const SectionTitle = ({ title, subtitle, light = false }) => (
+    <div className="text-center mb-12 md:mb-20 relative z-10">
+        <h2 className={`text-4xl md:text-6xl font-serif font-bold mb-6 tracking-tight ${light ? 'text-white' : 'text-brand-dark'}`}>
+            {title}
+        </h2>
+        <div className="flex items-center justify-center gap-4 mb-6">
+            <div className={`h-[1px] w-12 md:w-24 ${light ? 'bg-brand-gold/50' : 'bg-brand-gold'}`}></div>
+            <Star className={`w-4 h-4 ${light ? 'text-brand-gold' : 'text-brand-dark'} fill-current`} />
+            <div className={`h-[1px] w-12 md:w-24 ${light ? 'bg-brand-gold/50' : 'bg-brand-gold'}`}></div>
+        </div>
+        <p className={`text-lg md:text-xl max-w-2xl mx-auto leading-relaxed px-4 font-light ${light ? 'text-white/80' : 'text-slate-600'}`}>
+            {subtitle}
+        </p>
     </div>
 );
 
-// Navbar removed (using shared component)
+// ... (Navbar handled by shared component)
 
 import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
@@ -112,17 +120,17 @@ const SearchBar = () => {
                 value={value}
                 readOnly
                 placeholder="Agrega fechas"
-                className="w-full bg-transparent outline-none text-slate-800 font-semibold placeholder:text-slate-400 text-sm cursor-pointer"
+                className="w-full bg-transparent outline-none text-slate-700 font-semibold placeholder:text-slate-400 text-sm cursor-pointer"
             />
         </div>
     );
 
     return (
-        <div className="bg-white rounded-3xl md:rounded-full shadow-2xl p-4 md:pl-8 md:pr-2 md:py-2 max-w-4xl mx-auto flex flex-col md:flex-row items-stretch md:items-center border border-slate-100 transform -translate-y-12 md:-translate-y-1/2 relative z-50">
+        <div className="bg-white/90 backdrop-blur-xl border border-white/50 rounded-[2.5rem] shadow-glass hover:shadow-glow transition-all duration-300 p-4 md:pl-8 md:pr-2 md:py-2 max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center transform -translate-y-12 md:-translate-y-1/2 relative z-50">
 
             {/* Location */}
-            <div className="flex-1 py-3 md:py-2 md:pr-6 w-full md:w-[32%] relative border-b border-slate-100 md:border-b-0 md:border-r md:border-slate-200 hover:bg-slate-50 md:rounded-full transition-colors group cursor-pointer">
-                <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Dónde</label>
+            <div className="flex-1 py-3 md:py-2 md:pr-6 w-full md:w-[32%] relative border-b border-slate-200/50 md:border-b-0 md:border-r md:border-slate-200/50 hover:bg-white/50 md:rounded-full transition-colors group cursor-pointer">
+                <label className="block text-xs font-extrabold text-brand-dark ml-1 mb-0.5 tracking-wider uppercase">Dónde</label>
                 <div className="relative">
                     <input
                         type="text"
@@ -130,10 +138,10 @@ const SearchBar = () => {
                         onChange={handleLocationChange}
                         onFocus={() => destination.length > 0 && setShowSuggestions(true)}
                         placeholder="Explorar destinos"
-                        className="w-full bg-transparent outline-none text-slate-600 text-sm placeholder:text-slate-400 font-medium truncate"
+                        className="w-full bg-transparent outline-none text-slate-700 text-sm placeholder:text-slate-400 font-medium truncate"
                     />
                     {showSuggestions && suggestions.length > 0 && (
-                        <div className="absolute top-12 left-0 w-full md:w-[300px] bg-white rounded-3xl shadow-2xl border border-slate-100 py-4 z-50 overflow-hidden">
+                        <div className="absolute top-12 left-0 w-full md:w-[300px] bg-white rounded-3xl shadow-2xl border border-slate-100 py-4 z-50 overflow-hidden text-left">
                             {suggestions.map((item, index) => (
                                 <div
                                     key={index}
@@ -152,9 +160,9 @@ const SearchBar = () => {
             </div>
 
             {/* Date */}
-            <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[38%] relative border-b border-slate-100 md:border-b-0 md:border-r md:border-slate-200 hover:bg-slate-50 md:rounded-full transition-colors group cursor-pointer">
-                <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Fechas</label>
-                <div className="w-full">
+            <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[38%] relative border-b border-slate-200/50 md:border-b-0 md:border-r md:border-slate-200/50 hover:bg-white/50 md:rounded-full transition-colors group cursor-pointer">
+                <label className="block text-xs font-extrabold text-brand-dark ml-1 mb-0.5 tracking-wider uppercase">Fechas</label>
+                <div className="w-full text-left">
                     <DatePicker
                         selectsRange={true}
                         startDate={startDate}
@@ -168,7 +176,7 @@ const SearchBar = () => {
                         minDate={new Date()}
                         isClearable={true}
                         placeholderText="Agrega fechas"
-                        className="w-full bg-transparent outline-none text-slate-600 text-sm placeholder:text-slate-400 font-medium"
+                        className="w-full bg-transparent outline-none text-slate-700 text-sm placeholder:text-slate-400 font-medium"
                         calendarClassName="!font-sans !shadow-2xl !rounded-3xl !border-0 !p-6 !mt-4"
                         dayClassName={(date) => "rounded-full hover:bg-slate-100 font-medium"}
                         popperClassName="!z-50"
@@ -178,10 +186,10 @@ const SearchBar = () => {
             </div>
 
             {/* Passengers */}
-            <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[30%] relative hover:bg-slate-50 md:rounded-full transition-colors group cursor-pointer flex items-center justify-between">
+            <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[30%] relative hover:bg-white/50 md:rounded-full transition-colors group cursor-pointer flex items-center justify-between">
                 <div>
-                    <label className="block text-xs font-extrabold text-slate-800 ml-1 mb-0.5">Quién</label>
-                    <div className="text-slate-600 text-sm font-medium truncate">
+                    <label className="block text-xs font-extrabold text-brand-dark ml-1 mb-0.5 tracking-wider uppercase">Quién</label>
+                    <div className="text-slate-700 text-sm font-medium truncate">
                         {passengers > 0 ? `${passengers} viajeros` : '¿Cuántos?'}
                     </div>
                 </div>
@@ -197,179 +205,243 @@ const SearchBar = () => {
             {/* Search Button */}
             <button
                 onClick={handleSearch}
-                className="bg-brand-blue hover:bg-brand-dark text-white p-3.5 rounded-xl md:rounded-full shadow-lg shadow-brand-blue/30 transition-all hover:scale-[1.02] md:hover:scale-105 active:scale-95 mt-2 md:mt-0 w-full md:w-auto flex items-center justify-center gap-2 font-bold px-6 flex-shrink-0 z-10"
+                className="bg-brand-blue hover:bg-brand-dark text-white p-3.5 rounded-2xl md:rounded-full shadow-lg shadow-brand-blue/30 transition-all hover:scale-[1.02] md:hover:scale-105 active:scale-95 mt-2 md:mt-0 w-full md:w-auto flex items-center justify-center gap-2 font-bold px-8 flex-shrink-0 z-10"
             >
                 <Search className="w-5 h-5 stroke-[2.5px]" />
-                Buscar
+                <span className="md:hidden">Buscar</span>
             </button>
         </div>
     );
 };
 
 const PromotionCard = ({ title, discount, discountType, code }) => (
-    <div className="group bg-gradient-to-br from-ocean-50 to-white hover:from-white hover:to-ocean-50 border border-ocean-200 p-6 rounded-2xl flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1 cursor-pointer relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-24 h-24 bg-brand-light/10 rounded-full blur-2xl -mr-12 -mt-12"></div>
+    <div className="group relative overflow-hidden rounded-3xl p-8 transition-all duration-500 hover:-translate-y-2">
+        {/* Glass Background */}
+        <div className="absolute inset-0 bg-white/10 backdrop-blur-xl border border-white/20 transition-all duration-500 group-hover:bg-white/20"></div>
 
-        <div className="relative z-10">
-            <h3 className="text-lg font-bold text-brand-dark mb-2 font-serif">{title}</h3>
-            <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-3xl font-extrabold text-brand-blue">
-                    {discountType === 'percentage' ? `${discount}%` : `S/${discount}`}
-                </span>
-                <span className="text-sm font-bold text-brand-blue/60 uppercase">OFF</span>
+        {/* Gradient Glow */}
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-gold/20 rounded-full blur-3xl group-hover:bg-brand-gold/30 transition-all duration-1000"></div>
+        <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-brand-blue/20 rounded-full blur-3xl group-hover:bg-brand-blue/30 transition-all duration-1000"></div>
+
+        <div className="relative z-10 flex flex-col h-full justify-between min-h-[220px]">
+            <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-gold/10 border border-brand-gold/20 text-brand-gold text-xs font-bold tracking-wider uppercase mb-4">
+                    <Star className="w-3 h-3 fill-current" /> Promoción Exclusiva
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-white mb-2 leading-tight">
+                    {title}
+                </h3>
             </div>
-            <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 inline-block">
-                <span className="text-xs font-mono font-bold text-brand-blue">{code}</span>
+
+            <div className="mt-6">
+                <div className="flex items-baseline gap-2 mb-4">
+                    <span className="text-5xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-gold to-white">
+                        {discountType === 'percentage' ? `${discount}%` : `S/${discount}`}
+                    </span>
+                    <span className="text-lg font-medium text-white/60">OFF</span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <div className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-mono text-sm text-brand-gold tracking-widest text-center shadow-inner">
+                        {code}
+                    </div>
+                    <button className="bg-brand-gold hover:bg-white hover:text-brand-dark text-brand-dark p-3 rounded-xl transition-all duration-300 shadow-lg shadow-brand-gold/20">
+                        <ArrowRight className="w-5 h-5" />
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 );
 
 const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
-    <div className="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-300 border border-slate-100 hover:border-slate-200 hover:-translate-y-2">
-        <div className="relative h-72 overflow-hidden">
-            <Link to={`/vehiculo/${id}`}>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity z-10 duration-500"></div>
-                {isOffer && (
-                    <div className="absolute top-4 left-4 z-20 bg-gradient-to-r from-brand-blue to-brand-light text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
-                        ¡Oferta Especial!
-                    </div>
-                )}
-                <div className="absolute bottom-4 left-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-4 group-hover:translate-y-0 text-white">
-                    <p className="font-bold flex items-center gap-1"><MapPin className="w-4 h-4" />Ver ubicación</p>
-                </div>
-                <img
-                    src={image}
-                    alt={name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
-                />
-            </Link>
-        </div>
+    <div className="group relative rounded-[2rem] transition-all duration-500 hover:-translate-y-3">
+        {/* Floating Effect Shadow */}
+        <div className="absolute inset-4 bg-brand-dark/20 blur-2xl rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-8"></div>
 
-        <div className="p-8">
-            <div className="flex justify-between items-start mb-3">
-                <Link to={`/vehiculo/${id}`} className="hover:text-brand-blue transition-colors">
-                    <h3 className="text-2xl font-bold text-slate-900 font-serif leading-tight">{name}</h3>
+        {/* Card Content with Glassmorphism */}
+        <div className="relative h-full bg-white/90 backdrop-blur-md border border-white/50 rounded-[2rem] overflow-hidden shadow-glass hover:shadow-glow transition-all duration-500 flex flex-col">
+
+            {/* Image Section */}
+            <div className="relative h-80 overflow-hidden">
+                <Link to={`/vehiculo/${id}`} className="block h-full w-full">
+                    {/* Overlay Gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500 z-10"></div>
+
+                    {/* Hover Reveal Actions */}
+                    <div className="absolute inset-0 bg-brand-dark/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center gap-4">
+                        <span className="bg-white/20 hover:bg-white hover:text-brand-dark text-white backdrop-blur-md px-6 py-3 rounded-full font-bold transition-all transform scale-90 group-hover:scale-100 duration-300 border border-white/30">
+                            Ver Detalles
+                        </span>
+                    </div>
+
+                    {isOffer && (
+                        <div className="absolute top-5 left-5 z-30">
+                            <div className="bg-brand-gold text-brand-dark text-xs font-bold px-4 py-2 rounded-full shadow-lg shadow-brand-gold/20 flex items-center gap-1.5 animate-pulse">
+                                <Star className="w-3 h-3 fill-brand-dark" /> OFERTA
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="absolute top-5 right-5 z-30">
+                        <div className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                            <Star className="w-3.5 h-3.5 text-brand-gold fill-brand-gold" />
+                            {Number(rating).toFixed(1)}
+                        </div>
+                    </div>
+
+                    <img
+                        src={image}
+                        alt={name}
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-1000 ease-out"
+                    />
                 </Link>
-                <div className="flex items-center gap-1.5 bg-brand-light/10 px-3 py-1.5 rounded-full">
-                    <Star className="w-4 h-4 text-orange-400 fill-orange-400" />
-                    <span className="text-sm font-bold text-brand-dark">{Number(rating).toFixed(1)}</span>
-                </div>
             </div>
 
-            <p className="text-slate-500 flex items-center gap-2 text-sm mb-6 font-medium">
-                <MapPin className="w-4 h-4 text-brand-blue" />
-                {location}
-            </p>
+            {/* Info Section */}
+            <div className="p-8 flex flex-col flex-1 relative">
+                {/* Decorative Background Element */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
 
-            <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                <div className="flex flex-col">
-                    <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Precio por día</span>
-                    <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-brand-blue">S/{Number(price).toFixed(0)}</span>
+                <div className="mb-auto relative z-10">
+                    <div className="flex items-start justify-between gap-4 mb-2">
+                        <Link to={`/vehiculo/${id}`} className="group-hover:text-brand-blue transition-colors duration-300">
+                            <h3 className="text-2xl font-serif font-bold text-brand-dark leading-tight">{name}</h3>
+                        </Link>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-500 text-sm font-medium mb-6">
+                        <MapPin className="w-4 h-4 text-brand-gold" />
+                        {location}
                     </div>
                 </div>
-                <Link to={`/vehiculo/${id}`} className="btn-primary px-6 py-2.5 text-sm">
-                    Reservar
-                </Link>
+
+                <div className="pt-6 border-t border-slate-100 relative z-10">
+                    <div className="flex items-end justify-between">
+                        <div>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Precio Diario</p>
+                            <div className="flex items-baseline gap-1">
+                                <span className="text-brand-blue text-lg font-bold">S/</span>
+                                <span className="text-4xl font-serif font-bold text-brand-dark tracking-tight">
+                                    {Number(price).toFixed(0)}
+                                </span>
+                            </div>
+                        </div>
+                        <Link to={`/vehiculo/${id}`} className="btn-primary !px-6 !py-3 !rounded-2xl !text-sm group-hover:bg-brand-gold group-hover:border-brand-gold/50 transition-all duration-300">
+                            Reservar
+                        </Link>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 );
 
+// ... (Fleet Section wrapper updated in main render)
+// --- Main Component ---
 export default function Inicio() {
+    // ... (State and useEffect remain same)
     const [vehicles, setVehicles] = useState([]);
     const [promotions, setPromotions] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
-            // Fetch vehicles
-            const { data: vehiclesData, error: vehiclesError } = await supabase
-                .from('vehicles')
-                .select('*');
-
+            // ... (Fetch logic logic remains same)
+            const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('*');
             if (vehiclesError) console.error('Error fetching vehicles:', vehiclesError);
             else setVehicles(vehiclesData || []);
 
-            // Fetch active promotions (limit to 3)
-            const { data: promosData, error: promosError } = await supabase
-                .from('promotions')
-                .select('*')
-                .eq('is_active', true)
-                .order('created_at', { ascending: false })
-                .limit(3);
-
+            const { data: promosData, error: promosError } = await supabase.from('promotions').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(3);
             if (promosError) console.error('Error fetching promotions:', promosError);
             else setPromotions(promosData || []);
         };
-
         fetchData();
     }, []);
 
     return (
-        <div className="min-h-screen bg-white font-sans selection:bg-brand-blue/20 selection:text-brand-dark">
+        <div className="min-h-screen bg-brand-cream font-sans selection:bg-brand-gold/30 selection:text-brand-dark">
             <BarraNavegacion />
 
-            {/* Hero Section */}
-            <div className="relative h-[600px] md:h-[800px] w-full mt-0 overflow-hidden">
+            {/* Hero Section - Immersive Video/Image */}
+            <div className="relative h-[85vh] w-full overflow-hidden">
                 <img
-                    src="https://images.unsplash.com/photo-1519046904884-53103b34b206?q=80&w=2070&auto=format&fit=crop"
-                    alt="Costa Peruana"
-                    className="w-full h-full object-cover scale-105 animate-[kenburns_20s_infinite_alternate]"
+                    src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop"
+                    alt="Costa Peruana Lujo"
+                    className="w-full h-full object-cover scale-105 animate-[kenburns_30s_infinite_alternate]"
                 />
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-hero-gradient" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-                    <span className="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-white text-xs md:text-sm font-bold tracking-widest uppercase mb-4 md:mb-6">
-                        Vive el Perú
-                    </span>
-                    <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold text-white mb-4 md:mb-6 drop-shadow-2xl max-w-5xl leading-tight">
-                        Aventuras en la Costa <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-ocean-100 to-white">y Desiertos del Perú</span>
-                    </h1>
-                    <p className="hidden md:block text-base md:text-lg lg:text-2xl text-white/90 max-w-3xl font-light mb-8 md:mb-12 drop-shadow-md">
-                        Desde las misteriosas dunas de Ica hasta las cálidas aguas de Máncora. Alquila el vehículo perfecto para tu ruta.
-                    </p>
+
+                {/* Advanced Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/60 via-transparent to-brand-dark/90"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-brand-dark/50 to-transparent"></div>
+
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pt-20">
+                    <div className="animate-fade-in-up">
+                        <span className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-brand-gold text-xs md:text-sm font-bold tracking-[0.2em] uppercase mb-8 shadow-glass">
+                            <Star className="w-3 h-3 fill-current" /> Experience Peru
+                        </span>
+                        <h1 className="text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-6 drop-shadow-2xl leading-tight">
+                            El Lujo de <br />
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-white to-brand-gold animate-shimmer bg-[length:200%_auto]">
+                                Explorar
+                            </span>
+                        </h1>
+                        <p className="hidden md:block text-lg md:text-2xl text-white/80 max-w-2xl mx-auto font-light leading-relaxed mb-12 mix-blend-screen">
+                            Descubre la costa peruana con nuestra flota exclusiva. <br />Libertad, confort y estilo en cada kilómetro.
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            {/* Floating Search Bar Container */}
-            <div className="px-6 relative z-30 max-w-7xl mx-auto w-full">
+            {/* Floating Search Bar Container - Negative Margin for overlap */}
+            <div className="px-6 relative z-30 max-w-7xl mx-auto w-full -mt-24">
                 <SearchBar />
             </div>
 
-            {/* Promotions Section */}
-            <section className="max-w-7xl mx-auto px-6 py-20">
-                <SectionTitle
-                    title="Promociones Activas"
-                    subtitle="Descuentos exclusivos para tus rutas por la Panamericana Sur y Norte."
-                />
+            {/* Promotions Section with Dark Premium Background */}
+            <section className="relative py-24 overflow-hidden">
+                {/* Dark Background */}
+                <div className="absolute inset-0 bg-brand-dark"></div>
+                {/* Decorative Elements */}
+                <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
+                    <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-brand-blue rounded-full blur-[120px]"></div>
+                    <div className="absolute top-[40%] -right-[10%] w-[40%] h-[60%] bg-brand-gold rounded-full blur-[100px]"></div>
+                </div>
 
-                {promotions.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {promotions.map((promo) => (
-                            <PromotionCard
-                                key={promo.id}
-                                title={promo.name}
-                                discount={promo.discount_value}
-                                discountType={promo.discount_type}
-                                code={promo.code}
-                            />
-                        ))}
-                    </div>
-                ) : (
-                    <p className="text-center text-slate-400 py-8">No hay promociones activas en este momento.</p>
-                )}
-            </section>
-
-            {/* Fleet Section */}
-            <section className="bg-sand-100/50 py-32 rounded-t-[4rem] -mx-4 md:mx-0">
-                <div className="max-w-7xl mx-auto px-6">
+                <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <SectionTitle
-                        title="Flota Todo Terreno"
-                        subtitle="Vehículos preparados para la arena, la playa y la carretera."
+                        title="Privilegios Exclusivos"
+                        subtitle="Accede a descuentos especiales diseñados para tu próxima aventura."
+                        light={true}
                     />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                    {promotions.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {promotions.map((promo) => (
+                                <PromotionCard
+                                    key={promo.id}
+                                    title={promo.name}
+                                    discount={promo.discount_value}
+                                    discountType={promo.discount_type}
+                                    code={promo.code}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="glass-panel rounded-3xl p-12 text-center max-w-2xl mx-auto">
+                            <p className="text-white/60 text-lg">Actualmente estamos preparando nuevas experiencias exclusivas.</p>
+                        </div>
+                    )}
+                </div>
+            </section>
+
+            {/* Fleet Section with Sand Gradient */}
+            <section className="bg-slate-100 py-32 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto px-6 relative z-10">
+                    <SectionTitle
+                        title="Nuestra Colección"
+                        subtitle="Selección curada de vehículos premium para el viajero exigente."
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
                         {vehicles.map((vehicle) => (
                             <VehicleCard
                                 key={vehicle.id}
@@ -379,18 +451,18 @@ export default function Inicio() {
                                 price={vehicle.price_per_day}
                                 image={vehicle.image_url}
                                 rating={vehicle.rating}
-                                isOffer={vehicle.is_offer} // Assuming you might have this field, passed anyway
+                                isOffer={vehicle.is_offer}
                             />
                         ))}
                     </div>
 
-                    <div className="text-center mt-16">
-                        <button className="btn-secondary">
-                            Ver Toda la Flota
+                    <div className="text-center mt-24">
+                        <button className="btn-secondary text-lg px-10 py-4 hover:shadow-xl hover:shadow-brand-gold/20">
+                            Explorar Todo el Catálogo
                         </button>
                     </div>
                 </div>
             </section>
         </div>
-    )
+    );
 }

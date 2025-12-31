@@ -14,21 +14,21 @@ const VehicleResultCard = ({ id, make, model, price, location, image, rating, ty
     const capacity = getCapacity(type);
 
     return (
-        <div className="group flex flex-col sm:flex-row gap-4 p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer">
-            <div className="relative w-full sm:w-72 h-48 sm:h-52 flex-shrink-0 overflow-hidden rounded-xl">
-                <div className="absolute top-3 right-3 z-10">
-                    <button className="p-2 rounded-full bg-white/50 hover:bg-white backdrop-blur-sm transition-all text-slate-700 hover:text-rose-500">
-                        <Heart className="w-5 h-5" />
-                    </button>
-                </div>
-                {/* Tag */}
-                <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-800 shadow-sm uppercase tracking-wider">
-                    Superanfitrión
-                </div>
+        <div className="group bg-white/80 backdrop-blur-lg border border-white/50 rounded-[2rem] p-4 flex flex-col sm:flex-row gap-6 hover:shadow-glow hover:-translate-y-1 transition-all duration-300 cursor-pointer relative overflow-hidden">
+            {/* Hover Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/5 via-transparent to-brand-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+
+            <div className="relative w-full sm:w-80 h-56 flex-shrink-0 overflow-hidden rounded-2xl shadow-inner">
+                {rating >= 4.5 && (
+                    <div className="absolute top-3 left-3 z-10 bg-brand-gold/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-brand-dark shadow-lg uppercase tracking-widest flex items-center gap-1 border border-white/20">
+                        <Star className="w-3 h-3 fill-current" />
+                        Superanfitrión
+                    </div>
+                )}
                 <img
                     src={image}
                     alt={`${make} ${model}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
                     onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000';
@@ -36,36 +36,44 @@ const VehicleResultCard = ({ id, make, model, price, location, image, rating, ty
                 />
             </div>
 
-            <div className="flex-1 flex flex-col justify-between py-1">
+            <div className="flex-1 flex flex-col justify-between py-2 relative z-10">
                 <div>
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-start mb-2">
                         <div>
-                            <p className="text-xs text-slate-500 font-bold uppercase mb-1">{type || 'Vehículo'}</p>
-                            <h3 className="text-xl font-serif font-bold text-slate-900 group-hover:text-brand-blue transition-colors">{make} {model}</h3>
+                            <p className="text-[10px] text-brand-gold font-bold uppercase tracking-[0.2em] mb-1">{type || 'Vehículo'}</p>
+                            <h3 className="text-2xl font-serif font-bold text-slate-800 group-hover:text-brand-blue transition-colors leading-tight">{make} {model}</h3>
                         </div>
                     </div>
 
-                    <div className="w-10 h-0.5 bg-slate-200 my-3"></div>
-
-                    <p className="text-slate-500 text-sm mb-2 flex items-center gap-1">
-                        <span className="truncate">{location}</span>
-                    </p>
-                    <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-                        <span className="bg-slate-100 px-2 py-1 rounded">{capacity} pasajeros</span>
-                        <span className="bg-slate-100 px-2 py-1 rounded">Aire acondicionado</span>
-                        <span className="bg-slate-100 px-2 py-1 rounded">Automático</span>
+                    <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-500 mb-4">
+                        <span className="bg-white/50 border border-white/60 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                            <List className="w-3 h-3" /> {capacity} Pasajeros
+                        </span>
+                        <span className="bg-white/50 border border-white/60 px-3 py-1.5 rounded-lg">Automático</span>
                     </div>
                 </div>
 
-                <div className="flex items-end justify-between mt-4">
-                    <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-slate-900 fill-slate-900" />
-                        <span className="font-bold text-sm text-slate-900">{rating} • </span>
-                        <span className="text-sm text-slate-500 ml-1 underline">20 evaluaciones</span>
+                <div className="flex items-end justify-between mt-auto border-t border-slate-100/50 pt-4">
+                    <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-1 text-xs text-slate-500 font-medium">
+                            <MapPin className="w-3.5 h-3.5 text-brand-gold" />
+                            {location}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-0.5">
+                                <Star className="w-4 h-4 text-brand-gold fill-brand-gold" />
+                                <span className="font-bold text-slate-800">{rating}</span>
+                            </div>
+                            <span className="text-xs text-slate-400 font-medium">(24 reseñas)</span>
+                        </div>
                     </div>
+
                     <div className="text-right">
-                        <p className="text-lg font-bold text-slate-900">S/{price || '0'}</p>
-                        <p className="text-slate-500 text-sm font-light">día</p>
+                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Precio por día</p>
+                        <div className="flex items-baseline justify-end gap-1">
+                            <span className="text-brand-blue text-lg font-bold">S/</span>
+                            <span className="text-3xl font-serif font-bold text-slate-900">{price || '0'}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -74,6 +82,7 @@ const VehicleResultCard = ({ id, make, model, price, location, image, rating, ty
 };
 
 const ExplorarVehiculos = () => {
+    // ... (Hooks and State logic - existing logic is preserved, we are only re-rendering the return)
     const [searchParams] = useSearchParams();
     const destination = searchParams.get('destination') || '';
     const passengers = Number(searchParams.get('passengers')) || 1;
@@ -107,14 +116,13 @@ const ExplorarVehiculos = () => {
     // State for Dynamic Locations (Database)
     const [locationMap, setLocationMap] = useState({});
 
-    // Fetch Locations Structure on Mount
     useEffect(() => {
         const fetchLocationMap = async () => {
             const { data } = await supabase.from('locations').select('name, department');
             if (data) {
                 const map = {};
                 data.forEach(loc => {
-                    const dept = loc.department; // Keep case (e.g. "Piura")
+                    const dept = loc.department;
                     if (!map[dept]) map[dept] = [];
                     map[dept].push(loc.name);
                 });
@@ -139,9 +147,8 @@ const ExplorarVehiculos = () => {
 
             let results = data || [];
 
-            // 1.5 Date Availability Check (New)
+            // 1.5 Date Availability Check 
             if (filters.startDate && filters.endDate) {
-                // Fetch bookings that overlap with selected dates
                 const { data: busyBookings } = await supabase
                     .from('bookings')
                     .select('vehicle_id')
@@ -158,9 +165,6 @@ const ExplorarVehiculos = () => {
             if (destination) {
                 const term = destination.toLowerCase().trim();
                 let targetCities = [];
-
-                // Check Department Match using Dynamic Map
-                // key is like "Piura", term might be "piura"
                 const matchedDept = Object.keys(locationMap).find(d => d.toLowerCase().includes(term) || term.includes(d.toLowerCase()));
                 if (matchedDept) {
                     targetCities = locationMap[matchedDept];
@@ -169,7 +173,6 @@ const ExplorarVehiculos = () => {
                 results = results.filter(vehicle => {
                     const vCity = vehicle.location_city?.toLowerCase() || '';
                     const directCityMatch = vCity.includes(term);
-                    // Check if vehicle city is in the target department list
                     const deptMatch = targetCities.some(cityInDept => vCity.includes(cityInDept.toLowerCase()));
                     return directCityMatch || deptMatch;
                 });
@@ -178,7 +181,6 @@ const ExplorarVehiculos = () => {
             // 3. Advanced Filtering
             results = results.filter(v => {
                 const price = v.price_per_day || 0;
-                // Price Range
                 if (price < filters.minPrice || price > filters.maxPrice) return false;
 
                 if (filters.categories.length > 0) {
@@ -189,7 +191,6 @@ const ExplorarVehiculos = () => {
                     if (!matchesCategory) return false;
                 }
 
-                // Location Filter (New)
                 if (filters.department) {
                     const deptCities = COASTAL_LOCATIONS[filters.department] || [];
                     const vehicleCity = v.location_city;
@@ -202,7 +203,6 @@ const ExplorarVehiculos = () => {
                     if (v.location_city !== filters.city) return false;
                 }
 
-                // Passenger Capacity Filter
                 const capacity = getCapacity(v.category);
                 if (capacity < passengers) return false;
 
@@ -210,45 +210,46 @@ const ExplorarVehiculos = () => {
             });
 
             setFilteredVehicles(results);
-            setVehicles(data || []); // Store ALL vehicles for filter calculations
+            setVehicles(data || []);
             setLoading(false);
         };
 
         fetchAndFilterVehicles();
-    }, [destination, filters, locationMap]); // Re-run when locationMap loads
+    }, [destination, filters, locationMap]);
 
-    // Calculate available locations based on ALL vehicles (not just filtered ones)
     const availableCities = new Set(vehicles.map(v => v.location_city));
     const availableDepartments = Object.keys(locationMap).filter(dept =>
         locationMap[dept].some(city => availableCities.has(city))
     );
 
     return (
-        <div className="min-h-screen bg-white font-sans">
+        <div className="min-h-screen bg-brand-cream/30 font-sans selection:bg-brand-gold/20 selection:text-brand-dark">
             <BarraNavegacion />
 
             {/* Filter Modal */}
             {showFilters && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Filtros</h3>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white/95 backdrop-blur-xl border border-white/50 rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl animate-in zoom-in-95 duration-200 ring-1 ring-white/50">
+                        <div className="flex justify-between items-center mb-8">
+                            <h3 className="text-2xl font-serif font-bold text-slate-800">Filtros Avanzados</h3>
                             <button onClick={() => setShowFilters(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                <X className="w-5 h-5" />
+                                <X className="w-5 h-5 text-slate-500" />
                             </button>
                         </div>
 
 
                         <div className="mb-8">
-                            <h4 className="font-bold text-slate-800 mb-4">Ubicación</h4>
+                            <h4 className="flex items-center gap-2 font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">
+                                <MapPin className="w-4 h-4 text-brand-gold" /> Ubicación
+                            </h4>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <label className="text-xs text-slate-500 font-bold uppercase">Departamento</label>
+                                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Departamento</label>
                                     <div className="relative">
                                         <select
                                             value={filters.department || ''}
                                             onChange={(e) => setFilters({ ...filters, department: e.target.value, city: '' })}
-                                            className="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none appearance-none bg-white cursor-pointer font-medium text-sm"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none appearance-none bg-slate-50 hover:bg-white focus:bg-white focus:border-brand-blue transition-all cursor-pointer font-medium text-sm text-slate-700 shadow-sm"
                                         >
                                             <option value="">Todo el Perú</option>
                                             {availableDepartments.map(dept => (
@@ -258,12 +259,12 @@ const ExplorarVehiculos = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-xs text-slate-500 font-bold uppercase">Ciudad / Playa</label>
+                                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Ciudad / Playa</label>
                                     <div className="relative">
                                         <select
                                             value={filters.city || ''}
                                             onChange={(e) => setFilters({ ...filters, city: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-xl border border-slate-300 outline-none appearance-none bg-white cursor-pointer font-medium text-sm"
+                                            className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none appearance-none bg-slate-50 hover:bg-white focus:bg-white focus:border-brand-blue transition-all cursor-pointer font-medium text-sm text-slate-700 shadow-sm"
                                         >
                                             <option value="">Cualquiera</option>
                                             {(!filters.department
@@ -280,37 +281,45 @@ const ExplorarVehiculos = () => {
 
 
                         <div className="mb-8">
-                            <h4 className="font-bold text-slate-800 mb-4">Rango de Precio</h4>
+                            <h4 className="flex items-center gap-2 font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">
+                                <Star className="w-4 h-4 text-brand-gold" /> Rango de Precio
+                            </h4>
                             <div className="flex gap-4">
-                                <div className="flex-1 border border-slate-300 rounded-xl px-3 py-2">
-                                    <label className="text-xs text-slate-500 font-bold uppercase">Mínimo</label>
-                                    <input
-                                        type="number"
-                                        value={filters.minPrice}
-                                        onChange={(e) => setFilters({ ...filters, minPrice: Number(e.target.value) })}
-                                        className="w-full font-bold outline-none"
-                                    />
+                                <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 hover:bg-white focus-within:bg-white focus-within:border-brand-blue transition-all">
+                                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Mínimo</label>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-slate-400 font-serif font-bold">S/</span>
+                                        <input
+                                            type="number"
+                                            value={filters.minPrice}
+                                            onChange={(e) => setFilters({ ...filters, minPrice: Number(e.target.value) })}
+                                            className="w-full font-bold outline-none bg-transparent text-slate-800"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="flex-1 border border-slate-300 rounded-xl px-3 py-2">
-                                    <label className="text-xs text-slate-500 font-bold uppercase">Máximo</label>
-                                    <input
-                                        type="number"
-                                        value={filters.maxPrice}
-                                        onChange={(e) => setFilters({ ...filters, maxPrice: Number(e.target.value) })}
-                                        className="w-full font-bold outline-none"
-                                    />
+                                <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 hover:bg-white focus-within:bg-white focus-within:border-brand-blue transition-all">
+                                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Máximo</label>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-slate-400 font-serif font-bold">S/</span>
+                                        <input
+                                            type="number"
+                                            value={filters.maxPrice}
+                                            onChange={(e) => setFilters({ ...filters, maxPrice: Number(e.target.value) })}
+                                            className="w-full font-bold outline-none bg-transparent text-slate-800"
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="mb-8">
-                            <h4 className="font-bold text-slate-800 mb-3">Categoría</h4>
+                        <div className="mb-10">
+                            <h4 className="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">Categoría</h4>
                             <div className="flex flex-wrap gap-2">
                                 {['4x4', 'Sedán', 'Deportivo', 'SUV', 'Compacto'].map(cat => (
                                     <button
                                         key={cat}
                                         onClick={() => toggleFilter('categories', cat)}
-                                        className={`px-4 py-2 rounded-full text-sm font-bold border ${filters.categories.includes(cat) ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
+                                        className={`px-5 py-2.5 rounded-xl text-sm font-bold border transition-all duration-300 ${filters.categories.includes(cat) ? 'bg-brand-dark text-brand-gold border-brand-dark shadow-md transform scale-105' : 'bg-white text-slate-500 border-slate-200 hover:border-brand-gold/50 hover:text-brand-dark'}`}
                                     >
                                         {cat}
                                     </button>
@@ -321,46 +330,68 @@ const ExplorarVehiculos = () => {
                         <div className="flex justify-between pt-6 border-t border-slate-100">
                             <button
                                 onClick={() => setFilters({ minPrice: 0, maxPrice: 1000, categories: [], transmission: [] })}
-                                className="text-slate-500 font-bold underline text-sm"
+                                className="text-slate-500 font-bold hover:text-slate-800 transition-colors text-sm"
                             >
-                                Limpiar
+                                Restablecer todo
                             </button>
                             <button
                                 onClick={() => setShowFilters(false)}
-                                className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold"
+                                className="btn-primary"
                             >
-                                Ver Resultados
+                                Mostrar Resultados
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            <div className="pt-24 min-h-screen flex flex-col">
-                <div className="px-6 py-6 border-b border-slate-100 flex items-center justify-between sticky top-[80px] bg-white z-40">
-                    <p className="text-sm text-slate-600 font-medium">
-                        {loading ? 'Buscando...' : `${filteredVehicles.length} alojamientos en ${filters.city || filters.department || destination || 'todo el Perú'}`}
-                    </p>
+            <div className="pt-24 min-h-screen flex flex-col relative w-full overflow-x-hidden">
+                {/* Floating Filter Bar */}
+                <div className="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between sticky top-[80px] z-40 mx-4 md:mx-6 mt-2 md:mt-4 mb-4 md:mb-6 bg-white/70 backdrop-blur-xl border border-white/40 shadow-glass rounded-xl md:rounded-2xl">
+                    <div className="flex items-center gap-2 text-slate-600">
+                        <MapIcon className="w-5 h-5 text-brand-blue" />
+                        <p className="text-xs md:text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                            {loading ? 'Buscando...' : (
+                                <>
+                                    <span className="font-bold text-slate-900">{filteredVehicles.length}</span>
+                                    <span className="hidden sm:inline"> resultados</span>
+                                    {(destination || filters.department || filters.city) && <span className="hidden md:inline"> en <span className="font-bold">{filters.city || filters.department || destination}</span></span>}
+                                </>
+                            )}
+                        </p>
+                    </div>
                     <button
                         onClick={() => setShowFilters(true)}
-                        className="flex items-center gap-2 border border-slate-300 rounded-full px-4 py-2 hover:border-slate-800 transition-colors text-sm font-semibold"
+                        className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg md:rounded-xl px-4 md:px-5 py-2 md:py-2.5 hover:border-brand-gold hover:shadow-md transition-all text-xs md:text-sm font-bold text-slate-700 hover:text-brand-dark active:scale-95"
                     >
                         <SlidersHorizontal className="w-4 h-4" /> Filtros
-                        {(filters.categories.length > 0 || filters.department) && <span className="w-2 h-2 bg-brand-blue rounded-full"></span>}
+                        {(filters.categories.length > 0 || filters.department) && <span className="w-2 h-2 bg-brand-gold rounded-full animate-pulse"></span>}
                     </button>
                 </div>
 
-                <div className="flex flex-1">
+                <div className="flex flex-1 px-4 md:px-6 pb-6 gap-6">
                     {/* List */}
-                    <div className="w-full lg:w-[60%] xl:w-[55%] px-6 py-4 overflow-y-auto h-[calc(100vh-160px)] custom-scrollbar">
+                    <div className="w-full lg:w-[60%] xl:w-[55%] overflow-y-auto h-[calc(100vh-160px)] custom-scrollbar pr-0 md:pr-2">
                         {loading ? (
-                            <div className="space-y-4">
-                                {[1, 2, 3].map(i => <div key={i} className="h-64 bg-slate-100 rounded-xl animate-pulse"></div>)}
+                            <div className="space-y-6">
+                                {[1, 2, 3].map(i => (
+                                    <div key={i} className="h-64 rounded-[2rem] bg-white/50 border border-white/60 p-4 animate-pulse flex gap-6">
+                                        <div className="w-80 h-full bg-slate-200/50 rounded-2xl"></div>
+                                        <div className="flex-1 py-2 space-y-4">
+                                            <div className="w-2/3 h-8 bg-slate-200/50 rounded-lg"></div>
+                                            <div className="w-1/2 h-4 bg-slate-200/50 rounded-lg"></div>
+                                            <div className="flex gap-2 mt-4">
+                                                <div className="w-20 h-6 bg-slate-200/50 rounded-lg"></div>
+                                                <div className="w-20 h-6 bg-slate-200/50 rounded-lg"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : filteredVehicles.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-6 pb-20">
                                 {filteredVehicles.map(vehicle => (
-                                    <Link key={vehicle.id} to={`/vehiculo/${vehicle.id}`}>
+                                    <Link key={vehicle.id} to={`/vehiculo/${vehicle.id}`} className="block">
                                         <VehicleResultCard
                                             {...vehicle}
                                             price={vehicle.price_per_day}
@@ -372,24 +403,46 @@ const ExplorarVehiculos = () => {
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-20">
-                                <h3 className="text-2xl font-bold text-slate-800">No se encontraron vehículos</h3>
-                                <p className="text-slate-500 mt-2">Prueba ajustando los filtros</p>
+                            <div className="text-center py-20 bg-white/40 backdrop-blur-md rounded-[3rem] border border-white/50">
+                                <div className="w-20 h-20 bg-brand-gold/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <Star className="w-10 h-10 text-brand-gold opacity-50" />
+                                </div>
+                                <h3 className="text-2xl font-serif font-bold text-slate-800 mb-2">No encontramos vehículos</h3>
+                                <p className="text-slate-500 max-w-xs mx-auto mb-8">Intenta ajustar tu búsqueda o los filtros para encontrar tu vehículo ideal.</p>
+                                <button onClick={() => setFilters({ minPrice: 0, maxPrice: 1000, categories: [], department: '', city: '' })} className="btn-secondary">
+                                    Ver todos los vehículos
+                                </button>
                             </div>
                         )}
                     </div>
 
                     {/* Map */}
-                    <div className="hidden lg:block w-[40%] xl:w-[45%] sticky top-[160px] h-[calc(100vh-160px)] bg-slate-100 border-l border-slate-200">
+                    <div className="hidden lg:block w-[40%] xl:w-[45%] h-[calc(100vh-180px)] sticky top-[160px] rounded-[2.5rem] overflow-hidden border border-white/60 shadow-glass">
                         <div className="w-full h-full relative overflow-hidden bg-[#eef0f2]">
+                            {/* Map Gradient Overlay for 'Premium' feel */}
+                            <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-brand-dark/5 to-transparent mix-blend-multiply"></div>
+
                             <iframe
                                 width="100%" height="100%" frameBorder="0" scrolling="no" marginHeight="0" marginWidth="0"
                                 src={`https://maps.google.com/maps?q=${encodeURIComponent(filters.city || filters.department || destination || 'Perú')}&t=&z=10&ie=UTF8&iwloc=&output=embed`}
-                                className="w-full h-full grayscale-[20%] contrast-[1.1]"
+                                className="w-full h-full grayscale-[10%] contrast-[1.05] opacity-90 hover:opacity-100 transition-opacity duration-700"
                             ></iframe>
-                            <div className="absolute top-4 right-4 flex flex-col gap-2 pointer-events-none">
-                                <div className="w-10 h-10 bg-white rounded-lg shadow-md flex items-center justify-center text-slate-700 pointer-events-auto cursor-pointer" onClick={() => window.open(`https://www.google.com/maps/search/${filters.city || filters.department || destination || 'Peru'}`, '_blank')}>
-                                    <Plus className="w-5 h-5" />
+
+                            <div className="absolute bottom-8 right-8 flex flex-col gap-3 pointer-events-none z-20">
+                                <div className="bg-white/90 backdrop-blur-xl border border-white/50 p-4 rounded-2xl shadow-glass flex flex-col gap-2 w-64">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <div className="w-10 h-10 rounded-full bg-brand-gold/20 flex items-center justify-center text-brand-gold">
+                                            <MapPin className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mostrando</p>
+                                            <p className="font-serif font-bold text-slate-800">{filters.city || filters.department || destination || 'Todo el Perú'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center text-slate-700 pointer-events-auto cursor-pointer hover:bg-brand-gold hover:text-white transition-colors" onClick={() => window.open(`https://www.google.com/maps/search/${filters.city || filters.department || destination || 'Peru'}`, '_blank')}>
+                                    <Plus className="w-6 h-6" />
                                 </div>
                             </div>
                         </div>
