@@ -108,18 +108,18 @@ const DetalleVehiculo = () => {
         }
     }, [startDate, endDate, vehicle]);
 
-    const [rentalType, setRentalType] = useState('days'); // 'days' | 'hours'
+    const [rentalType, setRentalType] = useState('hours'); // Always hours for Beach App
 
-    // Enforce rental type based on vehicle category
-    useEffect(() => {
-        if (vehicle?.vehicle_type) {
-            if (vehicle.vehicle_type === 'playa') {
-                setRentalType('hours');
-            } else if (vehicle.vehicle_type === 'ciudad') {
-                setRentalType('days');
-            }
-        }
-    }, [vehicle]);
+    // Enforce rental type - Removing vehicle_type check, always hours
+    // useEffect(() => {
+    //     if (vehicle?.vehicle_type) {
+    //         if (vehicle.vehicle_type === 'playa') {
+    //             setRentalType('hours');
+    //         } else if (vehicle.vehicle_type === 'ciudad') {
+    //             setRentalType('days');
+    //         }
+    //     }
+    // }, [vehicle]);
 
     // Reset dates when type changes
     useEffect(() => {
@@ -138,13 +138,15 @@ const DetalleVehiculo = () => {
 
             if (rentalType === 'days') {
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                setTotalPrice(diffDays > 0 ? diffDays * vehicle.price_per_day * quantity : 0);
+                const subtotal = diffDays > 0 ? diffDays * vehicle.price_per_day * quantity : 0;
+                setTotalPrice(subtotal * 1.18); // Add 18% IGV
             } else {
                 // Hourly calculation: Rate = Day Price / 8
                 const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
                 // Use explicit price_per_hour if available, else derive it
                 const hourlyRate = vehicle.price_per_hour || (vehicle.price_per_day / 8);
-                setTotalPrice(diffHours > 0 ? diffHours * hourlyRate * quantity : 0);
+                const subtotal = diffHours > 0 ? diffHours * hourlyRate * quantity : 0;
+                setTotalPrice(subtotal * 1.18); // Add 18% IGV
             }
         }
     }, [startDate, endDate, vehicle, rentalType, quantity]);
@@ -462,9 +464,9 @@ const DetalleVehiculo = () => {
                             </div>
 
                             <div className="text-left md:text-right">
-                                <p className="text-sm text-white/70 font-medium uppercase tracking-wider mb-1">Precio por {rentalType === 'days' ? 'día' : 'hora'}</p>
+                                <p className="text-sm text-white/70 font-medium uppercase tracking-wider mb-1">Precio por hora</p>
                                 <p className="text-4xl md:text-5xl font-bold text-white">
-                                    S/ {rentalType === 'days' ? vehicle.price_per_day : (vehicle.price_per_hour || (vehicle.price_per_day / 8)).toFixed(2)}
+                                    S/ {(vehicle.price_per_hour || (vehicle.price_per_day / 8)).toFixed(2)}
                                 </p>
                             </div>
                         </div>
@@ -688,23 +690,9 @@ const DetalleVehiculo = () => {
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-bold text-slate-900 font-serif">Reserva tu Aventura</h3>
 
-                                    {/* Rental Type Toggle - Only show if type is NOT enforced */}
-                                    {(!vehicle?.vehicle_type || (vehicle.vehicle_type !== 'playa' && vehicle.vehicle_type !== 'ciudad')) && (
-                                        <div className="flex items-center bg-slate-100 p-1 rounded-lg">
-                                            <button
-                                                onClick={() => setRentalType('days')}
-                                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rentalType === 'days' ? 'bg-white text-brand-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                            >
-                                                Días
-                                            </button>
-                                            <button
-                                                onClick={() => setRentalType('hours')}
-                                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rentalType === 'hours' ? 'bg-white text-brand-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                            >
-                                                Horas
-                                            </button>
-                                        </div>
-                                    )}
+                                    <h3 className="text-xl font-bold text-slate-900 font-serif">Reserva tu Aventura</h3>
+
+                                    {/* Rental Type Toggle Removed - Sandbox is Beach Only (Hourly) */}
                                 </div>
 
                                 <div className="space-y-4 mb-8">
@@ -947,6 +935,14 @@ const DetalleVehiculo = () => {
                                             <span className="font-bold">- S/ {discount.toFixed(2)}</span>
                                         </div>
                                     )}
+                                    <div className="flex justify-between items-center text-sm text-slate-500">
+                                        <span className="font-medium">Subtotal</span>
+                                        <span>S/ {Math.max(0, (totalPrice - discount) / 1.18).toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm text-slate-500">
+                                        <span className="font-medium">IGV (18%)</span>
+                                        <span>S/ {Math.max(0, (totalPrice - discount) - ((totalPrice - discount) / 1.18)).toFixed(2)}</span>
+                                    </div>
                                     <div className="flex justify-between items-center pt-3 border-t border-ocean-200/50">
                                         <span className="text-lg font-bold text-brand-dark">Total estimado</span>
                                         <div className="text-right">

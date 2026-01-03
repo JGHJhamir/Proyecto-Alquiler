@@ -153,11 +153,14 @@ const DashboardView = () => {
                 }
 
                 bookings.forEach(b => {
+                    const validStatus = ['confirmed', 'completed'];
+                    if (!validStatus.includes(b.status)) return;
+
                     const date = new Date(b.created_at);
                     const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
                     const index = chartData.findIndex(d => d.name === monthKey);
                     if (index !== -1) {
-                        chartData[index].value += (b.total_price || 0);
+                        chartData[index].value += (Number(b.total_price) || 0);
                     }
                 });
 
@@ -165,6 +168,7 @@ const DashboardView = () => {
                 const vehiclePerformance = {};
                 bookings.forEach(b => {
                     if (!b.vehicles) return;
+
                     const vName = `${b.vehicles.make} ${b.vehicles.model}`;
                     if (!vehiclePerformance[vName]) {
                         vehiclePerformance[vName] = {
@@ -174,7 +178,11 @@ const DashboardView = () => {
                             image: b.vehicles.image_url
                         };
                     }
-                    vehiclePerformance[vName].revenue += (b.total_price || 0);
+
+                    const validStatus = ['confirmed', 'completed'];
+                    if (validStatus.includes(b.status)) {
+                        vehiclePerformance[vName].revenue += (Number(b.total_price) || 0);
+                    }
                     vehiclePerformance[vName].count += 1;
                 });
 
@@ -183,8 +191,10 @@ const DashboardView = () => {
                     .slice(0, 5);
 
                 // 3. Global Stats
-                const totalRev = bookings.reduce((acc, curr) => acc + (curr.total_price || 0), 0);
-                const avg = bookings.length ? totalRev / bookings.length : 0;
+                const validStatus = ['confirmed', 'completed'];
+                const validBookings = bookings.filter(b => validStatus.includes(b.status));
+                const totalRev = validBookings.reduce((acc, curr) => acc + (Number(curr.total_price) || 0), 0);
+                const avg = validBookings.length ? totalRev / validBookings.length : 0;
 
                 // 4. Count by status
                 const byStatus = {
@@ -476,11 +486,14 @@ const FinanceView = () => {
                 }
 
                 bookings.forEach(b => {
+                    const validStatus = ['confirmed', 'completed'];
+                    if (!validStatus.includes(b.status)) return;
+
                     const date = new Date(b.created_at);
                     const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
                     const index = chartData.findIndex(d => d.name === monthKey);
                     if (index !== -1) {
-                        chartData[index].value += (b.total_price || 0);
+                        chartData[index].value += (Number(b.total_price) || 0);
                     }
                 });
 
@@ -497,7 +510,11 @@ const FinanceView = () => {
                             image: b.vehicles.image_url
                         };
                     }
-                    vehiclePerformance[vName].revenue += (b.total_price || 0);
+
+                    const validStatus = ['confirmed', 'completed'];
+                    if (validStatus.includes(b.status)) {
+                        vehiclePerformance[vName].revenue += (Number(b.total_price) || 0);
+                    }
                     vehiclePerformance[vName].count += 1;
                 });
 
@@ -506,8 +523,10 @@ const FinanceView = () => {
                     .slice(0, 5);
 
                 // 3. Global Stats
-                const totalRev = bookings.reduce((acc, curr) => acc + (curr.total_price || 0), 0);
-                const avg = bookings.length ? totalRev / bookings.length : 0;
+                const validStatus = ['confirmed', 'completed'];
+                const validBookings = bookings.filter(b => validStatus.includes(b.status));
+                const totalRev = validBookings.reduce((acc, curr) => acc + (Number(curr.total_price) || 0), 0);
+                const avg = validBookings.length ? totalRev / validBookings.length : 0;
 
                 setStats({
                     monthlyRevenue: chartData,

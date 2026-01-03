@@ -43,8 +43,9 @@ const TicketReserva = ({ booking, vehicle, user }) => {
             `Inicio: ${booking.start_date ? new Date(booking.start_date).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' }) : 'Pendiente'}\n` +
             `Fin: ${booking.end_date ? new Date(booking.end_date).toLocaleString('es-PE', { dateStyle: 'short', timeStyle: 'short' }) : 'Pendiente'}\n\n` +
             `--- UBICACION ---\n` +
-            `${vehicle.location_city}, Peru\n\n` +
+            `${vehicle.location_city}, Peru\n` +
             `--- PAGO ---\n` +
+            `Cantidad: ${booking.quantity || 1} Vehículo(s)\n` +
             `Subtotal: S/ ${subtotal.toFixed(2)}\n` +
             `IGV (18%): S/ ${igv.toFixed(2)}\n` +
             `*TOTAL: S/ ${total.toFixed(2)}*` +
@@ -95,6 +96,9 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                     <img src={vehicle.image_url} alt={vehicle.model} className="w-20 h-20 object-cover rounded-xl mx-auto mb-3 shadow-md" />
                     <h3 className="font-bold text-slate-900 text-lg">{vehicle.make} {vehicle.model}</h3>
                     <p className="text-xs text-slate-500 font-medium">{vehicle.year} • {vehicle.category}</p>
+                    <div className="mt-2 text-xs font-bold text-brand-blue bg-blue-50 py-1 px-3 rounded-full inline-block">
+                        {booking.quantity || 1} {Number(booking.quantity) === 1 ? 'Vehículo' : 'Vehículos'}
+                    </div>
                 </div>
 
                 {/* Details Grid */}

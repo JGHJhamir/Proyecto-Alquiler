@@ -598,20 +598,23 @@ const DashboardView = ({ users }) => {
         totalRevenue: 0,
         totalBookings: 0,
         totalVehicles: 0,
-        bookingsByStatus: { confirmed: 0, completed: 0, active: 0, cancelled: 0 }
+        bookingsByStatus: { confirmed: 0, completed: 0, active: 0, cancelled: 0 },
+        monthlyRevenue: [] // Array of { month, year, revenue }
     });
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // Fetch all bookings
-                const { data: bookings } = await supabase.from('bookings').select('total_price, status');
+                // Fetch all bookings with created_at for time analysis
+                const { data: bookings } = await supabase.from('bookings').select('total_price, status, created_at');
 
                 // Fetch all vehicles
                 const { data: vehicles } = await supabase.from('vehicles').select('id');
 
                 // Calculate stats
-                const totalRevenue = bookings?.reduce((sum, b) => sum + (b.total_price || 0), 0) || 0;
+                // Only count revenue from 'confirmed' or 'completed'
+                const validRevenueStatus = ['confirmed', 'completed'];
+                const totalRevenue = bookings?.filter(b => validRevenueStatus.includes(b.status)).reduce((sum, b) => sum + (Number(b.total_price) || 0), 0) || 0;
                 const totalBookings = bookings?.length || 0;
                 const totalVehicles = vehicles?.length || 0;
 
@@ -623,11 +626,41 @@ const DashboardView = ({ users }) => {
                     cancelled: bookings?.filter(b => b.status === 'cancelled').length || 0
                 };
 
+                // Calculate Monthly Revenue (Last 6 Months)
+                const monthlyData = {};
+                const today = new Date();
+                const months = [];
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                    const key = `${d.getFullYear()}-${d.getMonth() + 1}`; // YYYY-M
+                    // Label: "Ene", "Feb", etc.
+                    const monthName = d.toLocaleString('es-PE', { month: 'short' });
+                    monthlyData[key] = {
+                        label: monthName.charAt(0).toUpperCase() + monthName.slice(1),
+                        year: d.getFullYear(),
+                        revenue: 0,
+                        key: key
+                    };
+                    months.push(key);
+                }
+
+                bookings?.forEach(b => {
+                    const validRevenueStatus = ['confirmed', 'completed'];
+                    if (!validRevenueStatus.includes(b.status)) return;
+
+                    const d = new Date(b.created_at);
+                    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+                    if (monthlyData[key]) {
+                        monthlyData[key].revenue += Number(b.total_price) || 0;
+                    }
+                });
+
                 setStats({
                     totalRevenue,
                     totalBookings,
                     totalVehicles,
-                    bookingsByStatus: byStatus
+                    bookingsByStatus: byStatus,
+                    monthlyRevenue: Object.values(monthlyData)
                 });
             } catch (error) {
                 console.error('Error fetching dashboard data:', error);
@@ -684,8 +717,44 @@ const DashboardView = ({ users }) => {
                     <h3 className="font-bold text-xl text-slate-900">Ingresos por Mes</h3>
                     <p className="text-sm text-slate-500 mb-8">Análisis de ingresos de reservas finalizadas, en curso o confirmadas.</p>
 
-                    <div className="h-64 flex items-center justify-center border border-slate-100 rounded-xl bg-slate-50">
-                        <p className="text-slate-400 text-sm">Análisis de ingresos mensuales</p>
+                    <div className="h-64 flex items-end justify-between gap-2 border-b border-slate-100 pb-2 relative">
+                        {/* Y-Axis Lines */}
+                        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                            <div className="border-t border-slate-50 w-full h-full"></div>
+                            <div className="border-t border-slate-50 w-full h-full"></div>
+                            <div className="border-t border-slate-50 w-full h-full"></div>
+                            <div className="border-t border-slate-50 w-full h-full"></div>
+                        </div>
+
+                        {stats.monthlyRevenue && stats.monthlyRevenue.length > 0 ? (
+                            stats.monthlyRevenue.map((item, index) => {
+                                // Find max revenue to scale
+                                const maxRev = Math.max(...stats.monthlyRevenue.map(m => m.revenue), 100); // Avoid div by zero
+                                const heightPercent = (item.revenue / maxRev) * 100;
+
+                                return (
+                                    <div key={index} className="flex flex-col items-center flex-1 h-full justify-end group relative">
+                                        {/* Tooltip */}
+                                        <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap z-10">
+                                            S/ {item.revenue.toLocaleString()}
+                                        </div>
+                                        {/* Bar */}
+                                        <div
+                                            className="w-full max-w-[40px] bg-brand-blue rounded-t-lg transition-all duration-500 hover:bg-blue-600 relative overflow-hidden"
+                                            style={{ height: `${Math.max(heightPercent, 2)}%` }} // Min 2% height
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                                        </div>
+                                        {/* Label */}
+                                        <p className="text-xs text-slate-400 mt-2 font-medium">{item.label}</p>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                No hay datos suficientes
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -1864,7 +1933,7 @@ const BookingsView = () => {
                                     )}
                                     {visibleColumns.total && (
                                         <td className="px-6 py-4 font-bold text-slate-900 text-sm">
-                                            S/ {booking.total_price}
+                                            S/ {Number(booking.total_price).toFixed(2)}
                                         </td>
                                     )}
                                     {visibleColumns.status && (
@@ -2483,15 +2552,30 @@ const PanelAdministrador = () => {
     };
 
     const handleDeleteClient = async (id) => {
-        if (!confirm('¿Estás seguro de eliminar este usuario? Esto no borrará su cuenta de autenticación, solo su perfil.')) return;
+        // 1. Check for existing bookings
         try {
+            const { count, error: countError } = await supabase
+                .from('bookings')
+                .select('*', { count: 'exact', head: true })
+                .eq('user_id', id);
+
+            if (countError) throw countError;
+
+            if (count > 0) {
+                alert(`No se puede eliminar este usuario porque tiene ${count} reserva(s) registrada(s). Esto comprometería el historial de reservas.`);
+                return;
+            }
+
+            // 2. Proceed with deletion if no bookings
+            if (!confirm('¿Estás seguro de eliminar el perfil de este usuario permanentemente?')) return;
+
             const { error } = await supabase.from('profiles').delete().eq('id', id);
             if (error) throw error;
             await logAction('DELETE_CLIENT_PROFILE', { profile_id: id });
             alert('Usuario eliminado correctamente.');
             setUsers(users.filter(u => u.id !== id));
         } catch (error) {
-            alert('Error al eliminar: ' + error.message);
+            alert('Error al procesar la solicitud: ' + error.message);
         }
     };
 

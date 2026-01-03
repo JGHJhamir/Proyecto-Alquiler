@@ -4,7 +4,7 @@ import { supabase } from '../supabase';
 import { FileText, Printer, TrendingUp, Calendar, Users, Car, Download, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 
 const ReportesView = () => {
-    const [dateRange, setDateRange] = useState('month');
+    const [dateRange, setDateRange] = useState('all'); // Default to all history
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({
         revenue: 0,
@@ -56,24 +56,25 @@ const ReportesView = () => {
 
             if (bookingsError) throw bookingsError;
 
-            // 2. Fetch Active Vehicles Count
+            // 2. Fetch Active Vehicles Count (All vehicles in DB)
             const { count: vehicleCount, error: vehicleError } = await supabase
                 .from('vehicles')
-                .select('id', { count: 'exact', head: true })
-                .eq('is_active', true);
+                .select('id', { count: 'exact', head: true });
+            // Removed .eq('is_active', true) as it defaults to null/false in current schema
 
             if (vehicleError) throw vehicleError;
 
             // --- Calculations ---
 
             // Revenue
+            const validStatus = ['confirmed', 'completed'];
             const revenue = bookings
-                .filter(b => b.status !== 'cancelled')
+                .filter(b => validStatus.includes(b.status))
                 .reduce((sum, b) => sum + (Number(b.total_price) || 0), 0);
 
             // Booking Stats
             const total = bookings.length;
-            const confirmed = bookings.filter(b => b.status !== 'cancelled').length;
+            const confirmed = bookings.filter(b => b.status === 'confirmed').length;
             const cancelled = bookings.filter(b => b.status === 'cancelled').length;
 
             // Top Vehicles
@@ -83,7 +84,11 @@ const ReportesView = () => {
                 const key = `${b.vehicles.make} ${b.vehicles.model}`;
                 if (!vehicleMap[key]) vehicleMap[key] = { name: key, count: 0, revenue: 0 };
                 vehicleMap[key].count += 1;
-                if (b.status !== 'cancelled') vehicleMap[key].revenue += (Number(b.total_price) || 0);
+
+                // Only count revenue if confirmed/completed
+                if (validStatus.includes(b.status)) {
+                    vehicleMap[key].revenue += (Number(b.total_price) || 0);
+                }
             });
             const topVehicles = Object.values(vehicleMap).sort((a, b) => b.count - a.count).slice(0, 5);
 
@@ -94,7 +99,11 @@ const ReportesView = () => {
                 const name = b.profiles.full_name || 'Desconocido';
                 if (!clientMap[name]) clientMap[name] = { name, count: 0, spent: 0 };
                 clientMap[name].count += 1;
-                if (b.status !== 'cancelled') clientMap[name].spent += (Number(b.total_price) || 0);
+
+                // Only count spent if confirmed/completed
+                if (validStatus.includes(b.status)) {
+                    clientMap[name].spent += (Number(b.total_price) || 0);
+                }
             });
             const topClients = Object.values(clientMap).sort((a, b) => b.count - a.count).slice(0, 5);
 
