@@ -10,6 +10,13 @@ import StepIndicator from '../components/StepIndicator';
 import DateRangePicker from '../components/DateRangePicker';
 import TicketReserva from '../components/TicketReserva';
 
+// Helper: Format Date to Local ISO String (YYYY-MM-DDTHH:mm) for inputs
+const toLocalISOString = (date) => {
+    const offset = date.getTimezoneOffset() * 60000;
+    const localDate = new Date(date.getTime() - offset);
+    return localDate.toISOString().slice(0, 16);
+};
+
 const DetalleVehiculo = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -19,6 +26,7 @@ const DetalleVehiculo = () => {
     // Booking State
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [quantity, setQuantity] = useState(1);
     const [totalPrice, setTotalPrice] = useState(0);
     const [bookingStatus, setBookingStatus] = useState('idle'); // idle, processing, success, error
 
@@ -102,6 +110,17 @@ const DetalleVehiculo = () => {
 
     const [rentalType, setRentalType] = useState('days'); // 'days' | 'hours'
 
+    // Enforce rental type based on vehicle category
+    useEffect(() => {
+        if (vehicle?.vehicle_type) {
+            if (vehicle.vehicle_type === 'playa') {
+                setRentalType('hours');
+            } else if (vehicle.vehicle_type === 'ciudad') {
+                setRentalType('days');
+            }
+        }
+    }, [vehicle]);
+
     // Reset dates when type changes
     useEffect(() => {
         setStartDate('');
@@ -119,16 +138,16 @@ const DetalleVehiculo = () => {
 
             if (rentalType === 'days') {
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                setTotalPrice(diffDays > 0 ? diffDays * vehicle.price_per_day : 0);
+                setTotalPrice(diffDays > 0 ? diffDays * vehicle.price_per_day * quantity : 0);
             } else {
                 // Hourly calculation: Rate = Day Price / 8
                 const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
                 // Use explicit price_per_hour if available, else derive it
                 const hourlyRate = vehicle.price_per_hour || (vehicle.price_per_day / 8);
-                setTotalPrice(diffHours > 0 ? diffHours * hourlyRate : 0);
+                setTotalPrice(diffHours > 0 ? diffHours * hourlyRate * quantity : 0);
             }
         }
-    }, [startDate, endDate, vehicle, rentalType]);
+    }, [startDate, endDate, vehicle, rentalType, quantity]);
 
     // Reset discount when dates change
     useEffect(() => {
@@ -218,7 +237,7 @@ const DetalleVehiculo = () => {
         // Basic Overlap Check
         const { data, error } = await supabase
             .from('bookings')
-            .select('id')
+            .select('quantity')
             .eq('vehicle_id', vehicle.id)
             .neq('status', 'cancelled') // Ignore cancelled bookings
             .or(`and(start_date.lte."${end}", end_date.gte."${start}")`);
@@ -227,7 +246,12 @@ const DetalleVehiculo = () => {
             console.error('Error checking availability:', error);
             return false;
         }
-        return data.length === 0;
+
+        // Calculate used stock
+        const usedStock = data.reduce((sum, booking) => sum + (booking.quantity || 1), 0);
+        const totalStock = vehicle.stock || 1;
+
+        return (totalStock - usedStock) >= quantity;
     };
 
     // Reset booking status when dates change
@@ -274,6 +298,7 @@ const DetalleVehiculo = () => {
                 start_date: startDate,
                 end_date: endDate,
                 total_price: Math.max(0, totalPrice - discount),
+                quantity: quantity,
                 status: 'pending'
             };
 
@@ -455,23 +480,23 @@ const DetalleVehiculo = () => {
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div className="flex flex-col items-center text-center gap-2 p-4 bg-slate-50 rounded-2xl">
                             <Gauge className="w-6 h-6 text-brand-blue" />
-                            <span className="text-xs font-bold text-slate-400 uppercase">Velocidad</span>
-                            <span className="font-bold text-slate-900">400 HP</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase">Potencia</span>
+                            <span className="font-bold text-slate-900">{vehicle.engine_power || '400 HP'}</span>
                         </div>
                         <div className="flex flex-col items-center text-center gap-2 p-4 bg-slate-50 rounded-2xl">
                             <Fuel className="w-6 h-6 text-brand-blue" />
                             <span className="text-xs font-bold text-slate-400 uppercase">Combustible</span>
-                            <span className="font-bold text-slate-900">Gasolina</span>
+                            <span className="font-bold text-slate-900">{vehicle.fuel_type || 'Gasolina'}</span>
                         </div>
                         <div className="flex flex-col items-center text-center gap-2 p-4 bg-slate-50 rounded-2xl">
                             <Users className="w-6 h-6 text-brand-blue" />
                             <span className="text-xs font-bold text-slate-400 uppercase">Pasajeros</span>
-                            <span className="font-bold text-slate-900">4 Personas</span>
+                            <span className="font-bold text-slate-900">{vehicle.passengers || 4} Personas</span>
                         </div>
                         <div className="flex flex-col items-center text-center gap-2 p-4 bg-slate-50 rounded-2xl">
                             <Shield className="w-6 h-6 text-brand-blue" />
-                            <span className="text-xs font-bold text-slate-400 uppercase">Seguro</span>
-                            <span className="font-bold text-slate-900">Todo Riesgo</span>
+                            <span className="text-xs font-bold text-slate-400 uppercase">Transmisión</span>
+                            <span className="font-bold text-slate-900">{vehicle.transmission || 'Automática'}</span>
                         </div>
                     </div>
 
@@ -663,165 +688,274 @@ const DetalleVehiculo = () => {
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-bold text-slate-900 font-serif">Reserva tu Aventura</h3>
 
-                                    {/* Rental Type Toggle */}
-                                    <div className="flex items-center bg-slate-100 p-1 rounded-lg">
-                                        <button
-                                            onClick={() => setRentalType('days')}
-                                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rentalType === 'days' ? 'bg-white text-brand-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                        >
-                                            Días
-                                        </button>
-                                        <button
-                                            onClick={() => setRentalType('hours')}
-                                            className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rentalType === 'hours' ? 'bg-white text-brand-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                                        >
-                                            Horas
-                                        </button>
-                                    </div>
+                                    {/* Rental Type Toggle - Only show if type is NOT enforced */}
+                                    {(!vehicle?.vehicle_type || (vehicle.vehicle_type !== 'playa' && vehicle.vehicle_type !== 'ciudad')) && (
+                                        <div className="flex items-center bg-slate-100 p-1 rounded-lg">
+                                            <button
+                                                onClick={() => setRentalType('days')}
+                                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rentalType === 'days' ? 'bg-white text-brand-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                            >
+                                                Días
+                                            </button>
+                                            <button
+                                                onClick={() => setRentalType('hours')}
+                                                className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${rentalType === 'hours' ? 'bg-white text-brand-blue shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                                            >
+                                                Horas
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-4 mb-8">
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2 flex items-center gap-2">
-                                            Desde
-                                            {startDate && <CheckCircle className="w-3 h-3 text-emerald-500" />}
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type={rentalType === 'days' ? "date" : "datetime-local"}
-                                                className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none"
-                                                value={startDate}
-                                                onChange={(e) => setStartDate(e.target.value)}
-                                                min={rentalType === 'days' ? todayStr : new Date().toISOString().slice(0, 16)}
-                                            />
-                                            <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2 flex items-center gap-2">
-                                            Hasta
-                                            {endDate && <CheckCircle className="w-3 h-3 text-emerald-500" />}
-                                        </label>
-                                        <div className="relative">
-                                            <input
-                                                type={rentalType === 'days' ? "date" : "datetime-local"}
-                                                className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none"
-                                                value={endDate}
-                                                onChange={(e) => setEndDate(e.target.value)}
-                                                min={startDate || (rentalType === 'days' ? todayStr : new Date().toISOString().slice(0, 16))}
-                                                disabled={!startDate}
-                                            />
-                                            <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
-                                        </div>
-                                    </div>
-
-                                    {/* Promo Code Section */}
-                                    <div className="pt-2">
-                                        <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Cupón de Descuento</label>
-                                        <div className="flex gap-2">
-                                            <div className="relative flex-1">
-                                                <Tag className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-                                                <input
-                                                    type="text"
-                                                    className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all uppercase placeholder:text-slate-400 text-sm font-medium disabled:opacity-50"
-                                                    placeholder="CÓDIGO"
-                                                    value={promoCode}
-                                                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                                                    disabled={appliedPromo || !startDate || !endDate}
-                                                />
-                                                {appliedPromo && (
-                                                    <button
-                                                        onClick={() => { setAppliedPromo(null); setDiscount(0); setPromoCode(''); setPromoMessage(null); }}
-                                                        className="absolute right-2 top-2 p-1 hover:bg-slate-200 rounded-full transition-colors"
-                                                    >
-                                                        <X className="w-3 h-3 text-slate-500" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <button
-                                                onClick={handleApplyPromo}
-                                                disabled={!promoCode || appliedPromo || promoLoading || !startDate || !endDate}
-                                                className="bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-                                            >
-                                                {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aplicar'}
-                                            </button>
-                                        </div>
-                                        {promoMessage && (
-                                            <p className={`text-xs mt-2 font-medium flex items-center gap-1.5 ${promoMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500'} `}>
-                                                {promoMessage.type === 'success' ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-                                                {promoMessage.text}
-                                            </p>
-                                        )}
-
-                                        {/* Available Promos Suggestions */}
-                                        {!appliedPromo && availablePromos.length > 0 && startDate && endDate && (
-                                            <div className="mt-3 space-y-2">
-                                                <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Cupones disponibles:</p>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {availablePromos.map((promo) => (
-                                                        <button
-                                                            key={promo.id}
-                                                            onClick={() => {
-                                                                setPromoCode(promo.code);
-                                                                setTimeout(() => handleApplyPromo(), 100);
-                                                            }}
-                                                            className="group relative bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 hover:border-emerald-400 rounded-lg px-3 py-2 text-left transition-all hover:shadow-md active:scale-95"
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <Tag className="w-3 h-3 text-emerald-600" />
-                                                                <span className="font-bold text-xs text-emerald-700">{promo.code}</span>
-                                                            </div>
-                                                            <p className="text-[10px] text-emerald-600 mt-0.5">
-                                                                {promo.discount_type === 'percentage'
-                                                                    ? `${promo.discount_value}% OFF`
-                                                                    : `S/ ${promo.discount_value} OFF`}
-                                                            </p>
-                                                        </button>
-                                                    ))}
+                                    {rentalType === 'days' ? (
+                                        <>
+                                            {/* DAYS VIEW: Date Range */}
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2 flex items-center gap-2">
+                                                    Fecha Inicio
+                                                    {startDate && <CheckCircle className="w-3 h-3 text-emerald-500" />}
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="date"
+                                                        className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none"
+                                                        value={startDate}
+                                                        onChange={(e) => setStartDate(e.target.value)}
+                                                        min={new Date().toISOString().split('T')[0]}
+                                                    />
+                                                    <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
                                                 </div>
                                             </div>
-                                        )}
-                                    </div>
 
-                                    <div className="bg-ocean-50/50 p-6 rounded-2xl border border-ocean-100 mt-6 space-y-3">
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="font-medium text-slate-500">
-                                                Precio x {rentalType === 'days' ? 'día' : 'hora'}
-                                            </span>
-                                            <span className="text-slate-700 font-bold">
-                                                S/ {rentalType === 'days' ? vehicle.price_per_day : (vehicle.price_per_hour || (vehicle.price_per_day / 8)).toFixed(2)}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="font-medium text-slate-500">
-                                                {rentalType === 'days' ? 'Días' : 'Horas'}
-                                            </span>
-                                            <span className="text-slate-700 font-bold">
-                                                {startDate && endDate
-                                                    ? (rentalType === 'days'
-                                                        ? Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))
-                                                        : Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60))
-                                                    )
-                                                    : 0}
-                                            </span>
-                                        </div>
-                                        {discount > 0 && (
-                                            <div className="flex justify-between items-center text-sm text-emerald-600 animate-in fade-in slide-in-from-top-1">
-                                                <span className="font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> Descuento</span>
-                                                <span className="font-bold">- S/ {discount.toFixed(2)}</span>
+                                            <div>
+                                                <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2 flex items-center gap-2">
+                                                    Fecha Fin
+                                                    {endDate && <CheckCircle className="w-3 h-3 text-emerald-500" />}
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="date"
+                                                        className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none"
+                                                        value={endDate}
+                                                        onChange={(e) => setEndDate(e.target.value)}
+                                                        min={startDate || new Date().toISOString().split('T')[0]}
+                                                        disabled={!startDate}
+                                                    />
+                                                    <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
+                                                </div>
                                             </div>
-                                        )}
-                                        <div className="flex justify-between items-center pt-3 border-t border-ocean-200/50">
-                                            <span className="text-lg font-bold text-brand-dark">Total estimado</span>
-                                            <div className="text-right">
-                                                {discount > 0 && (
-                                                    <span className="block text-xs text-slate-400 line-through mb-0.5">S/ {totalPrice.toFixed(2)}</span>
-                                                )}
-                                                <span className="text-2xl font-black text-brand-blue transition-all duration-300 animate-in fade-in">
-                                                    S/ {Math.max(0, totalPrice - discount).toFixed(2)}
-                                                </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {/* HOURS VIEW: Date + Time + Duration */}
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Fecha de Reserva</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="date"
+                                                            className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none"
+                                                            value={startDate ? startDate.split('T')[0] : ''}
+                                                            onChange={(e) => {
+                                                                const date = e.target.value;
+                                                                const time = startDate ? startDate.split('T')[1] : '10:00';
+                                                                const start = `${date}T${time}`;
+                                                                setStartDate(start);
+                                                                // Default 2 hours if not set
+                                                                if (!endDate) {
+                                                                    // Calculate end date based on duration (default 2h)
+                                                                    const endObj = new Date(new Date(start).getTime() + 2 * 60 * 60 * 1000);
+                                                                    setEndDate(toLocalISOString(endObj));
+                                                                } else {
+                                                                    // Keep existing duration
+                                                                    const oldStart = new Date(startDate);
+                                                                    const oldEnd = new Date(endDate);
+                                                                    const durationMs = oldEnd - oldStart;
+                                                                    const newStartObj = new Date(start);
+                                                                    const newEndObj = new Date(newStartObj.getTime() + durationMs);
+                                                                    setEndDate(toLocalISOString(newEndObj));
+                                                                }
+                                                            }}
+                                                            min={new Date().toISOString().split('T')[0]}
+                                                        />
+                                                        <Calendar className="absolute right-4 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Hora Inicio</label>
+                                                    <input
+                                                        type="time"
+                                                        className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none"
+                                                        value={startDate ? startDate.split('T')[1] : ''}
+                                                        onChange={(e) => {
+                                                            const time = e.target.value;
+                                                            const date = startDate ? startDate.split('T')[0] : new Date().toISOString().split('T')[0];
+                                                            const start = `${date}T${time}`;
+                                                            setStartDate(start);
+
+                                                            // Keep duration
+                                                            const oldStart = startDate ? new Date(startDate) : new Date();
+                                                            const oldEnd = endDate ? new Date(endDate) : new Date(oldStart.getTime() + 2 * 3600000);
+                                                            const durationMs = Math.max(3600000, oldEnd - oldStart); // Min 1 hour
+
+                                                            const newStartObj = new Date(start);
+                                                            const newEndObj = new Date(newStartObj.getTime() + durationMs);
+                                                            setEndDate(toLocalISOString(newEndObj));
+                                                        }}
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Duración</label>
+                                                    <select
+                                                        className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none cursor-pointer"
+                                                        value={startDate && endDate ? Math.round((new Date(endDate) - new Date(startDate)) / 3600000) : 2}
+                                                        onChange={(e) => {
+                                                            const hours = parseInt(e.target.value);
+                                                            if (startDate) {
+                                                                const startObj = new Date(startDate);
+                                                                const endObj = new Date(startObj.getTime() + hours * 60 * 60 * 1000);
+                                                                setEndDate(toLocalISOString(endObj));
+                                                            }
+                                                        }}
+                                                    >
+                                                        {[1, 2, 3, 4, 5, 6, 8, 10, 12, 24].map(h => (
+                                                            <option key={h} value={h}>{h} Horas</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+
+                                                {/* Quantity Selection */}
+                                                <div className="col-span-2">
+                                                    <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Cantidad de Vehículos</label>
+                                                    <div className="relative">
+                                                        <Users className="absolute left-4 top-3.5 w-5 h-5 text-slate-400 pointer-events-none" />
+                                                        <select
+                                                            className="w-full bg-slate-50 border border-slate-200 text-slate-700 font-bold rounded-xl px-4 py-3 pl-11 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all appearance-none cursor-pointer"
+                                                            value={quantity}
+                                                            onChange={(e) => setQuantity(Number(e.target.value))}
+                                                        >
+                                                            {Array.from({ length: Math.min(10, vehicle.stock || 1) }, (_, i) => i + 1).map(n => (
+                                                                <option key={n} value={n}>{n} {n === 1 ? 'Vehículo' : 'Vehículos'}</option>
+                                                            ))}
+                                                        </select>
+                                                        <div className="absolute right-4 top-3.5 text-xs font-medium text-slate-400 pointer-events-none">
+                                                            {vehicle.stock ? `${vehicle.stock} Disp.` : '1 Disp.'}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* Promo Code Section */}
+                                <div className="pt-2">
+                                    <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Cupón de Descuento</label>
+                                    <div className="flex gap-2">
+                                        <div className="relative flex-1">
+                                            <Tag className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                className="w-full bg-slate-50 border border-slate-200 text-slate-700 rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 transition-all uppercase placeholder:text-slate-400 text-sm font-medium disabled:opacity-50"
+                                                placeholder="CÓDIGO"
+                                                value={promoCode}
+                                                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                                disabled={appliedPromo || !startDate || !endDate}
+                                            />
+                                            {appliedPromo && (
+                                                <button
+                                                    onClick={() => { setAppliedPromo(null); setDiscount(0); setPromoCode(''); setPromoMessage(null); }}
+                                                    className="absolute right-2 top-2 p-1 hover:bg-slate-200 rounded-full transition-colors"
+                                                >
+                                                    <X className="w-3 h-3 text-slate-500" />
+                                                </button>
+                                            )}
+                                        </div>
+                                        <button
+                                            onClick={handleApplyPromo}
+                                            disabled={!promoCode || appliedPromo || promoLoading || !startDate || !endDate}
+                                            className="bg-slate-900 text-white px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                                        >
+                                            {promoLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aplicar'}
+                                        </button>
+                                    </div>
+                                    {promoMessage && (
+                                        <p className={`text-xs mt-2 font-medium flex items-center gap-1.5 ${promoMessage.type === 'success' ? 'text-emerald-600' : 'text-red-500'} `}>
+                                            {promoMessage.type === 'success' ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                                            {promoMessage.text}
+                                        </p>
+                                    )}
+
+                                    {/* Available Promos Suggestions */}
+                                    {!appliedPromo && availablePromos.length > 0 && startDate && endDate && (
+                                        <div className="mt-3 space-y-2">
+                                            <p className="text-xs font-bold text-slate-600 uppercase tracking-wider">Cupones disponibles:</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {availablePromos.map((promo) => (
+                                                    <button
+                                                        key={promo.id}
+                                                        onClick={() => {
+                                                            setPromoCode(promo.code);
+                                                            setTimeout(() => handleApplyPromo(), 100);
+                                                        }}
+                                                        className="group relative bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 hover:border-emerald-400 rounded-lg px-3 py-2 text-left transition-all hover:shadow-md active:scale-95"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <Tag className="w-3 h-3 text-emerald-600" />
+                                                            <span className="font-bold text-xs text-emerald-700">{promo.code}</span>
+                                                        </div>
+                                                        <p className="text-[10px] text-emerald-600 mt-0.5">
+                                                            {promo.discount_type === 'percentage'
+                                                                ? `${promo.discount_value}% OFF`
+                                                                : `S/ ${promo.discount_value} OFF`}
+                                                        </p>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="bg-ocean-50/50 p-6 rounded-2xl border border-ocean-100 mt-6 space-y-3">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="font-medium text-slate-500">
+                                            Precio x {rentalType === 'days' ? 'día' : 'hora'}
+                                        </span>
+                                        <span className="text-slate-700 font-bold">
+                                            S/ {rentalType === 'days' ? vehicle.price_per_day : (vehicle.price_per_hour || (vehicle.price_per_day / 8)).toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="font-medium text-slate-500">
+                                            {rentalType === 'days' ? 'Días' : 'Horas'}
+                                        </span>
+                                        <span className="text-slate-700 font-bold">
+                                            {startDate && endDate
+                                                ? (rentalType === 'days'
+                                                    ? Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))
+                                                    : Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60))
+                                                )
+                                                : 0}
+                                        </span>
+                                    </div>
+                                    {discount > 0 && (
+                                        <div className="flex justify-between items-center text-sm text-emerald-600 animate-in fade-in slide-in-from-top-1">
+                                            <span className="font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> Descuento</span>
+                                            <span className="font-bold">- S/ {discount.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center pt-3 border-t border-ocean-200/50">
+                                        <span className="text-lg font-bold text-brand-dark">Total estimado</span>
+                                        <div className="text-right">
+                                            {discount > 0 && (
+                                                <span className="block text-xs text-slate-400 line-through mb-0.5">S/ {totalPrice.toFixed(2)}</span>
+                                            )}
+                                            <span className="text-2xl font-black text-brand-blue transition-all duration-300 animate-in fade-in">
+                                                S/ {Math.max(0, totalPrice - discount).toFixed(2)}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -868,50 +1002,52 @@ const DetalleVehiculo = () => {
             </div>
 
             {/* Floating Summary Bar (Mobile Only) */}
-            {startDate && endDate && bookingStatus !== 'completed' && (
-                <div
-                    className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-brand-blue shadow-2xl p-4 lg:hidden z-50 animate-in slide-in-from-bottom-5 notranslate"
-                    translate="no"
-                >
-                    <div className="flex items-center justify-between gap-4">
-                        <div className="flex-1">
-                            <p className="text-xs text-slate-500 font-medium">Total estimado</p>
-                            <div className="flex items-baseline gap-2">
-                                {discount > 0 && (
-                                    <span className="text-sm text-slate-400 line-through">S/ {totalPrice.toFixed(2)}</span>
-                                )}
-                                <span className="text-2xl font-black text-brand-blue">
-                                    S/ {Math.max(0, totalPrice - discount).toFixed(2)}
-                                </span>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => {
-                                if (currentStep === 3) handleFinalizePayment();
-                                else if (isAuthenticated) handleBooking();
-                                else navigate('/login', { state: { from: `/vehiculo/${id}` } });
-                            }}
-                            disabled={bookingStatus === 'processing'}
-                            className={`btn-primary px-6 py-3 text-sm shadow-lg hover:shadow-brand-blue/30 active:scale-95 disabled:opacity-50 flex items-center gap-2 ${currentStep === 3 && selectedPaymentMethod === 'yape' ? 'bg-[#25D366] hover:bg-[#128C7E]' : ''}`}
-                        >
-                            {bookingStatus === 'processing' ? (
-                                <span className="flex items-center gap-2">
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                    <span>Procesando...</span>
-                                </span>
-                            ) : (
-                                <span className="flex items-center gap-2">
-                                    {currentStep === 3 ? (selectedPaymentMethod === 'yape' ? <Smartphone className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />) : <CheckCircle className="w-4 h-4" />}
-                                    <span>
-                                        {currentStep === 3 ? (selectedPaymentMethod === 'yape' ? 'Enviar' : 'Pagar') : 'Continuar'}
+            {
+                startDate && endDate && bookingStatus !== 'completed' && (
+                    <div
+                        className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-brand-blue shadow-2xl p-4 lg:hidden z-50 animate-in slide-in-from-bottom-5 notranslate"
+                        translate="no"
+                    >
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1">
+                                <p className="text-xs text-slate-500 font-medium">Total estimado</p>
+                                <div className="flex items-baseline gap-2">
+                                    {discount > 0 && (
+                                        <span className="text-sm text-slate-400 line-through">S/ {totalPrice.toFixed(2)}</span>
+                                    )}
+                                    <span className="text-2xl font-black text-brand-blue">
+                                        S/ {Math.max(0, totalPrice - discount).toFixed(2)}
                                     </span>
-                                </span>
-                            )}
-                        </button>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    if (currentStep === 3) handleFinalizePayment();
+                                    else if (isAuthenticated) handleBooking();
+                                    else navigate('/login', { state: { from: `/vehiculo/${id}` } });
+                                }}
+                                disabled={bookingStatus === 'processing'}
+                                className={`btn-primary px-6 py-3 text-sm shadow-lg hover:shadow-brand-blue/30 active:scale-95 disabled:opacity-50 flex items-center gap-2 ${currentStep === 3 && selectedPaymentMethod === 'yape' ? 'bg-[#25D366] hover:bg-[#128C7E]' : ''}`}
+                            >
+                                {bookingStatus === 'processing' ? (
+                                    <span className="flex items-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Procesando...</span>
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        {currentStep === 3 ? (selectedPaymentMethod === 'yape' ? <Smartphone className="w-4 h-4" /> : <CreditCard className="w-4 h-4" />) : <CheckCircle className="w-4 h-4" />}
+                                        <span>
+                                            {currentStep === 3 ? (selectedPaymentMethod === 'yape' ? 'Enviar' : 'Pagar') : 'Continuar'}
+                                        </span>
+                                    </span>
+                                )}
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

@@ -10,6 +10,8 @@ const PanelCliente = () => {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [selectedBookingForPayment, setSelectedBookingForPayment] = useState(null);
+    const [selectedBookingForCancellation, setSelectedBookingForCancellation] = useState(null); // [NEW]
+    const [cancellationReason, setCancellationReason] = useState(''); // [NEW]
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' or 'profile'
     const [profileData, setProfileData] = useState({
@@ -80,6 +82,42 @@ const PanelCliente = () => {
 
     const handleOpenPayment = (booking) => {
         setSelectedBookingForPayment(booking);
+    };
+
+    // [NEW] Handle Cancellation Request
+    const handleRequestCancellation = async (e) => {
+        e.preventDefault();
+        if (!cancellationReason.trim()) return;
+
+        setSaving(true);
+        try {
+            const { error } = await supabase
+                .from('bookings')
+                .update({
+                    status: 'cancellation_requested',
+                    cancellation_reason: cancellationReason
+                })
+                .eq('id', selectedBookingForCancellation.id);
+
+            if (error) throw error;
+
+            // Update local state
+            setBookings(bookings.map(b =>
+                b.id === selectedBookingForCancellation.id
+                    ? { ...b, status: 'cancellation_requested', cancellation_reason: cancellationReason }
+                    : b
+            ));
+
+            setMessage({ type: 'success', text: 'Solicitud de cancelación enviada correctamente.' });
+            setSelectedBookingForCancellation(null);
+            setCancellationReason('');
+            setTimeout(() => setMessage(null), 3000);
+        } catch (error) {
+            console.error('Error requesting cancellation:', error);
+            setMessage({ type: 'error', text: 'Error al enviar la solicitud.' });
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleProfileChange = (e) => {
@@ -229,13 +267,15 @@ const PanelCliente = () => {
                                                         booking.status === 'completed' ? 'bg-blue-50 text-brand-blue border-blue-100' :
                                                             booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
                                                                 booking.status === 'awaiting_confirmation' ? 'bg-orange-50 text-orange-700 border-orange-100' :
-                                                                    'bg-amber-50 text-amber-700 border-amber-100'
+                                                                    booking.status === 'cancellation_requested' ? 'bg-pink-50 text-pink-700 border-pink-100' :
+                                                                        'bg-amber-50 text-amber-700 border-amber-100'
                                                         }`}>
                                                         {booking.status === 'confirmed' ? 'Confirmada' :
                                                             booking.status === 'completed' ? 'Finalizada' :
                                                                 booking.status === 'cancelled' ? 'Cancelada' :
                                                                     booking.status === 'awaiting_confirmation' ? 'Validando Pago' :
-                                                                        'Pendiente'}
+                                                                        booking.status === 'cancellation_requested' ? 'Solicitado Cancelar' :
+                                                                            'Pendiente'}
                                                     </div>
                                                 </div>
 
@@ -278,6 +318,22 @@ const PanelCliente = () => {
                                                         >
                                                             <Clock className="w-4 h-4" /> Validando...
                                                         </button>
+                                                    )}
+
+                                                    {/* [NEW] Cancel Button for Confirmed/Awaiting */}
+                                                    {(booking.status === 'confirmed' || booking.status === 'awaiting_confirmation') && (
+                                                        <button
+                                                            onClick={() => setSelectedBookingForCancellation(booking)}
+                                                            className="text-slate-400 hover:text-red-500 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2"
+                                                        >
+                                                            Solicitar Cancelación
+                                                        </button>
+                                                    )}
+
+                                                    {booking.status === 'cancellation_requested' && (
+                                                        <span className="text-pink-600 text-sm font-medium flex items-center gap-2">
+                                                            <Clock className="w-4 h-4" /> Solicitud en revisión
+                                                        </span>
                                                     )}
                                                 </div>
                                             </div>
@@ -437,6 +493,45 @@ const PanelCliente = () => {
                 vehicle={selectedBookingForPayment?.vehicles}
                 user={user}
             />
+
+            {/* [NEW] Cancellation Modal */}
+            {selectedBookingForCancellation && (
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">Solicitar Cancelación</h3>
+                        <p className="text-slate-500 text-sm mb-4">
+                            Lamentamos que debas cancelar. Por favor, indícanos el motivo para procesar tu solicitud.
+                        </p>
+
+                        <form onSubmit={handleRequestCancellation}>
+                            <textarea
+                                value={cancellationReason}
+                                onChange={(val) => setCancellationReason(val.target.value)}
+                                className="w-full h-32 p-4 bg-slate-50 border border-slate-200 rounded-xl mb-4 focus:ring-2 focus:ring-brand-blue outline-none resize-none text-slate-700"
+                                placeholder="Ej: Cambio de planes, enfermedad..."
+                                required
+                            />
+
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    type="button"
+                                    onClick={() => { setSelectedBookingForCancellation(null); setCancellationReason(''); }}
+                                    className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors"
+                                >
+                                    Volver
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={saving || !cancellationReason.trim()}
+                                    className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-bold transition-colors shadow-lg shadow-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {saving ? 'Enviando...' : 'Enviar Solicitud'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Ticket Modal */}
             {selectedTicket && (

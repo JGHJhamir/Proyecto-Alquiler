@@ -6,11 +6,16 @@ import { MapPin, Star, Heart, SlidersHorizontal, Map as MapIcon, List, Plus, Min
 import { COASTAL_LOCATIONS } from '../constants';
 
 const getCapacity = (category) => {
-    const caps = { 'Deportivo': 2, 'Compacto': 5, 'Sedán': 5, 'SUV': 5, '4x4': 4, 'Familiar': 7 };
-    return caps[category] || 5;
+    // Exact match or partial match for complexity
+    const lowerCat = (category || '').toLowerCase();
+    if (lowerCat.includes('cuatrimoto') || lowerCat.includes('atv')) return 2; // Majority are 2, sport are 1 but safer to say 2 max
+    if (lowerCat.includes('moto acuática') || lowerCat.includes('jet ski')) return 3;
+    if (lowerCat.includes('buggy') || lowerCat.includes('utv')) return 4; // Commander XT is 4
+    if (lowerCat.includes('foil') || lowerCat.includes('board')) return 1;
+    return 2; // Fallback
 };
 
-const VehicleResultCard = ({ id, make, model, price, location, image, rating, type }) => {
+const VehicleResultCard = ({ id, make, model, price, location, image, rating, type, stock }) => {
     const capacity = getCapacity(type);
 
     return (
@@ -59,21 +64,19 @@ const VehicleResultCard = ({ id, make, model, price, location, image, rating, ty
                             <MapPin className="w-3.5 h-3.5 text-brand-gold" />
                             {location}
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="flex items-center gap-0.5">
-                                <Star className="w-4 h-4 text-brand-gold fill-brand-gold" />
-                                <span className="font-bold text-slate-800">{rating}</span>
-                            </div>
-                            <span className="text-xs text-slate-400 font-medium">(24 reseñas)</span>
+                        <div className="flex items-center gap-0.5">
+                            <Star className="w-4 h-4 text-brand-gold fill-brand-gold" />
+                            <span className="font-bold text-slate-800">{rating}</span>
                         </div>
+                        <span className="text-xs text-slate-400 font-medium">({stock} disponibles)</span>
                     </div>
+                </div>
 
-                    <div className="text-right">
-                        <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Precio por día</p>
-                        <div className="flex items-baseline justify-end gap-1">
-                            <span className="text-brand-blue text-lg font-bold">S/</span>
-                            <span className="text-3xl font-serif font-bold text-slate-900">{price || '0'}</span>
-                        </div>
+                <div className="text-right">
+                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Precio por hora</p>
+                    <div className="flex items-baseline justify-end gap-1">
+                        <span className="text-brand-blue text-lg font-bold">S/</span>
+                        <span className="text-3xl font-serif font-bold text-slate-900">{price || '0'}</span>
                     </div>
                 </div>
             </div>
@@ -95,8 +98,7 @@ const ExplorarVehiculos = () => {
 
     // Filter State
     const [filters, setFilters] = useState({
-        minPrice: 0,
-        maxPrice: 1000,
+        categories: [],
         categories: [],
         department: '',
         city: ''
@@ -180,8 +182,8 @@ const ExplorarVehiculos = () => {
 
             // 3. Advanced Filtering
             results = results.filter(v => {
-                const price = v.price_per_day || 0;
-                if (price < filters.minPrice || price > filters.maxPrice) return false;
+                // const price = v.price_per_day || 0;
+                // if (price < filters.minPrice || price > filters.maxPrice) return false;
 
                 if (filters.categories.length > 0) {
                     const matchesCategory = filters.categories.some(cat =>
@@ -280,42 +282,10 @@ const ExplorarVehiculos = () => {
                         </div>
 
 
-                        <div className="mb-8">
-                            <h4 className="flex items-center gap-2 font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">
-                                <Star className="w-4 h-4 text-brand-gold" /> Rango de Precio
-                            </h4>
-                            <div className="flex gap-4">
-                                <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 hover:bg-white focus-within:bg-white focus-within:border-brand-blue transition-all">
-                                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Mínimo</label>
-                                    <div className="flex items-center gap-1">
-                                        <span className="text-slate-400 font-serif font-bold">S/</span>
-                                        <input
-                                            type="number"
-                                            value={filters.minPrice}
-                                            onChange={(e) => setFilters({ ...filters, minPrice: Number(e.target.value) })}
-                                            className="w-full font-bold outline-none bg-transparent text-slate-800"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 hover:bg-white focus-within:bg-white focus-within:border-brand-blue transition-all">
-                                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">Máximo</label>
-                                    <div className="flex items-center gap-1">
-                                        <span className="text-slate-400 font-serif font-bold">S/</span>
-                                        <input
-                                            type="number"
-                                            value={filters.maxPrice}
-                                            onChange={(e) => setFilters({ ...filters, maxPrice: Number(e.target.value) })}
-                                            className="w-full font-bold outline-none bg-transparent text-slate-800"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div className="mb-10">
                             <h4 className="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">Categoría</h4>
                             <div className="flex flex-wrap gap-2">
-                                {['4x4', 'Sedán', 'Deportivo', 'SUV', 'Compacto'].map(cat => (
+                                {['Cuatrimotos (ATV)', 'Buggies / UTV', 'Motos Acuáticas', 'E-Foils & Jetboards'].map(cat => (
                                     <button
                                         key={cat}
                                         onClick={() => toggleFilter('categories', cat)}
@@ -329,7 +299,7 @@ const ExplorarVehiculos = () => {
 
                         <div className="flex justify-between pt-6 border-t border-slate-100">
                             <button
-                                onClick={() => setFilters({ minPrice: 0, maxPrice: 1000, categories: [], transmission: [] })}
+                                onClick={() => setFilters({ categories: [], transmission: [], department: '', city: '' })}
                                 className="text-slate-500 font-bold hover:text-slate-800 transition-colors text-sm"
                             >
                                 Restablecer todo
@@ -394,10 +364,11 @@ const ExplorarVehiculos = () => {
                                     <Link key={vehicle.id} to={`/vehiculo/${vehicle.id}`} className="block">
                                         <VehicleResultCard
                                             {...vehicle}
-                                            price={vehicle.price_per_day}
+                                            price={vehicle.price_per_hour}
                                             type={vehicle.category}
                                             location={vehicle.location_city}
                                             image={vehicle.image_url || 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1000'}
+                                            stock={vehicle.stock}
                                         />
                                     </Link>
                                 ))}
@@ -409,7 +380,7 @@ const ExplorarVehiculos = () => {
                                 </div>
                                 <h3 className="text-2xl font-serif font-bold text-slate-800 mb-2">No encontramos vehículos</h3>
                                 <p className="text-slate-500 max-w-xs mx-auto mb-8">Intenta ajustar tu búsqueda o los filtros para encontrar tu vehículo ideal.</p>
-                                <button onClick={() => setFilters({ minPrice: 0, maxPrice: 1000, categories: [], department: '', city: '' })} className="btn-secondary">
+                                <button onClick={() => setFilters({ categories: [], department: '', city: '' })} className="btn-secondary">
                                     Ver todos los vehículos
                                 </button>
                             </div>

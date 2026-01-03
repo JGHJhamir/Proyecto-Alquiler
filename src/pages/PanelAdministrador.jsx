@@ -7,7 +7,7 @@ import {
     Car, Users, Calendar, Plus, Search, BarChart3, Settings,
     X, Save, Image as ImageIcon, LayoutDashboard, Tag, ShoppingBag,
     LogOut, MoreVertical, MapPin, Filter, FileText, Briefcase, Bell, Menu,
-    Waves, Trash2, Edit, Loader2, CheckCircle
+    Waves, Trash2, Edit, Loader2, CheckCircle, Gauge, Fuel, Lock
 } from 'lucide-react';
 import { COASTAL_LOCATIONS } from '../constants';
 import TicketReserva from '../components/TicketReserva';
@@ -107,122 +107,328 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
     );
 };
 
+import { VEHICLE_CATALOG } from '../data/vehicleData';
+
 const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitting, isEditing }) => {
     if (!isOpen) return null;
 
+    // State for Dynamic Locations
+    const [availableLocations, setAvailableLocations] = useState(COASTAL_LOCATIONS);
+
+    useEffect(() => {
+        const fetchLocations = async () => {
+            const { data } = await supabase.from('locations').select('*');
+            if (data) {
+                const newLocs = { ...COASTAL_LOCATIONS };
+                data.forEach(loc => {
+                    const dept = loc.department; // e.g. "Piura"
+                    const city = loc.name;       // e.g. "Cabo Blanco"
+
+                    if (!newLocs[dept]) {
+                        newLocs[dept] = [];
+                    }
+                    if (!newLocs[dept].includes(city)) {
+                        newLocs[dept].push(city);
+                    }
+                });
+                setAvailableLocations(newLocs);
+            }
+        };
+        fetchLocations();
+    }, []);
+
+    // Derived states for dropdowns
+    const availableCategories = formData.vehicle_type && VEHICLE_CATALOG[formData.vehicle_type]
+        ? Object.keys(VEHICLE_CATALOG[formData.vehicle_type].categories)
+        : [];
+
+    const availableBrands = formData.vehicle_type && formData.category && VEHICLE_CATALOG[formData.vehicle_type]?.categories[formData.category]
+        ? Object.keys(VEHICLE_CATALOG[formData.vehicle_type].categories[formData.category].brands)
+        : [];
+
+    // Note: models are now Objects {name, specs}
+    const availableModels = formData.vehicle_type && formData.category && formData.make && VEHICLE_CATALOG[formData.vehicle_type]?.categories[formData.category]?.brands[formData.make]
+        ? VEHICLE_CATALOG[formData.vehicle_type].categories[formData.category].brands[formData.make]
+        : [];
+
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
-        if (name === 'department') {
-            setFormData(prev => ({ ...prev, department: value, city: '' }));
-        } else {
-            setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-        }
+        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
+    // Special handlers for dependent fields
+    const handleTypeChange = (e) => {
+        setFormData(prev => ({
+            ...prev,
+            vehicle_type: e.target.value,
+            category: '',
+            make: '',
+            model: '' // Reset downstream
+        }));
+    };
+
+    const handleCategoryChange = (e) => {
+        setFormData(prev => ({
+            ...prev,
+            category: e.target.value,
+            make: '',
+            model: '' // Reset downstream
+        }));
+    };
+
+    const handleBrandChange = (e) => {
+        setFormData(prev => ({
+            ...prev,
+            make: e.target.value,
+            model: '' // Reset downstream
+        }));
+    };
+
+    const handleModelChange = (e) => {
+        const selectedModelName = e.target.value;
+        const selectedModelObj = availableModels.find(m => m.name === selectedModelName);
+
+        setFormData(prev => ({
+            ...prev,
+            model: selectedModelName,
+            // Auto-fill specs if model found
+            ...(selectedModelObj && selectedModelObj.specs ? {
+                passengers: selectedModelObj.specs.passengers,
+                transmission: selectedModelObj.specs.transmission,
+                fuel_type: selectedModelObj.specs.fuel_type,
+                engine_power: selectedModelObj.specs.engine_power,
+                image_url: selectedModelObj.image // Auto-fill image
+            } : {})
+        }));
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden md:max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl overflow-hidden md:max-h-[90vh] overflow-y-auto">
                 <div className="bg-white px-8 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
                     <div>
                         <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Editar Vehículo' : 'Agregar Vehículo'}</h2>
-                        <p className="text-slate-500 text-sm">{isEditing ? 'Modificar detalles existentes.' : 'Detalles de la nueva unidad.'}</p>
+                        <p className="text-slate-500 text-sm">{isEditing ? 'Modificar ficha técnica.' : 'Selecciona las características del catálogo.'}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                         <X className="w-5 h-5 text-slate-400" />
                     </button>
                 </div>
 
-                <form onSubmit={onSubmit} className="p-8 space-y-6">
-                    {/* Row 1: Basic Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Marca</label>
-                            <input type="text" name="make" required placeholder="Ej: Toyota"
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all placeholder:text-slate-400"
-                                value={formData.make} onChange={handleInputChange}
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Modelo</label>
-                            <input type="text" name="model" required placeholder="Ej: Hilux 4x4"
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all placeholder:text-slate-400"
-                                value={formData.model} onChange={handleInputChange}
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Año</label>
-                            <input type="number" name="year" required min="1900" max="2099" placeholder="2024"
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all placeholder:text-slate-400"
-                                value={formData.year} onChange={handleInputChange}
-                            />
-                        </div>
-                    </div>
+                <form onSubmit={onSubmit} className="p-8 space-y-8">
+                    {/* Section 1: Classification (Dropdown Flow) */}
+                    <div className="space-y-4">
+                        <h3 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
+                            <Tag className="w-4 h-4" /> Clasificación del Vehículo
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                    {/* Row 2: Prices */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Precio por Día</label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">S/</span>
-                                <input type="number" name="price_per_day" required min="0" placeholder="0.00"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all placeholder:text-slate-400"
-                                    value={formData.price_per_day} onChange={handleInputChange}
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Precio por Hora</label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">S/</span>
-                                <input type="number" name="price_per_hour" min="0" placeholder="0.00"
-                                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all placeholder:text-slate-400"
-                                    value={formData.price_per_hour} onChange={handleInputChange}
-                                />
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Row 3: Category & Dept & City (Merged for cleaner layout) */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Categoría</label>
-                            <div className="relative">
-                                <select name="category"
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all appearance-none cursor-pointer"
-                                    value={formData.category} onChange={handleInputChange}
+                            {/* 2. Category */}
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">Categoría</label>
+                                <select
+                                    name="category"
+                                    required
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
+                                    value={formData.category || ''}
+                                    onChange={handleCategoryChange}
                                 >
-                                    <option value="4x4">Camioneta 4x4</option>
-                                    <option value="Deportivo">Deportivo / Buggy</option>
-                                    <option value="Familiar">SUV Familiar</option>
-                                    <option value="Sedan">Sedán</option>
-                                    <option value="Moto">Moto / Cuatrimoto</option>
+                                    <option value="">Selecciona Categoría...</option>
+                                    {availableCategories.map(cat => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* 3. Brand */}
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">Marca</label>
+                                <select
+                                    name="make"
+                                    required
+                                    disabled={!formData.category}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
+                                    value={formData.make || ''}
+                                    onChange={handleBrandChange}
+                                >
+                                    <option value="">Selecciona Marca...</option>
+                                    {availableBrands.map(brand => (
+                                        <option key={brand} value={brand}>{brand}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* 4. Model (AUTO-FILLS SPECS ON CHANGE) */}
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">Modelo</label>
+                                <select
+                                    name="model"
+                                    required
+                                    disabled={!formData.make}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
+                                    value={formData.model || ''}
+                                    onChange={handleModelChange}
+                                >
+                                    <option value="">Selecciona Modelo...</option>
+                                    {availableModels.map(item => (
+                                        <option key={item.name} value={item.name}>{item.name}</option>
+                                    ))}
                                 </select>
                             </div>
                         </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Departamento</label>
-                            <div className="relative">
+                    </div>
+
+                    <hr className="border-slate-100" />
+
+                    {/* Section 2: Technical Specs (Now Auto-filled & Locked) */}
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <h3 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
+                                <Gauge className="w-4 h-4" /> Ficha Técnica
+                            </h3>
+                            <span className="text-[10px] text-slate-400 bg-slate-50 px-2 py-1 rounded-full border border-slate-100 flex items-center gap-1">
+                                {formData.model && <Lock className="w-3 h-3" />} Automática según modelo
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Year */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-500 block">Año</label>
+                                <select name="year" required className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none"
+                                    value={formData.year} onChange={handleInputChange}>
+                                    {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + 1 - i).map(y => (
+                                        <option key={y} value={y}>{y}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Stock */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-500 block">Stock Disponible</label>
+                                <input type="number" name="stock" min="1" required
+                                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none"
+                                    value={formData.stock || 1} onChange={handleInputChange}
+                                />
+                            </div>
+
+                            {/* Passengers */}
+                            <div className="space-y-1.5 opacity-80">
+                                <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
+                                    Pasajeros {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
+                                </label>
+                                <div className="relative">
+                                    <Users className="absolute left-2.5 top-2 w-4 h-4 text-slate-400" />
+                                    <select name="passengers"
+                                        disabled={!!formData.model}
+                                        className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none appearance-none bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500 cursor-not-allowed"
+                                        value={formData.passengers || 2} onChange={handleInputChange}>
+                                        {[1, 2, 3, 4, 5, 7, 8].map(n => <option key={n} value={n}>{n} {n === 1 ? 'Persona' : 'Personas'}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* Transmission */}
+                            <div className="space-y-1.5 opacity-80">
+                                <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
+                                    Transmisión {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
+                                </label>
+                                <select name="transmission"
+                                    disabled={!!formData.model}
+                                    className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500 cursor-not-allowed"
+                                    value={formData.transmission || 'Automática'} onChange={handleInputChange}>
+                                    <option value="Automática">Automática</option>
+                                    <option value="Semiautomática">Semiautomática</option>
+                                    <option value="Mecánica">Mecánica</option>
+                                    <option value="CVT">CVT</option>
+                                </select>
+                            </div>
+
+                            {/* Fuel */}
+                            <div className="space-y-1.5 opacity-80">
+                                <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
+                                    Combustible {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
+                                </label>
+                                <div className="relative">
+                                    <Fuel className="absolute left-2.5 top-2 w-4 h-4 text-slate-400" />
+                                    <select name="fuel_type"
+                                        disabled={!!formData.model}
+                                        className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none appearance-none bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500 cursor-not-allowed"
+                                        value={formData.fuel_type || 'Gasolina'} onChange={handleInputChange}>
+                                        <option value="Gasolina">Gasolina</option>
+                                        <option value="Diesel">Diesel</option>
+                                        <option value="Eléctrico">Eléctrico</option>
+                                        <option value="Híbrido">Híbrido</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Power / Engine */}
+                        <div className="space-y-1.5 opacity-80 pt-2">
+                            <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
+                                Potencia / Motor {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
+                            </label>
+                            <input
+                                type="text"
+                                name="engine_power"
+                                disabled={!!formData.model}
+                                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500 cursor-not-allowed"
+                                value={formData.engine_power || ''}
+                                placeholder="Ej: 400 HP"
+                                onChange={handleInputChange}
+                            />
+                        </div>
+                    </div>
+
+                    <hr className="border-slate-100" />
+
+                    {/* Section 3: Location & Prices */}
+                    <div className="space-y-4">
+                        <h3 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
+                            <MapPin className="w-4 h-4" /> Ubicación y Costos
+                        </h3>
+                        {/* Location */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">Departamento</label>
                                 <select name="department" required
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all appearance-none cursor-pointer"
-                                    value={formData.department} onChange={handleInputChange}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer"
+                                    value={formData.department} onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value, city: '' }))}
                                 >
                                     <option value="">Selecciona...</option>
-                                    {Object.keys(COASTAL_LOCATIONS).map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                                    {Object.keys(availableLocations).map(dept => <option key={dept} value={dept}>{dept}</option>)}
                                 </select>
                             </div>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Ciudad / Playa</label>
-                            <div className="relative">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">Ciudad / Playa</label>
                                 <select name="city" required disabled={!formData.department}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all appearance-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
                                     value={formData.city || ''}
                                     onChange={handleInputChange}
                                 >
                                     <option value="">Selecciona...</option>
-                                    {formData.department && COASTAL_LOCATIONS[formData.department].map(city => <option key={city} value={city}>{city}</option>)}
+                                    {formData.department && availableLocations[formData.department]?.map(city => <option key={city} value={city}>{city}</option>)}
                                 </select>
+                            </div>
+                        </div>
+
+                        {/* Prices */}
+                        {/* Prices */}
+                        <div className="grid grid-cols-1 gap-6">
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-semibold text-slate-700 block">
+                                    Precio por Hora
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">S/</span>
+                                    <input type="number" name="price_per_hour" min="0" placeholder="0.00"
+                                        required
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all placeholder:text-slate-400"
+                                        value={formData.price_per_hour} onChange={handleInputChange}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -231,17 +437,17 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                     <div className="space-y-1.5">
                         <div className="flex justify-between items-center">
                             <label className="text-sm font-semibold text-slate-700 block">Imagen del Vehículo</label>
-                            <a href="https://unsplash.com/s/photos/car" target="_blank" rel="noopener noreferrer" className="text-brand-blue text-xs font-medium hover:underline flex items-center gap-1">
+                            <a href="https://unsplash.com/s/photos/vehicle" target="_blank" rel="noopener noreferrer" className="text-brand-blue text-xs font-medium hover:underline flex items-center gap-1">
                                 <ImageIcon className="w-3 h-3" /> Buscar fotos
                             </a>
                         </div>
                         <div className="flex gap-4 items-start">
                             <div className="flex-1">
                                 <input type="url" name="image_url" required placeholder="https://..."
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all text-sm"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all text-sm"
                                     value={formData.image_url} onChange={handleInputChange}
                                 />
-                                <p className="text-[10px] text-slate-400 mt-1.5 ml-1">Pega el enlace directo de la imagen (JPG, PNG, WebP).</p>
+                                <p className="text-[10px] text-slate-400 mt-1.5 ml-1">Pega el enlace directo o usa una imagen de muestra.</p>
                             </div>
                             <div className="w-24 h-24 rounded-xl border-2 border-dashed border-slate-200 flex-shrink-0 overflow-hidden bg-slate-50 flex items-center justify-center relative group">
                                 {formData.image_url ? (
@@ -253,10 +459,22 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         </div>
                     </div>
 
+                    {/* Description - Auto-generated suggestion */}
                     <div className="space-y-1.5">
-                        <label className="text-sm font-semibold text-slate-700 block">Descripción</label>
+                        <div className="flex justify-between">
+                            <label className="text-sm font-semibold text-slate-700 block">Descripción</label>
+                            <button type="button"
+                                onClick={() => setFormData(prev => ({
+                                    ...prev,
+                                    description: `Disfruta de este ${prev.make} ${prev.model} (${prev.year}) en ${prev.city || 'la playa'}. Ideal para ${prev.passengers} personas. Potencia de ${prev.engine_power || 'alto rendimiento'}.`
+                                }))}
+                                className="text-xs text-brand-blue font-semibold hover:underline"
+                            >
+                                Generar Automática
+                            </button>
+                        </div>
                         <textarea name="description" rows="3" placeholder="Describe las características principales..."
-                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 outline-none transition-all resize-none placeholder:text-slate-400"
+                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all resize-none placeholder:text-slate-400"
                             value={formData.description} onChange={handleInputChange}></textarea>
                     </div>
 
@@ -1486,9 +1704,16 @@ const BookingsView = () => {
             pending: 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20',
             confirmed: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20',
             cancelled: 'bg-red-50 text-red-700 ring-1 ring-red-600/20',
-            completed: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20'
+            completed: 'bg-blue-50 text-blue-700 ring-1 ring-blue-600/20',
+            cancellation_requested: 'bg-pink-50 text-pink-700 ring-1 ring-pink-600/20'
         };
-        const labels = { pending: 'Pendiente', confirmed: 'Confirmado', cancelled: 'Cancelado', completed: 'Finalizado' };
+        const labels = {
+            pending: 'Pendiente',
+            confirmed: 'Confirmado',
+            cancelled: 'Cancelado',
+            completed: 'Finalizado',
+            cancellation_requested: 'Solicitud Cancelación'
+        };
         return <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status] || styles.pending}`}>{labels[status] || status}</span>;
     };
 
@@ -1530,6 +1755,7 @@ const BookingsView = () => {
                             <option value="confirmed">Confirmados</option>
                             <option value="completed">Finalizados</option>
                             <option value="cancelled">Cancelados</option>
+                            <option value="cancellation_requested">Solicitudes de Cancelación</option>
                         </select>
 
                         {selectedIds.length > 0 && (
@@ -1614,6 +1840,12 @@ const BookingsView = () => {
                                             <div>
                                                 <div className="font-bold text-slate-900 text-sm">{booking.vehicles?.make} {booking.vehicles?.model}</div>
                                                 <div className="text-xs text-slate-500">{booking.vehicles?.year}</div>
+                                                {/* Cancellation Reason Alert */}
+                                                {booking.status === 'cancellation_requested' && (
+                                                    <div className="mt-2 p-2 bg-pink-50 border border-pink-100 rounded-lg text-xs text-pink-800 max-w-[200px]">
+                                                        <span className="font-bold">Motivo:</span> {booking.cancellation_reason}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </td>
@@ -1642,53 +1874,66 @@ const BookingsView = () => {
                                     )}
                                     <td className="px-6 py-4 text-right">
                                         <div className="flex justify-end gap-1">
-                                            {booking.status === 'pending' && (
+                                            {booking.status === 'cancellation_requested' ? (
                                                 <>
                                                     <button
                                                         onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
-                                                        disabled={actionLoading === booking.id}
-                                                        className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
-                                                        title="Aprobar"
+                                                        className="p-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-lg transition-colors text-xs font-medium mr-1"
+                                                        title="Rechazar y mantener reserva"
                                                     >
-                                                        <CheckCircle className="w-4 h-4" />
+                                                        Rechazar
                                                     </button>
                                                     <button
                                                         onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
-                                                        disabled={actionLoading === booking.id}
-                                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                                        title="Rechazar"
+                                                        className="p-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg transition-colors text-xs font-medium"
+                                                        title="Aprobar Cancelación"
                                                     >
-                                                        <X className="w-4 h-4" />
+                                                        Aprobar
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    {booking.status === 'pending' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleUpdateStatus(booking.id, 'confirmed')}
+                                                                disabled={actionLoading === booking.id}
+                                                                className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                                                                title="Aprobar"
+                                                            >
+                                                                <CheckCircle className="w-4 h-4" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleUpdateStatus(booking.id, 'cancelled')}
+                                                                disabled={actionLoading === booking.id}
+                                                                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Rechazar"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {booking.status === 'confirmed' && (
+                                                        <button
+                                                            onClick={() => handleUpdateStatus(booking.id, 'completed')}
+                                                            className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                                                        >
+                                                            Finalizar
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleDeleteBooking(booking.id)}
+                                                        disabled={actionLoading === booking.id}
+                                                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1"
+                                                        title="Eliminar"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
                                                     </button>
                                                 </>
                                             )}
-                                            {booking.status === 'confirmed' && (
-                                                <button
-                                                    onClick={() => handleUpdateStatus(booking.id, 'completed')}
-                                                    className="px-3 py-1 bg-blue-600 text-white rounded-md text-xs font-medium hover:bg-blue-700 transition-colors shadow-sm"
-                                                >
-                                                    Finalizar
-                                                </button>
-                                            )}
-
-                                            {(booking.status === 'confirmed' || booking.status === 'completed') && (
-                                                <button
-                                                    onClick={() => setSelectedTicket(booking)}
-                                                    className="p-1.5 text-slate-400 hover:text-brand-blue hover:bg-blue-50 rounded-lg transition-colors"
-                                                    title="Ver Ticket"
-                                                >
-                                                    <FileText className="w-4 h-4" />
-                                                </button>
-                                            )}
-
-                                            <button
-                                                onClick={() => handleDeleteBooking(booking.id)}
-                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
                                         </div>
                                     </td>
+
                                 </tr>
                             ))}
                             {paginatedBookings.length === 0 && (
@@ -1727,29 +1972,31 @@ const BookingsView = () => {
                         </button>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Ticket Modal */}
-            {selectedTicket && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-in zoom-in slide-in-from-bottom-4 duration-300">
-                        <button
-                            onClick={() => setSelectedTicket(null)}
-                            className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full transition-colors z-10"
-                        >
-                            <X className="w-5 h-5 text-slate-400" />
-                        </button>
-                        <div className="p-6">
-                            <TicketReserva
-                                booking={selectedTicket}
-                                vehicle={selectedTicket.vehicles}
-                                user={selectedTicket.profiles}
-                            />
+            {
+                selectedTicket && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-in zoom-in slide-in-from-bottom-4 duration-300">
+                            <button
+                                onClick={() => setSelectedTicket(null)}
+                                className="absolute top-4 right-4 p-2 hover:bg-slate-100 rounded-full transition-colors z-10"
+                            >
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                            <div className="p-6">
+                                <TicketReserva
+                                    booking={selectedTicket}
+                                    vehicle={selectedTicket.vehicles}
+                                    user={selectedTicket.profiles}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
@@ -2074,33 +2321,30 @@ const PanelAdministrador = () => {
     const handleClearDatabase = async () => {
         if (!confirm('¿Estás seguro de ELIMINAR TODOS los vehículos? Esta acción también eliminará todas las reservas asociadas.')) return;
         try {
-            // 1. Fetch and Delete Bookings explicitly
-            const { data: bookings } = await supabase.from('bookings').select('id');
-            if (bookings && bookings.length > 0) {
-                const bookingIds = bookings.map(b => b.id);
-                // Delete in chunks if necessary, but for now simple in filter
-                const { error: bookingError } = await supabase.from('bookings').delete().in('id', bookingIds);
-                if (bookingError) throw bookingError;
-            }
+            // 1. Delete ALL Bookings using a broad filter (ID is not null) to ensure we hit even those we might not 'see' in a select if logic permits
+            // Note: This still respects RLS, so if RLS prevents delete, it will throw an error.
+            const { error: bookingError } = await supabase.from('bookings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+            if (bookingError) throw new Error('Error al limpiar reservas: ' + bookingError.message);
 
-            // 2. Fetch and Delete Vehicles explicitly
-            const { data: vehicles } = await supabase.from('vehicles').select('id');
-            if (vehicles && vehicles.length > 0) {
-                const vehicleIds = vehicles.map(v => v.id);
-                const { error: vehicleError } = await supabase.from('vehicles').delete().in('id', vehicleIds);
-                if (vehicleError) throw vehicleError;
-            }
+            // 2. Delete ALL Vehicles
+            const { error: vehicleError } = await supabase.from('vehicles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+            if (vehicleError) throw new Error('Error al limpiar vehículos: ' + vehicleError.message);
 
             alert('¡Base de datos limpia! (Vehículos y Reservas eliminados)');
             window.location.reload();
-        } catch (err) { alert('Error: ' + err.message); }
+        } catch (err) {
+            console.error(err);
+            alert('Error: ' + err.message + '\n\nPosible causa: Políticas de seguridad (RLS) impiden borrar datos de otros usuarios.');
+        }
     };
 
     const handleDeleteVehicle = async (id) => {
         if (!confirm('¿Estás seguro de eliminar este vehículo?')) return;
         try {
             // Cascade delete for single vehicle
-            await supabase.from('bookings').delete().eq('vehicle_id', id);
+            const { error: bookingError } = await supabase.from('bookings').delete().eq('vehicle_id', id);
+            if (bookingError) throw new Error('No se pudieron borrar las reservas asociadas: ' + bookingError.message);
+
             const { error } = await supabase.from('vehicles').delete().eq('id', id);
             if (error) throw error;
             await logAction('DELETE_VEHICLE', { vehicle_id: id });
@@ -2116,6 +2360,7 @@ const PanelAdministrador = () => {
         try {
             // Cascade delete for multiple vehicles
             const { error: bookingError } = await supabase.from('bookings').delete().in('vehicle_id', ids);
+            if (bookingError) throw new Error('No se pudieron borrar las reservas asociadas: ' + bookingError.message);
             if (bookingError) throw bookingError;
 
             const { error: vehicleError } = await supabase.from('vehicles').delete().in('id', ids);
@@ -2131,7 +2376,7 @@ const PanelAdministrador = () => {
     };
 
     const handleSeedDatabase = async () => {
-        if (!confirm('¿Quieres agregar datos de prueba? Se generarán 6 vehículos por región (3 de Ciudad, 3 de Playa).')) return;
+        if (!confirm('¿Quieres agregar datos de prueba? Se generarán vehículos de Playa.')) return;
         setSubmitting(true);
         try {
             // Updated Coastal Locations (Tropical/Central Focus)
@@ -2140,71 +2385,76 @@ const PanelAdministrador = () => {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Debes iniciar sesión para realizar esta acción.");
 
-            const CITY_TEMPLATES = [
-                { make: 'Toyota', model: 'Corolla', category: 'Sedán', price_base: 60, image_url: 'https://tse2.mm.bing.net/th/id/OIP.qr6xSD3kUiQXnlAGZP1MIQHaE8?rs=1&pid=ImgDetMain&o=7&rm=3' },
-                { make: 'Kia', model: 'Rio', category: 'Compacto', price_base: 50, image_url: 'https://tse3.mm.bing.net/th/id/OIP.IuyBv9Lr_Y2qPJ1o00w7awHaE1?rs=1&pid=ImgDetMain&o=7&rm=3' },
-                { make: 'Hyundai', model: 'Tucson', category: 'SUV', price_base: 85, image_url: 'https://mediacloud.carbuyer.co.uk/image/private/s--DHfOYrcD--/f_auto,t_content-image-full-desktop@1/v1600853566/carbuyer/2020/09/all-new_hyundai_tucson_1.jpg' }
-            ];
 
-            const BEACH_TEMPLATES = [
-                { make: 'Jeep', model: 'Wrangler', category: '4x4', price_base: 150, image_url: 'https://tse1.mm.bing.net/th/id/OIP.XORhAQWLkCPd8kzQ-suzsgHaEi?rs=1&pid=ImgDetMain&o=7&rm=3' },
-                { make: 'Ford', model: 'Bronco', category: '4x4', price_base: 180, image_url: 'https://i.pinimg.com/originals/03/ba/34/03ba345c76599c99d272e3d24d43f1d0.jpg' },
-                { make: 'Can-Am', model: 'Maverick', category: 'Deportivo', price_base: 200, image_url: 'https://tse1.mm.bing.net/th/id/OIP.svtV1MvH8pTopowvqOUdJQHaFE?w=1024&h=702&rs=1&pid=ImgDetMain&o=7&rm=3' }
-            ];
+
+            // Flatten Catalog into a single list of all available beach vehicles
+            const allBeachVehicles = [];
+            const playaCategory = VEHICLE_CATALOG.playa; // Access 'playa' zone
+
+            Object.entries(playaCategory.categories).forEach(([categoryName, data]) => {
+                Object.entries(data.brands).forEach(([brand, models]) => {
+                    models.forEach(model => {
+                        allBeachVehicles.push({
+                            ...model,
+                            brand: brand,
+                            category: categoryName
+                        });
+                    });
+                });
+            });
 
             const vehiclesToInsert = [];
 
             // Iterate over each Coastal Department
             for (const [department, cities] of Object.entries(COASTAL_LOCATIONS)) {
-                // Identify "City" node (usually first item) and "Beach" node (usually second item or explicitly defined)
-                // Heuristic: First item is Capital/City, others are beaches
-                const cityNode = cities[0];
-                const beachNode = cities.length > 1 ? cities[1] : cities[0];
 
-                // 1. Generate 3 City Vehicles
-                for (let i = 0; i < 3; i++) {
-                    const template = CITY_TEMPLATES[i % CITY_TEMPLATES.length];
-                    vehiclesToInsert.push({
-                        make: template.make,
-                        model: template.model,
-                        year: 2020 + Math.floor(Math.random() * 4),
-                        price_per_day: Math.round(template.price_base),
-                        price_per_hour: Math.round(template.price_base / 8),
-                        location_city: cityNode,
-                        category: template.category,
-                        image_url: template.image_url,
-                        description: `Perfecto para moverte por la ciudad de ${cityNode}. Económico y cómodo.`,
-                        rating: Number((4.0 + Math.random()).toFixed(1)),
-                        owner_id: user.id,
-                        created_at: new Date().toISOString()
-                    });
-                }
+                // Iterate over ALL cities in the department (User said "todo lado")
+                cities.forEach(cityLocation => {
 
-                // 2. Generate 3 Beach Vehicles
-                for (let i = 0; i < 3; i++) {
-                    const template = BEACH_TEMPLATES[i % BEACH_TEMPLATES.length];
-                    vehiclesToInsert.push({
-                        make: template.make,
-                        model: template.model,
-                        year: 2022 + Math.floor(Math.random() * 3),
-                        price_per_day: Math.round(template.price_base),
-                        price_per_hour: Math.round(template.price_base / 6),
-                        location_city: beachNode,
-                        category: template.category,
-                        image_url: template.image_url,
-                        description: `¡Domina la arena en ${beachNode}! Ideal para aventuras off-road.`,
-                        rating: Number((4.5 + Math.random() * 0.5).toFixed(1)),
-                        owner_id: user.id,
-                        created_at: new Date().toISOString()
+                    // Generate ALL Beach Vehicles for EACH city
+                    allBeachVehicles.forEach(template => {
+                        // Base price logic
+                        let basePricePerHour = 50;
+                        if (template.category.includes('Buggy')) basePricePerHour = 150;
+                        if (template.category.includes('Motos Acuáticas')) basePricePerHour = 120;
+                        if (template.category.includes('Foil')) basePricePerHour = 180;
+
+                        vehiclesToInsert.push({
+                            make: template.brand,
+                            model: template.name,
+                            year: 2023 + Math.floor(Math.random() * 2),
+                            price_per_hour: basePricePerHour,
+                            price_per_day: basePricePerHour * 6,
+                            location_city: cityLocation,
+                            category: template.category,
+                            image_url: template.image || 'https://images.unsplash.com/photo-1540562470762-212dcda824eb?q=80&w=2000&auto=format&fit=crop',
+                            description: `Disfruta de la adrenalina con ${template.brand} ${template.name} en ${cityLocation}.`,
+                            rating: Number((4.5 + Math.random() * 0.5).toFixed(1)),
+                            vehicle_type: 'playa',
+                            stock: Math.floor(Math.random() * 4) + 3, // Stock 3-6
+                            passengers: template.specs.passengers,
+                            transmission: template.specs.transmission,
+                            fuel_type: template.specs.fuel_type,
+                            engine_power: template.specs.engine_power,
+                            owner_id: user.id,
+                            created_at: new Date().toISOString()
+                        });
                     });
-                }
+                });
             }
 
-            // Insert in chunks to avoid payload limits if necessary, but 40 items is fine
+            // Insert in chunks to avoid payload limits (approx 1000+ items now)
+            const CHUNK_SIZE = 50;
             if (vehiclesToInsert.length > 0) {
-                const { error } = await supabase.from('vehicles').insert(vehiclesToInsert);
-                if (error) throw error;
-                alert(`¡Base de datos populada! Se añadieron ${vehiclesToInsert.length} vehículos (6 por región).`);
+                console.log(`Inserting ${vehiclesToInsert.length} vehicles...`);
+                for (let i = 0; i < vehiclesToInsert.length; i += CHUNK_SIZE) {
+                    const chunk = vehiclesToInsert.slice(i, i + CHUNK_SIZE);
+                    const { error } = await supabase.from('vehicles').insert(chunk);
+                    if (error) throw error;
+                    console.log(`Inserted chunk ${i / CHUNK_SIZE + 1}`);
+                }
+
+                alert(`¡Éxito! Se añadieron ${vehiclesToInsert.length} vehículos. Ahora sí, TODAS las playas tienen TODOS los modelos.`);
                 window.location.reload();
             }
 
@@ -2447,7 +2697,7 @@ const PanelAdministrador = () => {
             setIsModalOpen(false);
             setEditingId(null);
             setEditingId(null);
-            setFormData({ make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false });
+            setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 });
             window.location.reload();
         } catch (error) { alert(error.message); }
         finally { setSubmitting(false); }
@@ -2456,7 +2706,7 @@ const PanelAdministrador = () => {
     const renderContent = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView users={users} />;
-            case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false }); setIsModalOpen(true); }} onClearDB={handleClearDatabase} onSeed={handleSeedDatabase} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
+            case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 }); setIsModalOpen(true); }} onClearDB={handleClearDatabase} onSeed={handleSeedDatabase} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'clients': return <ClientsView users={users} onEdit={handleEditClient} onDelete={handleDeleteClient} onAdd={() => { setEditingClientId(null); setClientFormData({ full_name: '', email: '', phone: '', dni: '', role: 'client' }); setIsClientModalOpen(true); }} onSeed={handleSeedClients} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'promotions': return <PromotionsView />;
             case 'reports': return <ReportesView />;

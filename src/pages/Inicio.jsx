@@ -35,6 +35,7 @@ const SearchBar = () => {
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
     const [passengers, setPassengers] = useState(1);
+    const [maxPassengers, setMaxPassengers] = useState(5); // Default to 5 until fetched
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const navigate = useNavigate();
@@ -49,14 +50,18 @@ const SearchBar = () => {
                     .from('locations')
                     .select('name, department');
 
-                // 2. Fetch cities with actual vehicles (Inventory)
+                // 2. Fetch cities with actual vehicles (Inventory) and find max passengers
                 const { data: vehicleData, error: vError } = await supabase
                     .from('vehicles')
-                    .select('location_city');
+                    .select('location_city, passengers');
 
                 if (locError || vError) throw new Error('Error loading location data');
 
                 const vehicleCities = new Set(vehicleData.map(v => v.location_city));
+                // Calculate max passengers dynamically from inventory
+                const maxCap = vehicleData.reduce((max, v) => Math.max(max, v.passengers || 0), 4);
+                setMaxPassengers(maxCap || 5);
+
                 const locations = [];
                 const activeDepartments = new Set();
 
@@ -198,7 +203,7 @@ const SearchBar = () => {
                 <div className="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 md:right-4 bg-white shadow-sm md:shadow-lg rounded-full p-1 border border-slate-100">
                     <button onClick={(e) => { e.stopPropagation(); setPassengers(Math.max(1, passengers - 1)) }} className="p-1.5 hover:bg-slate-100 rounded-full"><Minus className="w-3 h-3 text-slate-600" /></button>
                     <span className="text-xs font-bold w-4 text-center">{passengers}</span>
-                    <button onClick={(e) => { e.stopPropagation(); setPassengers(Math.min(5, passengers + 1)) }} className="p-1.5 hover:bg-slate-100 rounded-full"><Plus className="w-3 h-3 text-slate-600" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); setPassengers(Math.min(maxPassengers, passengers + 1)) }} className="p-1.5 hover:bg-slate-100 rounded-full"><Plus className="w-3 h-3 text-slate-600" /></button>
                 </div>
             </div>
 
