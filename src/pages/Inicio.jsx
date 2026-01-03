@@ -386,11 +386,11 @@ export default function Inicio() {
                         <h1 className="text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-6 drop-shadow-2xl leading-tight">
                             El Lujo de <br />
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-white to-brand-gold animate-shimmer bg-[length:200%_auto]">
-                                Explorar
+                                la Aventura
                             </span>
                         </h1>
                         <p className="hidden md:block text-lg md:text-2xl text-white/80 max-w-2xl mx-auto font-light leading-relaxed mb-12 mix-blend-screen">
-                            Descubre la costa peruana con nuestra flota exclusiva. <br />Libertad, confort y estilo en cada kilómetro.
+                            Domina la arena y el mar con nuestra flota exclusiva. <br />Buggies, Jetskis y 4x4 disponibles por horas o días.
                         </p>
                     </div>
                 </div>
