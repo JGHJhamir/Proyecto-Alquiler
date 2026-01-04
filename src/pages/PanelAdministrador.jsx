@@ -840,7 +840,7 @@ const DashboardView = ({ users }) => {
     );
 };
 
-const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, onDeleteMultiple, onEdit, activeMenu, setActiveMenu }) => {
+const VehiclesView = ({ onAddClick, onFixImages, onDelete, onDeleteMultiple, onEdit, activeMenu, setActiveMenu }) => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedVehicles, setSelectedVehicles] = useState([]);
@@ -848,6 +848,7 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
         vehicle: true, category: true, location: true, prices: true, status: true
     });
     const [showColumnMenu, setShowColumnMenu] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchVehicles = async () => {
         setLoading(true);
@@ -874,12 +875,23 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
         }
     };
 
+    const filteredVehicles = vehicles.filter(vehicle =>
+        vehicle.make?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-6 animate-fade-in-up">
             <div className="flex justify-between items-center">
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="text" placeholder="Filtrar por vehículo..." className="pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none w-64" />
+                    <input
+                        type="text"
+                        placeholder="Filtrar por vehículo..."
+                        className="pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none w-64"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
                 <div className="flex gap-3">
                     {selectedVehicles.length > 0 && (
@@ -890,12 +902,7 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
                             <Trash2 className="w-4 h-4" /> Eliminar ({selectedVehicles.length})
                         </button>
                     )}
-                    <button onClick={onSeed} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold px-2 hover:underline transition-all">
-                        + Auto-completar
-                    </button>
-                    <button onClick={onClearDB} className="text-red-500 hover:text-red-700 text-xs font-semibold px-4 hover:underline transition-all">
-                        Limpiar Todo
-                    </button>
+
 
                     <div className="relative">
                         <button onClick={() => setShowColumnMenu(!showColumnMenu)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 flex items-center gap-2">
@@ -950,7 +957,7 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {vehicles.map((car) => (
+                        {filteredVehicles.map((car) => (
                             <tr key={car.id} className={`hover:bg-blue-50/50 transition-colors group ${selectedVehicles.includes(car.id) ? 'bg-blue-50/30' : ''}`}>
                                 <td className="p-4">
                                     <input
@@ -1030,11 +1037,18 @@ const VehiclesView = ({ onAddClick, onClearDB, onSeed, onFixImages, onDelete, on
     );
 };
 
-const ClientsView = ({ users, onEdit, onDelete, onAdd, onSeed, activeMenu, setActiveMenu }) => {
+const ClientsView = ({ users, onEdit, onDelete, onAdd, activeMenu, setActiveMenu }) => {
     const [visibleColumns, setVisibleColumns] = useState({
         name: true, email: true, phone: true, dni: true, role: true, actions: true
     });
     const [showColumnMenu, setShowColumnMenu] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredUsers = users.filter(user =>
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.dni?.includes(searchTerm)
+    );
 
     return (
         <div className="space-y-6 animate-fade-in-up">
@@ -1043,9 +1057,7 @@ const ClientsView = ({ users, onEdit, onDelete, onAdd, onSeed, activeMenu, setAc
                     <Users className="w-6 h-6" /> Gestión de Clientes
                 </h2>
                 <div className="flex gap-2">
-                    <button onClick={onSeed} className="text-emerald-600 hover:text-emerald-700 text-xs font-semibold px-2 hover:underline transition-all">
-                        + Clientes de Prueba
-                    </button>
+
                     <button onClick={onAdd} className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
                         <Plus className="w-4 h-4" /> Añadir Cliente
                     </button>
@@ -1055,7 +1067,13 @@ const ClientsView = ({ users, onEdit, onDelete, onAdd, onSeed, activeMenu, setAc
             <div className="flex gap-4">
                 <div className="relative flex-1 max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input type="text" placeholder="Filtrar por email..." className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none" />
+                    <input
+                        type="text"
+                        placeholder="Filtrar por email, nombre o DNI..."
+                        className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
                 <div className="relative">
                     <button
@@ -1102,7 +1120,7 @@ const ClientsView = ({ users, onEdit, onDelete, onAdd, onSeed, activeMenu, setAc
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {users.map((user, idx) => (
+                        {filteredUsers.map((user, idx) => (
                             <tr key={idx} className="hover:bg-blue-50/50 transition-colors">
                                 <td className="p-4"><input type="checkbox" className="rounded border-slate-300" /></td>
                                 <td className="px-6 py-4">
@@ -2388,25 +2406,7 @@ const PanelAdministrador = () => {
         fetchData();
     }, []);
 
-    const handleClearDatabase = async () => {
-        if (!confirm('¿Estás seguro de ELIMINAR TODOS los vehículos? Esta acción también eliminará todas las reservas asociadas.')) return;
-        try {
-            // 1. Delete ALL Bookings using a broad filter (ID is not null) to ensure we hit even those we might not 'see' in a select if logic permits
-            // Note: This still respects RLS, so if RLS prevents delete, it will throw an error.
-            const { error: bookingError } = await supabase.from('bookings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-            if (bookingError) throw new Error('Error al limpiar reservas: ' + bookingError.message);
 
-            // 2. Delete ALL Vehicles
-            const { error: vehicleError } = await supabase.from('vehicles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-            if (vehicleError) throw new Error('Error al limpiar vehículos: ' + vehicleError.message);
-
-            alert('¡Base de datos limpia! (Vehículos y Reservas eliminados)');
-            window.location.reload();
-        } catch (err) {
-            console.error(err);
-            alert('Error: ' + err.message + '\n\nPosible causa: Políticas de seguridad (RLS) impiden borrar datos de otros usuarios.');
-        }
-    };
 
     const handleDeleteVehicle = async (id) => {
         if (!confirm('¿Estás seguro de eliminar este vehículo?')) return;
@@ -2445,96 +2445,7 @@ const PanelAdministrador = () => {
         }
     };
 
-    const handleSeedDatabase = async () => {
-        if (!confirm('¿Quieres agregar datos de prueba? Se generarán vehículos de Playa.')) return;
-        setSubmitting(true);
-        try {
-            // Updated Coastal Locations (Tropical/Central Focus)
 
-
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Debes iniciar sesión para realizar esta acción.");
-
-
-
-            // Flatten Catalog into a single list of all available beach vehicles
-            const allBeachVehicles = [];
-            const playaCategory = VEHICLE_CATALOG.playa; // Access 'playa' zone
-
-            Object.entries(playaCategory.categories).forEach(([categoryName, data]) => {
-                Object.entries(data.brands).forEach(([brand, models]) => {
-                    models.forEach(model => {
-                        allBeachVehicles.push({
-                            ...model,
-                            brand: brand,
-                            category: categoryName
-                        });
-                    });
-                });
-            });
-
-            const vehiclesToInsert = [];
-
-            // Iterate over each Coastal Department
-            for (const [department, cities] of Object.entries(COASTAL_LOCATIONS)) {
-
-                // Iterate over ALL cities in the department (User said "todo lado")
-                cities.forEach(cityLocation => {
-
-                    // Generate ALL Beach Vehicles for EACH city
-                    allBeachVehicles.forEach(template => {
-                        // Base price logic
-                        let basePricePerHour = 50;
-                        if (template.category.includes('Buggy')) basePricePerHour = 150;
-                        if (template.category.includes('Motos Acuáticas')) basePricePerHour = 120;
-                        if (template.category.includes('Foil')) basePricePerHour = 180;
-
-                        vehiclesToInsert.push({
-                            make: template.brand,
-                            model: template.name,
-                            year: 2023 + Math.floor(Math.random() * 2),
-                            price_per_hour: basePricePerHour,
-                            price_per_day: basePricePerHour * 6,
-                            location_city: cityLocation,
-                            category: template.category,
-                            image_url: template.image || 'https://images.unsplash.com/photo-1540562470762-212dcda824eb?q=80&w=2000&auto=format&fit=crop',
-                            description: `Disfruta de la adrenalina con ${template.brand} ${template.name} en ${cityLocation}.`,
-                            rating: Number((4.5 + Math.random() * 0.5).toFixed(1)),
-                            vehicle_type: 'playa',
-                            stock: Math.floor(Math.random() * 4) + 3, // Stock 3-6
-                            passengers: template.specs.passengers,
-                            transmission: template.specs.transmission,
-                            fuel_type: template.specs.fuel_type,
-                            engine_power: template.specs.engine_power,
-                            owner_id: user.id,
-                            created_at: new Date().toISOString()
-                        });
-                    });
-                });
-            }
-
-            // Insert in chunks to avoid payload limits (approx 1000+ items now)
-            const CHUNK_SIZE = 50;
-            if (vehiclesToInsert.length > 0) {
-                console.log(`Inserting ${vehiclesToInsert.length} vehicles...`);
-                for (let i = 0; i < vehiclesToInsert.length; i += CHUNK_SIZE) {
-                    const chunk = vehiclesToInsert.slice(i, i + CHUNK_SIZE);
-                    const { error } = await supabase.from('vehicles').insert(chunk);
-                    if (error) throw error;
-                    console.log(`Inserted chunk ${i / CHUNK_SIZE + 1}`);
-                }
-
-                alert(`¡Éxito! Se añadieron ${vehiclesToInsert.length} vehículos. Ahora sí, TODAS las playas tienen TODOS los modelos.`);
-                window.location.reload();
-            }
-
-        } catch (error) {
-            console.error(error);
-            alert('Error al popular: ' + error.message);
-        } finally {
-            setSubmitting(false);
-        }
-    };
 
 
     // --- Client Management Logic ---
@@ -2628,41 +2539,7 @@ const PanelAdministrador = () => {
         }
     };
 
-    const handleSeedClients = async () => {
-        if (!confirm('¿Generar clientes de prueba? (Nota: Estos perfiles son ficticios y no tendrán acceso real al sistema).')) return;
-        setSubmitting(true);
-        try {
-            const fakeClients = [
-                { full_name: 'Maria Garcia', email: 'maria.garcia@example.com', phone: '998877665', dni: '45678901', role: 'client' },
-                { full_name: 'Juan Perez', email: 'juan.perez@example.com', phone: '987654321', dni: '12345678', role: 'client' },
-                { full_name: 'Carlos Rodriguez', email: 'carlos.rod@example.com', phone: '912345678', dni: '87654321', role: 'client' },
-                { full_name: 'Ana Martinez', email: 'ana.martinez@example.com', phone: '923456789', dni: '11223344', role: 'client' },
-                { full_name: 'Luis Hernandez', email: 'luis.h@example.com', phone: '934567890', dni: '55667788', role: 'client' },
-                { full_name: 'Sofia Lopez', email: 'sofia.lopez@example.com', phone: '945678901', dni: '99887766', role: 'client' },
-                { full_name: 'Jorge Chavez', email: 'jorge.chavez@example.com', phone: '956789012', dni: '44556677', role: 'client' }
-            ];
 
-            const clientsWithIds = fakeClients.map(c => ({
-                ...c,
-                id: crypto.randomUUID(), // Generate a random UUID for the profile ID
-                updated_at: new Date()
-            }));
-
-            const { error } = await supabase.from('profiles').insert(clientsWithIds);
-            if (error) {
-                if (error.message.includes('foreign key') || error.code === '23503') {
-                    throw new Error('No se pueden crear perfiles falsos porque tu base de datos requiere que el ID coincida con un usuario real de autenticación. Solo los usuarios reales aparecerán aquí.');
-                }
-                throw error;
-            }
-            alert('¡Clientes de prueba creados exitosamente!');
-            window.location.reload();
-        } catch (error) {
-            alert('Error al generar clientes: ' + error.message);
-        } finally {
-            setSubmitting(false);
-        }
-    };
 
     const handleFixImages = async () => {
         if (!confirm('¿Quieres intentar reparar las imágenes faltantes o rotas basándote en el modelo del vehículo?')) return;
@@ -2791,8 +2668,8 @@ const PanelAdministrador = () => {
     const renderContent = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView users={users} />;
-            case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 }); setIsModalOpen(true); }} onClearDB={handleClearDatabase} onSeed={handleSeedDatabase} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
-            case 'clients': return <ClientsView users={users} onEdit={handleEditClient} onDelete={handleDeleteClient} onAdd={() => { setEditingClientId(null); setClientFormData({ full_name: '', email: '', phone: '', dni: '', role: 'client' }); setIsClientModalOpen(true); }} onSeed={handleSeedClients} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
+            case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 }); setIsModalOpen(true); }} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
+            case 'clients': return <ClientsView users={users} onEdit={handleEditClient} onDelete={handleDeleteClient} onAdd={() => { setEditingClientId(null); setClientFormData({ full_name: '', email: '', phone: '', dni: '', role: 'client' }); setIsClientModalOpen(true); }} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'promotions': return <PromotionsView />;
             case 'reports': return <ReportesView />;
             case 'reservas': return <BookingsView />;
