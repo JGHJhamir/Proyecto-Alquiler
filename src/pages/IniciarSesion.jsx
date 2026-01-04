@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '../supabase';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const IniciarSesion = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -56,6 +57,11 @@ const IniciarSesion = () => {
             console.log("Profile found:", profile);
 
             // 3. Redirección basada en rol
+            if (location.state?.from) {
+                navigate(location.state.from);
+                return;
+            }
+
             switch (profile.role) {
                 case 'admin':
                     navigate('/admin');

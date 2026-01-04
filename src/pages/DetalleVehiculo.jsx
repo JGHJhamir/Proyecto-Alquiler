@@ -205,9 +205,11 @@ const DetalleVehiculo = () => {
             const diffTime = Math.abs(end - start);
             const rentalHours = Math.ceil(diffTime / (1000 * 60 * 60));
 
-            if (promo.min_rental_hours > 0 && rentalHours < promo.min_rental_hours) {
-                const minDays = Math.ceil(promo.min_rental_hours / 24);
-                throw new Error(`Requiere alquiler mínimo de ${promo.min_rental_hours} horas(${rentalType === 'days' ? minDays + ' días aprox' : ''})`);
+            const minHours = Number(promo.min_rental_hours) || 0;
+
+            if (minHours > 0 && rentalHours < minHours) {
+                const minDays = Math.ceil(minHours / 24);
+                throw new Error(`Esta promoción requiere un alquiler mínimo de ${minHours} horas (${rentalType === 'days' ? minDays + ' días aprox' : 'o su equivalente en días'})`);
             }
 
             // Apply Discount
@@ -345,6 +347,26 @@ const DetalleVehiculo = () => {
         return true;
     };
 
+    // State for Similar Vehicles
+    const [similarVehicles, setSimilarVehicles] = useState([]);
+
+    // Fetch Similar Vehicles
+    useEffect(() => {
+        const fetchSimilar = async () => {
+            if (!vehicle) return;
+
+            const { data } = await supabase
+                .from('vehicles')
+                .select('*')
+                .eq('category', vehicle.category)
+                .neq('id', vehicle.id) // Exclude current
+                .limit(3);
+
+            if (data) setSimilarVehicles(data);
+        };
+        fetchSimilar();
+    }, [vehicle]);
+
     const handleFinalizePayment = async () => {
         if (selectedPaymentMethod === 'card' && !validateCard()) {
             alert('Por favor verifica los datos de tu tarjeta.');
@@ -379,15 +401,21 @@ const DetalleVehiculo = () => {
                 // Open WhatsApp for Yape
                 const ADMIN_PHONE = '51954025029';
                 const bookingId = currentBooking.id.toString().slice(0, 8);
-                const vehicleName = `${vehicle.make} ${vehicle.model} `;
+                const vehicleName = `${vehicle.make} ${vehicle.model}`;
                 const userName = currentUser?.full_name || 'Cliente';
 
+                // Format Dates properly
+                const startStr = new Date(startDate).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                const endStr = new Date(endDate).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+
                 const newLine = '%0A';
-                const message = `Hola, soy * ${userName}* y pago mi reserva con YAPE / PLIN${newLine}${newLine} ` +
-                    `ID: ${bookingId}...${newLine} ` +
-                    `Auto: ${vehicleName}${newLine} ` +
-                    `Monto: S / ${currentBooking.total_price}${newLine}${newLine} ` +
-                    `Adjunto mi comprobante: `;
+                const message = `👋 *Hola, soy ${userName}*${newLine}` +
+                    `Acabo de realizar una reserva y realizo el pago por *YAPE / PLIN*.${newLine}${newLine}` +
+                    `📄 *ID Reserva:* ${bookingId}${newLine}` +
+                    `🚙 *Vehículo:* ${vehicleName}${newLine}` +
+                    `📅 *Fecha:* ${startStr} - ${endStr}${newLine}` +
+                    `💰 *Monto Total:* S/ ${currentBooking.total_price.toFixed(2)}${newLine}${newLine}` +
+                    `📎 *Adjunto mi comprobante:*`;
 
                 window.open(`https://wa.me/${ADMIN_PHONE}?text=${message}`, '_blank');
             }
@@ -421,12 +449,6 @@ const DetalleVehiculo = () => {
                     <ArrowLeft className="w-6 h-6" />
                 </Link>
                 <div className="flex gap-3 pointer-events-auto">
-                    <button className="p-3 bg-white/20 backdrop-blur-md text-white rounded-full hover:bg-white/30 transition-all">
-                        <Share2 className="w-5 h-5" />
-                    </button>
-                    <button className="p-3 bg-white/20 backdrop-blur-md text-white rounded-full hover:bg-white/30 transition-all">
-                        <Heart className="w-5 h-5" />
-                    </button>
                 </div>
             </nav>
 
@@ -439,7 +461,7 @@ const DetalleVehiculo = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
 
-                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 text-white">
+                <div className="absolute bottom-0 left-0 right-0 p-6 pb-16 md:p-12 text-white">
                     <div className="max-w-7xl mx-auto">
                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                             <div>
@@ -509,9 +531,36 @@ const DetalleVehiculo = () => {
                             {vehicle.description || `Diseñado para dominar tanto las dunas como la carretera costera, este ${vehicle.make} ${vehicle.model} ofrece la combinación perfecta de potencia y confort. Ideal para recorrer las playas de ${vehicle.location_city} con estilo y seguridad. Equipado con suspensión reforzada, aire acondicionado y sistema de sonido premium para tus playlists playeras.`}
                         </p>
                     </div>
+
+                    {/* Similar Vehicles */}
+                    {similarVehicles.length > 0 && (
+                        <div className="pt-8">
+                            <h3 className="text-2xl font-bold text-slate-900 font-serif mb-6">Vehículos Similares</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {similarVehicles.map(v => (
+                                    <Link key={v.id} to={`/vehiculo/${v.id}`} className="group bg-white rounded-[2rem] p-4 border border-slate-100 hover:shadow-lg transition-all flex gap-4 overflow-hidden">
+                                        <div className="w-32 h-24 rounded-xl overflow-hidden shrink-0">
+                                            <img src={v.image_url} alt={v.model} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                        </div>
+                                        <div className="flex-1 py-1">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <p className="text-[10px] text-brand-gold font-bold uppercase tracking-wider">{v.category}</p>
+                                                <div className="flex items-center gap-1">
+                                                    <Star className="w-3 h-3 text-orange-400 fill-orange-400" />
+                                                    <span className="text-xs font-bold">{v.rating}</span>
+                                                </div>
+                                            </div>
+                                            <h4 className="font-bold text-slate-800 leading-tight mb-2 group-hover:text-brand-blue transition-colors">{v.make} {v.model}</h4>
+                                            <p className="text-brand-blue font-bold text-lg">S/ {(v.price_per_hour || 0)} <span className="text-xs text-slate-400 font-normal">/ hora</span></p>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {/* Booking Card (Sticky) */}
+                {/* Booking Card */}
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl shadow-brand-blue/5 border border-blue-100 lg:sticky lg:top-24">
                         {/* Step Indicator */}
@@ -802,6 +851,7 @@ const DetalleVehiculo = () => {
                                                         value={startDate && endDate ? Math.round((new Date(endDate) - new Date(startDate)) / 3600000) : 2}
                                                         onChange={(e) => {
                                                             const hours = parseInt(e.target.value);
+
                                                             if (startDate) {
                                                                 const startObj = new Date(startDate);
                                                                 const endObj = new Date(startObj.getTime() + hours * 60 * 60 * 1000);

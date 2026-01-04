@@ -1272,8 +1272,9 @@ const PromotionModal = ({ isOpen, onClose, formData, setFormData, onSubmit, isEd
                                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none transition-all"
                                     >
                                         <option value="Todos">Todos</option>
-                                        <option value="4x4">Camionetas 4x4</option>
-                                        <option value="Deportivo">Deportivos</option>
+                                        {VEHICLE_CATALOG.playa && Object.keys(VEHICLE_CATALOG.playa.categories).map((cat) => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div>

@@ -378,26 +378,26 @@ export default function Inicio() {
                 <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/60 via-transparent to-brand-dark/90"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-brand-dark/50 to-transparent"></div>
 
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pt-20">
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 pt-32 pb-20 md:pt-20">
                     <div className="animate-fade-in-up">
-                        <span className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-brand-gold text-xs md:text-sm font-bold tracking-[0.2em] uppercase mb-8 shadow-glass">
+                        <span className="inline-flex items-center gap-2 py-2 px-6 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-brand-gold text-[10px] md:text-sm font-bold tracking-[0.2em] uppercase mb-6 md:mb-8 shadow-glass">
                             <Star className="w-3 h-3 fill-current" /> Experience Peru
                         </span>
-                        <h1 className="text-4xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-6 drop-shadow-2xl leading-tight">
+                        <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold text-white mb-6 drop-shadow-2xl leading-tight">
                             El Lujo de <br />
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-white to-brand-gold animate-shimmer bg-[length:200%_auto]">
                                 la Aventura
                             </span>
                         </h1>
-                        <p className="hidden md:block text-lg md:text-2xl text-white/80 max-w-2xl mx-auto font-light leading-relaxed mb-12 mix-blend-screen">
-                            Domina la arena y el mar con nuestra flota exclusiva. <br />Buggies, Jetskis y 4x4 disponibles por horas o días.
+                        <p className="text-base md:text-2xl text-white/80 max-w-xl md:max-w-2xl mx-auto font-light leading-relaxed mb-6 md:mb-12 mix-blend-screen">
+                            Domina la arena y el mar con nuestra flota exclusiva. <br />Buggies, Jetskis y 4x4 disponibles por horas.
                         </p>
                     </div>
                 </div>
             </div>
 
             {/* Floating Search Bar Container - Negative Margin for overlap */}
-            <div className="px-6 relative z-30 max-w-7xl mx-auto w-full -mt-24">
+            <div className="px-4 md:px-6 relative z-30 max-w-7xl mx-auto w-full -mt-20 md:-mt-24">
                 <SearchBar />
             </div>
 

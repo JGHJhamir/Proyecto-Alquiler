@@ -228,14 +228,14 @@ const ExplorarVehiculos = () => {
         <div className="min-h-screen bg-brand-cream/30 font-sans selection:bg-brand-gold/20 selection:text-brand-dark">
             <BarraNavegacion />
 
-            {/* Filter Modal */}
+            {/* Filter Modal - Mobile Full Screen / Desktop Modal */}
             {showFilters && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white/95 backdrop-blur-xl border border-white/50 rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl animate-in zoom-in-95 duration-200 ring-1 ring-white/50">
-                        <div className="flex justify-between items-center mb-8">
+                <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white/95 backdrop-blur-xl border-t md:border border-white/50 rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-lg p-8 md:p-8 shadow-2xl animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 ring-1 ring-white/50 max-h-[85vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-8 sticky top-0 bg-white/0 backdrop-blur-none z-10 pb-2 border-b border-transparent">
                             <h3 className="text-2xl font-serif font-bold text-slate-800">Filtros Avanzados</h3>
                             <button onClick={() => setShowFilters(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                <X className="w-5 h-5 text-slate-500" />
+                                <X className="w-6 h-6 text-slate-500" />
                             </button>
                         </div>
 
@@ -244,7 +244,7 @@ const ExplorarVehiculos = () => {
                             <h4 className="flex items-center gap-2 font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider">
                                 <MapPin className="w-4 h-4 text-brand-gold" /> Ubicación
                             </h4>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wider pl-1">Departamento</label>
                                     <div className="relative">
@@ -297,7 +297,7 @@ const ExplorarVehiculos = () => {
                             </div>
                         </div>
 
-                        <div className="flex justify-between pt-6 border-t border-slate-100">
+                        <div className="flex justify-between pt-6 border-t border-slate-100 pb-safe">
                             <button
                                 onClick={() => setFilters({ categories: [], transmission: [], department: '', city: '' })}
                                 className="text-slate-500 font-bold hover:text-slate-800 transition-colors text-sm"
@@ -317,7 +317,7 @@ const ExplorarVehiculos = () => {
 
             <div className="pt-24 min-h-screen flex flex-col relative w-full overflow-x-hidden">
                 {/* Floating Filter Bar */}
-                <div className="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between sticky top-[80px] z-40 mx-4 md:mx-6 mt-2 md:mt-4 mb-4 md:mb-6 bg-white/70 backdrop-blur-xl border border-white/40 shadow-glass rounded-xl md:rounded-2xl">
+                <div className="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between z-40 mx-4 md:mx-6 mt-2 md:mt-4 mb-4 md:mb-6 bg-white/70 backdrop-blur-xl border border-white/40 shadow-glass rounded-xl md:rounded-2xl">
                     <div className="flex items-center gap-2 text-slate-600">
                         <MapIcon className="w-5 h-5 text-brand-blue" />
                         <p className="text-xs md:text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
@@ -395,7 +395,7 @@ const ExplorarVehiculos = () => {
 
                             <iframe
                                 width="100%" height="100%" frameBorder="0" scrolling="no" marginHeight="0" marginWidth="0"
-                                src={`https://maps.google.com/maps?q=${encodeURIComponent(filters.city || filters.department || destination || 'Perú')}&t=&z=10&ie=UTF8&iwloc=&output=embed`}
+                                src={`https://maps.google.com/maps?q=${encodeURIComponent(filters.city || filters.department || destination || 'Perú')}&t=&z=${filters.city ? 17 : (filters.department || destination ? 13 : 6)}&ie=UTF8&iwloc=&output=embed`}
                                 className="w-full h-full grayscale-[10%] contrast-[1.05] opacity-90 hover:opacity-100 transition-opacity duration-700"
                             ></iframe>
 
