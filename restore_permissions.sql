@@ -8,6 +8,8 @@ drop policy if exists "Admin and Owner view all profiles" on profiles;
 drop policy if exists "Admin_Owner_View_Profiles" on profiles;
 drop policy if exists "Enable read access for all users" on profiles;
 drop policy if exists "Public profiles" on profiles;
+drop policy if exists "Allow Auth Users View All Bookings" on bookings;
+drop policy if exists "Allow Auth Users View All Profiles" on profiles;
 
 -- 2. Habilitar lectura TOTAL de reservas para usuarios autenticados
 -- Esto arreglará los REPORTES (que salen en 0)
