@@ -1058,9 +1058,7 @@ const ClientsView = ({ users, onEdit, onDelete, onAdd, activeMenu, setActiveMenu
                 </h2>
                 <div className="flex gap-2">
 
-                    <button onClick={onAdd} className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
-                        <Plus className="w-4 h-4" /> Añadir Cliente
-                    </button>
+
                 </div>
             </div>
 
