@@ -3,6 +3,14 @@ import { Suspense, lazy } from 'react';
 import { Toaster } from 'sonner';
 import RutaProtegida from './components/RutaProtegida';
 import ErrorBoundary from './components/ErrorBoundary';
+import PantallaMantenimiento from './components/PantallaMantenimiento';
+
+// ************************************************************************
+// [CONTROL DE MANTENIMIENTO]
+// PARA DESACTIVAR LA PÁGINA: Cambia el valor de abajo a "true"
+// PARA ACTIVAR LA PÁGINA: Cambia el valor de abajo a "false"
+const MODO_MANTENIMIENTO = false;
+// ************************************************************************
 
 // Lazy loading pages
 const Inicio = lazy(() => import('./pages/Inicio'));
@@ -24,6 +32,11 @@ const LoadingFallback = () => (
 );
 
 function App() {
+  // Si el modo manual está activo, bloqueamos todo
+  if (MODO_MANTENIMIENTO) {
+    return <PantallaMantenimiento />;
+  }
+
   return (
     <Router>
       <Toaster position="top-center" richColors />
@@ -57,4 +70,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
