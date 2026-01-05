@@ -9,7 +9,7 @@ import PantallaMantenimiento from './components/PantallaMantenimiento';
 // [CONTROL DE MANTENIMIENTO]
 // PARA DESACTIVAR LA PÁGINA: Cambia el valor de abajo a "true"
 // PARA ACTIVAR LA PÁGINA: Cambia el valor de abajo a "false"
-const MODO_MANTENIMIENTO = false;
+const MODO_MANTENIMIENTO = true;
 // ************************************************************************
 
 // Lazy loading pages
@@ -32,7 +32,7 @@ const LoadingFallback = () => (
 );
 
 function App() {
-  // Si el modo manual está activo, bloqueamos todo
+  // Si el modo manual está activo, bloquea todo
   if (MODO_MANTENIMIENTO) {
     return <PantallaMantenimiento />;
   }
