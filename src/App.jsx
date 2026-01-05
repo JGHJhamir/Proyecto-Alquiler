@@ -9,7 +9,7 @@ import PantallaMantenimiento from './components/PantallaMantenimiento';
 // [CONTROL DE MANTENIMIENTO]
 // PARA DESACTIVAR LA PÁGINA: Cambia el valor de abajo a "true"
 // PARA ACTIVAR LA PÁGINA: Cambia el valor de abajo a "false"
-const MODO_MANTENIMIENTO = true;
+const MODO_MANTENIMIENTO = false;
 // ************************************************************************
 
 // Lazy loading pages
