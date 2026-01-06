@@ -93,22 +93,10 @@ const DetalleVehiculo = () => {
         fetchPromos();
     }, []);
 
-    useEffect(() => {
-        if (startDate && endDate && vehicle) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            if (diffDays > 0) {
-                setTotalPrice(diffDays * vehicle.price_per_day);
-            } else {
-                setTotalPrice(0);
-            }
-        }
-    }, [startDate, endDate, vehicle]);
 
-    const [rentalType, setRentalType] = useState('hours'); // Siempre horas para la App de Playa
+    // rentalType removed, always 'hours'
+    const rentalType = 'hours';
 
     // Forzar tipo de alquiler - Eliminando verificación de vehicle_type, siempre horas
     // useEffect(() => {
@@ -121,14 +109,7 @@ const DetalleVehiculo = () => {
     //     }
     // }, [vehicle]);
 
-    // Reiniciar fechas cuando cambia el tipo
-    useEffect(() => {
-        setStartDate('');
-        setEndDate('');
-        setTotalPrice(0);
-        setDiscount(0);
-        setAppliedPromo(null);
-    }, [rentalType]);
+    // Reiniciar fechas removed as rentalType is static
 
     useEffect(() => {
         if (startDate && endDate && vehicle) {
@@ -136,20 +117,14 @@ const DetalleVehiculo = () => {
             const end = new Date(endDate);
             const diffTime = Math.abs(end - start);
 
-            if (rentalType === 'days') {
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const subtotal = diffDays > 0 ? diffDays * vehicle.price_per_day * quantity : 0;
-                setTotalPrice(subtotal * 1.18); // Agregar 18% IGV
-            } else {
-                // Cálculo por hora: Tarifa = Precio Diario / 8
-                const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-                // Usar price_per_hour explícito si está disponible, sino derivarlo
-                const hourlyRate = vehicle.price_per_hour || (vehicle.price_per_day / 8);
-                const subtotal = diffHours > 0 ? diffHours * hourlyRate * quantity : 0;
-                setTotalPrice(subtotal * 1.18); // Agregar 18% IGV
-            }
+            // Cálculo por hora: Tarifa = Precio Diario / 8 (Fallback eliminado, solo price_per_hour)
+            const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+            // Usar price_per_hour explícito si está disponible, sino 0
+            const hourlyRate = vehicle.price_per_hour || 0;
+            const subtotal = diffHours > 0 ? diffHours * hourlyRate * quantity : 0;
+            setTotalPrice(subtotal * 1.18); // Agregar 18% IGV
         }
-    }, [startDate, endDate, vehicle, rentalType, quantity]);
+    }, [startDate, endDate, vehicle, quantity]);
 
     // Reiniciar descuento cuando cambian las fechas
     useEffect(() => {
@@ -488,7 +463,7 @@ const DetalleVehiculo = () => {
                             <div className="text-left md:text-right">
                                 <p className="text-sm text-white/70 font-medium uppercase tracking-wider mb-1">Precio por hora</p>
                                 <p className="text-4xl md:text-5xl font-bold text-white">
-                                    S/ {(vehicle.price_per_hour || (vehicle.price_per_day / 8)).toFixed(2)}
+                                    S/ {(vehicle.price_per_hour || 0).toFixed(2)}
                                 </p>
                             </div>
                         </div>
@@ -960,22 +935,19 @@ const DetalleVehiculo = () => {
                                 <div className="bg-ocean-50/50 p-6 rounded-2xl border border-ocean-100 mt-6 space-y-3">
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="font-medium text-slate-500">
-                                            Precio x {rentalType === 'days' ? 'día' : 'hora'}
+                                            Precio x hora
                                         </span>
                                         <span className="text-slate-700 font-bold">
-                                            S/ {rentalType === 'days' ? vehicle.price_per_day : (vehicle.price_per_hour || (vehicle.price_per_day / 8)).toFixed(2)}
+                                            S/ {(vehicle.price_per_hour || 0).toFixed(2)}
                                         </span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="font-medium text-slate-500">
-                                            {rentalType === 'days' ? 'Días' : 'Horas'}
+                                            Horas
                                         </span>
                                         <span className="text-slate-700 font-bold">
                                             {startDate && endDate
-                                                ? (rentalType === 'days'
-                                                    ? Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))
-                                                    : Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60))
-                                                )
+                                                ? Math.ceil(Math.abs(new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60))
                                                 : 0}
                                         </span>
                                     </div>

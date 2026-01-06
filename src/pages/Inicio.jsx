@@ -323,7 +323,7 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
                 <div className="pt-6 border-t border-slate-100 relative z-10">
                     <div className="flex items-end justify-between">
                         <div>
-                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Precio Diario</p>
+                            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Precio por Hora</p>
                             <div className="flex items-baseline gap-1">
                                 <span className="text-brand-blue text-lg font-bold">S/</span>
                                 <span className="text-4xl font-serif font-bold text-brand-dark tracking-tight">
@@ -453,7 +453,7 @@ export default function Inicio() {
                                 id={vehicle.id}
                                 name={`${vehicle.make} ${vehicle.model}`}
                                 location={vehicle.location_city}
-                                price={vehicle.price_per_day}
+                                price={vehicle.price_per_hour}
                                 image={vehicle.image_url}
                                 rating={vehicle.rating}
                                 isOffer={vehicle.is_offer}

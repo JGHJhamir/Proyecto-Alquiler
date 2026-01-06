@@ -995,9 +995,7 @@ const VehiclesView = ({ onAddClick, onFixImages, onDelete, onDeleteMultiple, onE
                                 {visibleColumns.prices && (
                                     <td className="px-6 py-4 font-semibold text-slate-900 text-sm">
                                         <div className="flex flex-col">
-                                            {car.price_per_day > 0 && <span>S/ {Math.round(car.price_per_day)}/día</span>}
-                                            {car.price_per_hour > 0 && <span className="text-xs text-slate-500">S/ {Math.round(car.price_per_hour)}/hora</span>}
-                                            {!car.price_per_day && !car.price_per_hour && <span className="text-slate-400 text-xs">Sin precio</span>}
+                                            {car.price_per_hour > 0 ? <span>S/ {Math.round(car.price_per_hour)}/hora</span> : <span className="text-slate-400 text-xs">Sin precio</span>}
                                         </div>
                                     </td>
                                 )}
@@ -2375,7 +2373,7 @@ const PanelAdministrador = () => {
 
     // Form State
     const [formData, setFormData] = useState({
-        make: '', model: '', year: new Date().getFullYear(), price_per_day: '', price_per_hour: '', department: '', province: '',
+        make: '', model: '', year: new Date().getFullYear(), price_per_hour: '', department: '', province: '',
         category: '4x4', image_url: '', description: '', is_offer: false
     });
 
@@ -2612,7 +2610,7 @@ const PanelAdministrador = () => {
             make: vehicle.make,
             model: vehicle.model,
             year: vehicle.year,
-            price_per_day: vehicle.price_per_day || '',
+            // price_per_day removed
             price_per_hour: vehicle.price_per_hour || '',
             department: foundDept,
             city: vehicle.location_city,
@@ -2633,7 +2631,7 @@ const PanelAdministrador = () => {
 
             const vehicleData = {
                 make: formData.make, model: formData.model, year: parseInt(formData.year),
-                price_per_day: Number(formData.price_per_day) || 0,
+                // price_per_day removed
                 price_per_hour: Number(formData.price_per_hour) || 0,
                 location_city: formData.city, category: formData.category, image_url: formData.image_url,
                 description: formData.description,
@@ -2657,7 +2655,7 @@ const PanelAdministrador = () => {
             setIsModalOpen(false);
             setEditingId(null);
             setEditingId(null);
-            setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 });
+            setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 });
             window.location.reload();
         } catch (error) { alert(error.message); }
         finally { setSubmitting(false); }
@@ -2666,7 +2664,7 @@ const PanelAdministrador = () => {
     const renderContent = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView users={users} />;
-            case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 }); setIsModalOpen(true); }} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
+            case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 }); setIsModalOpen(true); }} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'clients': return <ClientsView users={users} onEdit={handleEditClient} onDelete={handleDeleteClient} onAdd={() => { setEditingClientId(null); setClientFormData({ full_name: '', email: '', phone: '', dni: '', role: 'client' }); setIsClientModalOpen(true); }} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'promotions': return <PromotionsView />;
             case 'reports': return <VistaReportes />;
