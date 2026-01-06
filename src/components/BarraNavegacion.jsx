@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Sun, User, LogOut, Waves, Menu, X, LayoutDashboard, ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
-import BottomNavigation from './BottomNavigation';
+import NavegacionInferior from './NavegacionInferior';
 
 const BarraNavegacion = () => {
     const navigate = useNavigate();
@@ -213,7 +213,7 @@ const BarraNavegacion = () => {
                 </div>
             )}
 
-            <BottomNavigation />
+            <NavegacionInferior />
         </>
     );
 };

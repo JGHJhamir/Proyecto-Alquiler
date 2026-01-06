@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react';
 
-const StepIndicator = ({ steps, currentStep }) => {
+const IndicadorPasos = ({ steps, currentStep }) => {
     return (
         <div className="w-full py-8">
             <div className="flex items-center justify-between max-w-2xl mx-auto">
@@ -56,4 +56,4 @@ const StepIndicator = ({ steps, currentStep }) => {
     );
 };
 
-export default StepIndicator;
+export default IndicadorPasos;

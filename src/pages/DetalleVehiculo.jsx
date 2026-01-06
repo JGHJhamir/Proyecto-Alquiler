@@ -6,8 +6,8 @@ import { MapPin, Star, Share2, Heart, ArrowLeft, Shield, Gauge, Fuel, Users, Cal
 
 import BarraNavegacion from '../components/BarraNavegacion';
 // import ModalPago (Removed)
-import StepIndicator from '../components/StepIndicator';
-import DateRangePicker from '../components/DateRangePicker';
+import SelectorRangoFechas from '../components/SelectorRangoFechas';
+import IndicadorPasos from '../components/IndicadorPasos';
 import TicketReserva from '../components/TicketReserva';
 
 // Helper: Formatear fecha a cadena ISO local (YYYY-MM-DDTHH:mm) para inputs
@@ -565,7 +565,7 @@ const DetalleVehiculo = () => {
                     <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl shadow-brand-blue/5 border border-blue-100 lg:sticky lg:top-24">
                         {/* Indicador de Pasos */}
                         <div className="mb-6 pb-6 border-b border-slate-100">
-                            <StepIndicator steps={steps} currentStep={bookingStatus === 'completed' ? 4 : currentStep} />
+                            <IndicadorPasos steps={steps} currentStep={bookingStatus === 'completed' ? 4 : currentStep} />
                         </div>
 
 

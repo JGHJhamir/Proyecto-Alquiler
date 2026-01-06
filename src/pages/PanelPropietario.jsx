@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import ReportesView from '../components/ReportesView';
+import VistaReportes from '../components/VistaReportes';
 import {
     LayoutDashboard,
     TrendingUp,
@@ -979,7 +979,7 @@ const PanelPropietario = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView />;
             case 'team': return <TeamView />;
-            case 'reports': return <ReportesView />;
+            case 'reports': return <VistaReportes />;
 
             default: return <div className="p-12 text-center text-slate-400">Selecciona una opción del menú</div>;
         }

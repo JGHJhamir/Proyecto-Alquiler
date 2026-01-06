@@ -2,7 +2,7 @@
 import { Link } from 'react-router-dom';
 
 import { supabase } from '../supabase';
-import ReportesView from '../components/ReportesView';
+import VistaReportes from '../components/VistaReportes';
 import {
     Car, Users, Calendar, Plus, Search, BarChart3, Settings,
     X, Save, Image as ImageIcon, LayoutDashboard, Tag, ShoppingBag,
@@ -107,7 +107,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
     );
 };
 
-import { VEHICLE_CATALOG } from '../data/vehicleData';
+import { CATALOGO_VEHICULOS } from '../data/datosVehiculos';
 
 const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitting, isEditing }) => {
     if (!isOpen) return null;
@@ -138,17 +138,17 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
     }, []);
 
     // Estados derivados para desplegables
-    const availableCategories = formData.vehicle_type && VEHICLE_CATALOG[formData.vehicle_type]
-        ? Object.keys(VEHICLE_CATALOG[formData.vehicle_type].categories)
+    const availableCategories = formData.vehicle_type && CATALOGO_VEHICULOS[formData.vehicle_type]
+        ? Object.keys(CATALOGO_VEHICULOS[formData.vehicle_type].categories)
         : [];
 
-    const availableBrands = formData.vehicle_type && formData.category && VEHICLE_CATALOG[formData.vehicle_type]?.categories[formData.category]
-        ? Object.keys(VEHICLE_CATALOG[formData.vehicle_type].categories[formData.category].brands)
+    const availableBrands = formData.vehicle_type && formData.category && CATALOGO_VEHICULOS[formData.vehicle_type]?.categories[formData.category]
+        ? Object.keys(CATALOGO_VEHICULOS[formData.vehicle_type].categories[formData.category].brands)
         : [];
 
     // Nota: los modelos ahora son Objetos {name, specs}
-    const availableModels = formData.vehicle_type && formData.category && formData.make && VEHICLE_CATALOG[formData.vehicle_type]?.categories[formData.category]?.brands[formData.make]
-        ? VEHICLE_CATALOG[formData.vehicle_type].categories[formData.category].brands[formData.make]
+    const availableModels = formData.vehicle_type && formData.category && formData.make && CATALOGO_VEHICULOS[formData.vehicle_type]?.categories[formData.category]?.brands[formData.make]
+        ? CATALOGO_VEHICULOS[formData.vehicle_type].categories[formData.category].brands[formData.make]
         : [];
 
     const handleInputChange = (e) => {
@@ -1288,7 +1288,7 @@ const PromotionModal = ({ isOpen, onClose, formData, setFormData, onSubmit, isEd
                                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none transition-all"
                                     >
                                         <option value="Todos">Todos</option>
-                                        {VEHICLE_CATALOG.playa && Object.keys(VEHICLE_CATALOG.playa.categories).map((cat) => (
+                                        {CATALOGO_VEHICULOS.playa && Object.keys(CATALOGO_VEHICULOS.playa.categories).map((cat) => (
                                             <option key={cat} value={cat}>{cat}</option>
                                         ))}
                                     </select>
@@ -2669,7 +2669,7 @@ const PanelAdministrador = () => {
             case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_day: '', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 }); setIsModalOpen(true); }} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'clients': return <ClientsView users={users} onEdit={handleEditClient} onDelete={handleDeleteClient} onAdd={() => { setEditingClientId(null); setClientFormData({ full_name: '', email: '', phone: '', dni: '', role: 'client' }); setIsClientModalOpen(true); }} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
             case 'promotions': return <PromotionsView />;
-            case 'reports': return <ReportesView />;
+            case 'reports': return <VistaReportes />;
             case 'reservas': return <BookingsView />;
             case 'locations': return <LocationsView />;
             default: return <PlaceholderView title={VIEW_TITLES[activeView]} icon={UserIconMap[activeView] || LayoutDashboard} />;

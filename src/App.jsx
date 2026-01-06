@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { Toaster } from 'sonner';
 import RutaProtegida from './components/RutaProtegida';
-import ErrorBoundary from './components/ErrorBoundary';
+import CapturaErrores from './components/CapturaErrores';
 import PantallaMantenimiento from './components/PantallaMantenimiento';
 
 // ************************************************************************
@@ -40,7 +40,7 @@ function App() {
   return (
     <Router>
       <Toaster position="top-center" richColors />
-      <ErrorBoundary>
+      <CapturaErrores>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={<Inicio />} />
@@ -65,7 +65,7 @@ function App() {
             </Route>
           </Routes>
         </Suspense>
-      </ErrorBoundary>
+      </CapturaErrores>
     </Router>
   )
 }

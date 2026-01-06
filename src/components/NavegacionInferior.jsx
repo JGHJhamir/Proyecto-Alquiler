@@ -1,7 +1,7 @@
 import { Home, Search, Calendar, User } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
-const BottomNavigation = () => {
+const NavegacionInferior = () => {
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-200 px-6 py-2 z-50 shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.1)] pb-safe">
             <div className="flex justify-between items-center max-w-sm mx-auto">
@@ -41,4 +41,4 @@ const BottomNavigation = () => {
     );
 };
 
-export default BottomNavigation;
+export default NavegacionInferior;

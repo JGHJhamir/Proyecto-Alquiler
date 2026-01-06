@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const DateRangePicker = ({ startDate, endDate, onStartDateChange, onEndDateChange, rentalType, blockedDates = [] }) => {
+const SelectorRangoFechas = ({ startDate, endDate, onStartDateChange, onEndDateChange, rentalType, blockedDates = [] }) => {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -160,4 +160,4 @@ const DateRangePicker = ({ startDate, endDate, onStartDateChange, onEndDateChang
     );
 };
 
-export default DateRangePicker;
+export default SelectorRangoFechas;

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { FileText, Printer, TrendingUp, Calendar, Users, Car, Download, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react';
 
-const ReportesView = () => {
+const VistaReportes = () => {
     const [dateRange, setDateRange] = useState('all'); // Por defecto a todo el historial
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({
@@ -360,4 +360,4 @@ const DollarSignIcon = ({ className }) => (
     </svg>
 );
 
-export default ReportesView;
+export default VistaReportes;
