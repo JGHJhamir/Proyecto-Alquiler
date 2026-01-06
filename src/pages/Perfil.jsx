@@ -156,7 +156,7 @@ const Perfil = () => {
 
             <div className="pt-32 pb-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-2xl mx-auto">
-                    {/* Profile Card */}
+                    {/* Tarjeta de Perfil */}
                     <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-500">
                         <div className="p-8 text-center border-b border-slate-100">
                             {/* Avatar */}
@@ -169,7 +169,7 @@ const Perfil = () => {
                                 </div>
                             </div>
 
-                            {/* Name & Role */}
+                            {/* Nombre y Rol */}
                             <h2 className="text-2xl font-serif font-bold text-slate-900 mb-2">
                                 {profile?.full_name || 'Usuario'}
                             </h2>
@@ -178,7 +178,7 @@ const Perfil = () => {
                             </span>
                         </div>
 
-                        {/* Details List */}
+                        {/* Lista de Detalles */}
                         <div className="p-8 space-y-6">
 
                             {/* Email */}
@@ -192,7 +192,7 @@ const Perfil = () => {
                                 </div>
                             </div>
 
-                            {/* Phone (Mocked for now as it might not be in DB yet, or use metadata) */}
+                            {/* Teléfono (Simulado por ahora ya que podría no estar en BD aún, o usar metadata) */}
                             <div className="flex items-start gap-4 p-4 rounded-xl border border-slate-100 hover:border-brand-blue/30 transition-colors group">
                                 <div className="p-2.5 bg-slate-50 text-slate-400 rounded-lg group-hover:text-brand-blue group-hover:bg-brand-blue/5 transition-colors">
                                     <Phone className="w-5 h-5" />
@@ -215,7 +215,7 @@ const Perfil = () => {
                             </div>
                         </div>
 
-                        {/* Action Footer */}
+                        {/* Pie de Página de Acción */}
                         <div className="px-8 pb-8">
                             <button
                                 onClick={() => setIsEditing(true)}

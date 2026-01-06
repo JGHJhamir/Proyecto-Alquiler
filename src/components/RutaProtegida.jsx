@@ -11,7 +11,7 @@ const RutaProtegida = ({ allowedRoles = [] }) => {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                // 1. Check Session
+                // 1. Verificar Sesión
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (!session) {
@@ -21,7 +21,7 @@ const RutaProtegida = ({ allowedRoles = [] }) => {
 
                 setUser(session.user);
 
-                // 2. Fetch Profile Role
+                // 2. Obtener Rol del Perfil
                 const { data: profile, error } = await supabase
                     .from('profiles')
                     .select('role')
@@ -49,14 +49,14 @@ const RutaProtegida = ({ allowedRoles = [] }) => {
         );
     }
 
-    // 1. Not Logged In -> Redirect to Login
+    // 1. No Iniciado Sesión -> Redirigir a Login
     if (!user) {
         return <Navigate to="/login" replace />;
     }
 
-    // 2. Logged In but Wrong Role -> Redirect to Home (or specific dashboard)
+    // 2. Sesión Iniciada pero Rol Incorrecto -> Redirigir a Inicio (o panel específico)
     if (allowedRoles.length > 0 && role && !allowedRoles.includes(role)) {
-        // Optional: Redirect based on their ACTUAL role to be helpful
+        // Opcional: Redirigir basado en su rol REAL para ser útil
         if (role === 'admin') return <Navigate to="/admin" replace />;
         if (role === 'owner') return <Navigate to="/owner" replace />;
         if (role === 'client') return <Navigate to="/cliente" replace />;
@@ -64,7 +64,7 @@ const RutaProtegida = ({ allowedRoles = [] }) => {
         return <Navigate to="/" replace />;
     }
 
-    // 3. Allowed
+    // 3. Permitido
     return <Outlet />;
 };
 

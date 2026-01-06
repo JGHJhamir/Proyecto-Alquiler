@@ -58,7 +58,7 @@ const TicketReserva = ({ booking, vehicle, user }) => {
 
     return (
         <div id="ticket-content" className="bg-white max-w-sm mx-auto p-0 rounded-3xl shadow-xl overflow-hidden animate-fade-in-up border border-slate-100">
-            {/* Header */}
+            {/* Encabezado */}
             <div className="bg-slate-900 p-6 text-white relative overflow-hidden">
                 <div className="absolute -right-6 -top-6 w-24 h-24 bg-brand-blue/30 rounded-full blur-xl"></div>
                 <div className="relative z-10 text-center">
@@ -67,16 +67,16 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                 </div>
             </div>
 
-            {/* Content */}
+            {/* Contenido */}
             <div className="p-6 relative">
-                {/* Perforated Line Effect */}
+                {/* Efecto de línea perforada */}
                 <div className="absolute top-0 left-0 right-0 transform -translate-y-1/2 flex justify-between space-x-2 px-2">
                     {[...Array(20)].map((_, i) => (
                         <div key={i} className="w-2 h-2 bg-slate-50 rounded-full"></div>
                     ))}
                 </div>
 
-                {/* Status Badge */}
+                {/* Insignia de estado */}
                 <div className="flex justify-center -mt-10 mb-3 relative z-10">
                     <span className={`px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm flex items-center gap-2 ${booking.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                         }`}>
@@ -85,13 +85,13 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                     </span>
                 </div>
 
-                {/* User Info */}
+                {/* Información del usuario */}
                 <div className="text-center mb-6 pb-4 border-b border-dashed border-slate-200">
                     <p className="text-xs text-slate-500 mb-1">Cliente</p>
                     <p className="font-bold text-slate-900">{user?.full_name || 'Usuario'}</p>
                 </div>
 
-                {/* Vehicle Section */}
+                {/* Sección del vehículo */}
                 <div className="text-center mb-6">
                     <img src={vehicle.image_url} alt={vehicle.model} className="w-20 h-20 object-cover rounded-xl mx-auto mb-3 shadow-md" />
                     <h3 className="font-bold text-slate-900 text-lg">{vehicle.make} {vehicle.model}</h3>
@@ -101,7 +101,7 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                     </div>
                 </div>
 
-                {/* Details Grid */}
+                {/* Cuadrícula de detalles */}
                 <div className="space-y-4 mb-6 text-sm">
                     <div className="flex items-center justify-between border-b border-dashed border-slate-100 pb-3">
                         <div className="flex items-center gap-3 text-slate-500">
@@ -126,7 +126,7 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                     </div>
                 </div>
 
-                {/* Financials */}
+                {/* Financiero */}
                 <div className="bg-slate-50 p-4 rounded-xl space-y-2 mb-6 text-sm">
                     <div className="flex justify-between text-slate-500 text-xs">
                         <span>Subtotal</span>
@@ -142,13 +142,13 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                     </div>
                 </div>
 
-                {/* Footer */}
+                {/* Pie de página */}
                 <div className="text-center space-y-3">
                     <p className="text-[10px] text-slate-400 max-w-[200px] mx-auto leading-tight">
                         Conserve este ticket digital como comprobante de su reserva. Para soporte contáctenos.
                     </p>
 
-                    {/* Action Buttons */}
+                    {/* Botones de acción */}
                     <div className="grid grid-cols-2 gap-2">
                         <button
                             onClick={handleDownloadImage}
@@ -169,7 +169,7 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                 </div>
             </div>
 
-            {/* Barcode Strip */}
+            {/* Tira de código de barras */}
             <div className="bg-slate-100 h-3 border-t border-dashed border-slate-300"></div>
         </div>
     );

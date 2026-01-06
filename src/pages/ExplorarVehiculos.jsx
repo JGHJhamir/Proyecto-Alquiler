@@ -6,11 +6,11 @@ import { MapPin, Star, Heart, SlidersHorizontal, Map as MapIcon, List, Plus, Min
 import { COASTAL_LOCATIONS } from '../constants';
 
 const getCapacity = (category) => {
-    // Exact match or partial match for complexity
+    // Coincidencia exacta o parcial para complejidad
     const lowerCat = (category || '').toLowerCase();
-    if (lowerCat.includes('cuatrimoto') || lowerCat.includes('atv')) return 2; // Majority are 2, sport are 1 but safer to say 2 max
+    if (lowerCat.includes('cuatrimoto') || lowerCat.includes('atv')) return 2; // La mayoría son 2, deportivos son 1 pero más seguro decir 2 máx
     if (lowerCat.includes('moto acuática') || lowerCat.includes('jet ski')) return 3;
-    if (lowerCat.includes('buggy') || lowerCat.includes('utv')) return 4; // Commander XT is 4
+    if (lowerCat.includes('buggy') || lowerCat.includes('utv')) return 4; // Commander XT es 4
     if (lowerCat.includes('foil') || lowerCat.includes('board')) return 1;
     return 2; // Fallback
 };
@@ -20,7 +20,7 @@ const VehicleResultCard = ({ id, make, model, price, location, image, rating, ty
 
     return (
         <div className="group bg-white/80 backdrop-blur-lg border border-white/50 rounded-[2rem] p-4 flex flex-col sm:flex-row gap-6 hover:shadow-glow hover:-translate-y-1 transition-all duration-300 cursor-pointer relative overflow-hidden">
-            {/* Hover Gradient Overlay */}
+            {/* Superposición de Gradiente Hover */}
             <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/5 via-transparent to-brand-blue/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
 
             <div className="relative w-full sm:w-80 h-56 flex-shrink-0 overflow-hidden rounded-2xl shadow-inner">
@@ -85,18 +85,18 @@ const VehicleResultCard = ({ id, make, model, price, location, image, rating, ty
 };
 
 const ExplorarVehiculos = () => {
-    // ... (Hooks and State logic - existing logic is preserved, we are only re-rendering the return)
+    // ... (Hooks y lógica de Estado - lógica existente preservada, solo re-renderizamos el retorno)
     const [searchParams] = useSearchParams();
     const destination = searchParams.get('destination') || '';
     const passengers = Number(searchParams.get('passengers')) || 1;
 
-    // State
+    // Estado
     const [vehicles, setVehicles] = useState([]);
     const [filteredVehicles, setFilteredVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showFilters, setShowFilters] = useState(false);
 
-    // Filter State
+    // Estado de Filtros
     const [filters, setFilters] = useState({
         categories: [],
         categories: [],
@@ -104,7 +104,7 @@ const ExplorarVehiculos = () => {
         city: ''
     });
 
-    // Helper to toggle filter arrays
+    // Helper para alternar arrays de filtros
     const toggleFilter = (type, value) => {
         setFilters(prev => {
             const list = prev[type] || [];
@@ -115,7 +115,7 @@ const ExplorarVehiculos = () => {
         });
     };
 
-    // State for Dynamic Locations (Database)
+    // Estado para Ubicaciones Dinámicas (Base de Datos)
     const [locationMap, setLocationMap] = useState({});
 
     useEffect(() => {
@@ -138,7 +138,7 @@ const ExplorarVehiculos = () => {
         const fetchAndFilterVehicles = async () => {
             setLoading(true);
 
-            // 1. Fetch
+            // 1. Obtener
             const { data, error } = await supabase.from('vehicles').select('*');
 
             if (error) {
@@ -149,7 +149,7 @@ const ExplorarVehiculos = () => {
 
             let results = data || [];
 
-            // 1.5 Date Availability Check 
+            // 1.5 Verificación de Disponibilidad de Fechas 
             if (filters.startDate && filters.endDate) {
                 const { data: busyBookings } = await supabase
                     .from('bookings')
@@ -163,7 +163,7 @@ const ExplorarVehiculos = () => {
                 }
             }
 
-            // 2. Location Filtering
+            // 2. Filtrado de Ubicación
             if (destination) {
                 const term = destination.toLowerCase().trim();
                 let targetCities = [];
@@ -180,7 +180,7 @@ const ExplorarVehiculos = () => {
                 });
             }
 
-            // 3. Advanced Filtering
+            // 3. Filtrado Avanzado
             results = results.filter(v => {
                 // const price = v.price_per_day || 0;
                 // if (price < filters.minPrice || price > filters.maxPrice) return false;
@@ -228,7 +228,7 @@ const ExplorarVehiculos = () => {
         <div className="min-h-screen bg-brand-cream/30 font-sans selection:bg-brand-gold/20 selection:text-brand-dark">
             <BarraNavegacion />
 
-            {/* Filter Modal - Mobile Full Screen / Desktop Modal */}
+            {/* Modal de Filtros - Pantalla Completa Móvil / Modal Escritorio */}
             {showFilters && (
                 <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
                     <div className="bg-white/95 backdrop-blur-xl border-t md:border border-white/50 rounded-t-[2.5rem] md:rounded-[2.5rem] w-full max-w-lg p-8 md:p-8 shadow-2xl animate-in slide-in-from-bottom-10 md:zoom-in-95 duration-200 ring-1 ring-white/50 max-h-[85vh] overflow-y-auto">
@@ -316,7 +316,7 @@ const ExplorarVehiculos = () => {
             )}
 
             <div className="pt-24 min-h-screen flex flex-col relative w-full overflow-x-hidden">
-                {/* Floating Filter Bar */}
+                {/* Barra de Filtros Flotante */}
                 <div className="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between z-40 mx-4 md:mx-6 mt-2 md:mt-4 mb-4 md:mb-6 bg-white/70 backdrop-blur-xl border border-white/40 shadow-glass rounded-xl md:rounded-2xl">
                     <div className="flex items-center gap-2 text-slate-600">
                         <MapIcon className="w-5 h-5 text-brand-blue" />
@@ -340,7 +340,7 @@ const ExplorarVehiculos = () => {
                 </div>
 
                 <div className="flex flex-1 px-4 md:px-6 pb-6 gap-6">
-                    {/* List */}
+                    {/* Lista */}
                     <div className="w-full lg:w-[60%] xl:w-[55%] overflow-y-auto h-[calc(100vh-160px)] custom-scrollbar pr-0 md:pr-2">
                         {loading ? (
                             <div className="space-y-6">
@@ -387,10 +387,10 @@ const ExplorarVehiculos = () => {
                         )}
                     </div>
 
-                    {/* Map */}
+                    {/* Mapa */}
                     <div className="hidden lg:block w-[40%] xl:w-[45%] h-[calc(100vh-180px)] sticky top-[160px] rounded-[2.5rem] overflow-hidden border border-white/60 shadow-glass">
                         <div className="w-full h-full relative overflow-hidden bg-[#eef0f2]">
-                            {/* Map Gradient Overlay for 'Premium' feel */}
+                            {/* Superposición de Gradiente del Mapa para sensación 'Premium' */}
                             <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-brand-dark/5 to-transparent mix-blend-multiply"></div>
 
                             <iframe

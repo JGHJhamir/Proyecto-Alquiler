@@ -20,7 +20,7 @@ import {
     FileText
 } from 'lucide-react';
 
-// --- Components ---
+// --- Componentes ---
 
 const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) => {
     const navItems = [
@@ -36,7 +36,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
 
     return (
         <>
-            {/* Mobile Overlay */}
+            {/* Overlay Móvil */}
             {isMobileOpen && (
                 <div
                     className="fixed inset-0 bg-slate-900/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
@@ -44,9 +44,9 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
                 />
             )}
 
-            {/* Sidebar Container */}
+            {/* Contenedor Lateral */}
             <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:h-screen flex flex-col ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                {/* Logo Area */}
+                {/* Área de Logo */}
                 <div className="h-20 flex items-center px-8 border-b border-slate-800">
                     <div className="flex items-center gap-2 text-amber-500">
                         <Shield className="w-8 h-8" />
@@ -57,7 +57,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
                     </div>
                 </div>
 
-                {/* Navigation */}
+                {/* Navegación */}
                 <nav className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
                     {navItems.map((item) => (
                         <button
@@ -77,7 +77,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
                     ))}
                 </nav>
 
-                {/* User Profile & Logout */}
+                {/* Perfil de Usuario y Cerrar Sesión */}
                 <div className="p-4 border-t border-slate-800 bg-slate-950/30">
                     <div className="flex items-center gap-3 mb-4 px-2">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold shadow-lg">
@@ -101,7 +101,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
     );
 };
 
-// --- Views ---
+// --- Vistas ---
 
 const DashboardView = () => {
     const [stats, setStats] = useState({
@@ -118,12 +118,12 @@ const DashboardView = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // Fetch all bookings with vehicle details
+                // Obtener todas las reservas con detalles del vehículo
                 const { data: bookings } = await supabase
                     .from('bookings')
                     .select('*, vehicles(make, model, image_url)');
 
-                // Fetch recent 5 bookings (Recent Activity) with profile details
+                // Obtener últimas 5 reservas (Actividad Reciente) con detalles del perfil
                 const { data: recent } = await supabase
                     .from('bookings')
                     .select(`
@@ -136,7 +136,7 @@ const DashboardView = () => {
 
                 if (!bookings) return;
 
-                // 1. Calculate Monthly Revenue (Last 6 Months)
+                // 1. Calcular Ingresos Mensuales (Últimos 6 Meses)
                 const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
                 const currentMonth = new Date().getMonth();
                 const currentYear = new Date().getFullYear();
@@ -164,7 +164,7 @@ const DashboardView = () => {
                     }
                 });
 
-                // 2. Top Performing Vehicles
+                // 2. Vehículos de Mayor Rendimiento
                 const vehiclePerformance = {};
                 bookings.forEach(b => {
                     if (!b.vehicles) return;
@@ -190,13 +190,13 @@ const DashboardView = () => {
                     .sort((a, b) => b.revenue - a.revenue)
                     .slice(0, 5);
 
-                // 3. Global Stats
+                // 3. Estadísticas Globales
                 const validStatus = ['confirmed', 'completed'];
                 const validBookings = bookings.filter(b => validStatus.includes(b.status));
                 const totalRev = validBookings.reduce((acc, curr) => acc + (Number(curr.total_price) || 0), 0);
                 const avg = validBookings.length ? totalRev / validBookings.length : 0;
 
-                // 4. Count by status
+                // 4. Contar por estado
                 const byStatus = {
                     confirmed: bookings?.filter(b => b.status === 'confirmed').length || 0,
                     completed: bookings?.filter(b => b.status === 'completed').length || 0,
@@ -207,7 +207,7 @@ const DashboardView = () => {
                 setStats({
                     totalRevenue: totalRev,
                     avgTicket: avg,
-                    growth: 12.5, // Hardcoded for demo
+                    growth: 12.5, // Hardcoded para demo
                     monthlyRevenue: chartData,
                     topVehicles: sortedVehicles,
                     bookingsByStatus: byStatus,
@@ -230,7 +230,7 @@ const DashboardView = () => {
 
     return (
         <div className="animate-fade-in-up space-y-8">
-            {/* KPI Cards */}
+            {/* Tarjetas KPI */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-md transition-shadow">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -268,9 +268,9 @@ const DashboardView = () => {
                 </div>
             </div>
 
-            {/* Charts Row */}
+            {/* Fila de Gráficos */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Monthly Revenue Chart */}
+                {/* Gráfico de Ingresos Mensuales */}
                 <div className="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 className="font-bold text-lg text-slate-900 mb-6">Ingresos Mensuales</h3>
                     <div className="h-64 flex items-end justify-between gap-2 px-4">
@@ -295,11 +295,11 @@ const DashboardView = () => {
                     </div>
                 </div>
 
-                {/* Booking Status Donut */}
+                {/* Donut de Estado de Reserva */}
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
                     <h3 className="font-bold text-lg text-slate-900 mb-4">Distribución de Reservas por Estado</h3>
                     <div className="flex-1 flex items-center justify-center">
-                        {/* Dynamic SVG Donut Chart */}
+                        {/* Gráfico de Donut SVG Dinámico */}
                         {(() => {
                             const total = stats.bookingsByStatus.confirmed + stats.bookingsByStatus.completed + stats.bookingsByStatus.pending + stats.bookingsByStatus.cancelled || 1;
                             const confirmed = stats.bookingsByStatus.confirmed;
@@ -307,19 +307,19 @@ const DashboardView = () => {
                             const pending = stats.bookingsByStatus.pending;
                             const cancelled = stats.bookingsByStatus.cancelled;
 
-                            // Calculate percentages
+                            // Calcular porcentajes
                             const confirmedPercent = (confirmed / total) * 100;
                             const completedPercent = (completed / total) * 100;
                             const pendingPercent = (pending / total) * 100;
                             const cancelledPercent = (cancelled / total) * 100;
 
-                            // SVG circle parameters
+                            // Parámetros de círculo SVG
                             const size = 200;
                             const strokeWidth = 20;
                             const radius = (size - strokeWidth) / 2;
                             const circumference = 2 * Math.PI * radius;
 
-                            // Calculate stroke dash offsets for each segment
+                            // Calcular offsets de trazo para cada segmento
                             let currentOffset = 0;
                             const segments = [
                                 { percent: confirmedPercent, color: '#14b8a6', label: 'Confirmada' },
@@ -372,9 +372,9 @@ const DashboardView = () => {
                 </div>
             </div>
 
-            {/* Bottom Row: Recent Activity + Top Vehicles */}
+            {/* Fila Inferior: Actividad Reciente + Top Vehículos */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Recent Activity Table */}
+                {/* Tabla de Actividad Reciente */}
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                         <h3 className="font-bold text-lg text-slate-900">Actividad Reciente</h3>
@@ -408,7 +408,7 @@ const DashboardView = () => {
                     </div>
                 </div>
 
-                {/* Top 5 Vehicles */}
+                {/* Top 5 Vehículos */}
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
                     <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
                         <h3 className="font-bold text-lg text-slate-900">Top 5 Vehículos</h3>
@@ -462,19 +462,19 @@ const FinanceView = () => {
                 const { data: bookings } = await supabase
                     .from('bookings')
                     .select('*, vehicles(make, model, image_url)')
-                    .neq('status', 'cancelled'); // Only count real value
+                    .neq('status', 'cancelled'); // Solo contar valor real
 
                 if (!bookings) return;
 
-                // 1. Calculate Monthly Revenue (Last 6 Months)
+                // 1. Calcular Ingresos Mensuales (Últimos 6 Meses)
                 const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
                 const currentMonth = new Date().getMonth();
                 const currentYear = new Date().getFullYear();
 
-                // Initialize last 6 months with 0
+                // Inicializar últimos 6 meses con 0
                 const chartData = [];
                 for (let i = 5; i >= 0; i--) {
-                    // Handle year wrap-around logic if needed (simple version)
+                    // Manejar lógica de cambio de año si es necesario (versión simple)
                     let m = currentMonth - i;
                     let y = currentYear;
                     if (m < 0) {
@@ -497,7 +497,7 @@ const FinanceView = () => {
                     }
                 });
 
-                // 2. Top Performing Vehicles
+                // 2. Vehículos de Mayor Rendimiento
                 const vehiclePerformance = {};
                 bookings.forEach(b => {
                     if (!b.vehicles) return;
@@ -522,7 +522,7 @@ const FinanceView = () => {
                     .sort((a, b) => b.revenue - a.revenue)
                     .slice(0, 5);
 
-                // 3. Global Stats
+                // 3. Estadísticas Globales
                 const validStatus = ['confirmed', 'completed'];
                 const validBookings = bookings.filter(b => validStatus.includes(b.status));
                 const totalRev = validBookings.reduce((acc, curr) => acc + (Number(curr.total_price) || 0), 0);
@@ -533,7 +533,7 @@ const FinanceView = () => {
                     topVehicles: sortedVehicles,
                     avgTicket: avg,
                     totalRevenue: totalRev,
-                    growth: 12.5 // Hardcoded for demo/MVP
+                    growth: 12.5 // Hardcoded para demo/MVP
                 });
 
             } catch (error) {
@@ -554,7 +554,7 @@ const FinanceView = () => {
         <div className="space-y-8 animate-fade-in-up">
             <h2 className="text-2xl font-bold text-slate-900">Inteligencia Financiera</h2>
 
-            {/* KPI Row */}
+            {/* Fila KPI */}
             {/* KPI Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -571,9 +571,9 @@ const FinanceView = () => {
                 </div>
             </div>
 
-            {/* Charts & Tables Grid */}
+            {/* Cuadrícula de Gráficos y Tablas */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Chart */}
+                {/* Gráfico */}
                 <div className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
                     <h3 className="font-bold text-lg text-slate-900 mb-6">Ingresos Mensuales</h3>
                     <div className="h-64 flex items-end justify-between gap-4 px-4 pb-2">
@@ -599,7 +599,7 @@ const FinanceView = () => {
                     </div>
                 </div>
 
-                {/* Top Vehicles */}
+                {/* Top Vehículos */}
                 <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
                     <h3 className="font-bold text-lg text-slate-900 mb-6">Top Vehículos (Rentabilidad)</h3>
                     <div className="space-y-6">
@@ -654,7 +654,7 @@ const TeamView = () => {
                 .from('profiles')
                 .select('*')
                 .in('role', ['admin', 'owner'])
-                .order('role', { ascending: false }) // Owners first usually
+                .order('role', { ascending: false }) // Propietarios primero usualmente
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -670,7 +670,7 @@ const TeamView = () => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            // In a real app, this would create an Auth user via a Supabase Edge Function
+            // En una app real, esto crearía un usuario Auth vía Supabase Edge Function
             if (!confirm(`Nota: Esto creará un perfil de ${formData.role === 'owner' ? 'PROPIETARIO' : 'ADMINISTRADOR'}. ¿Continuar?`)) {
                 return;
             }

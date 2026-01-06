@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom'; // Added useLocation
+import { useParams, Link, useLocation } from 'react-router-dom'; // useLocation Agregado
 import BarraNavegacion from '../components/BarraNavegacion';
 import { CheckCircle, CreditCard, Smartphone, ShieldCheck, Lock, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,16 +12,16 @@ const Pago = () => {
     const [booking, setBooking] = useState(location.state?.booking || null);
     const [vehicle, setVehicle] = useState(location.state?.vehicle || null);
     const [selectedMethod, setSelectedMethod] = useState('card');
-    const [paymentStatus, setPaymentStatus] = useState('idle'); // idle, processing, success
+    const [paymentStatus, setPaymentStatus] = useState('idle'); // inactivo, procesando, éxito
     const [user, setUser] = useState(null);
 
-    // Promo Code State
+    // Estado de Código Promocional
     const [promoCode, setPromoCode] = useState('');
     const [appliedPromo, setAppliedPromo] = useState(null);
     const [discountError, setDiscountError] = useState('');
     const [finalPrice, setFinalPrice] = useState(0);
 
-    // Card State
+    // Estado de Tarjeta
     const [cardDetails, setCardDetails] = useState({
         number: '',
         name: '',
@@ -69,10 +69,10 @@ const Pago = () => {
         return true;
     };
 
-    // Initial Setup & Fetch
+    // Configuración Inicial y Obtención
     useEffect(() => {
         const fetchUserAndData = async () => {
-            // Fetch user profile
+            // Obtener perfil de usuario
             const { data: { user: authUser } } = await supabase.auth.getUser();
             if (authUser) {
                 const { data: profile } = await supabase
@@ -83,12 +83,12 @@ const Pago = () => {
                 setUser(profile || authUser);
             }
 
-            // Set final price from location state
+            // Establecer precio final desde estado de ubicación
             if (location.state?.booking?.total_price) {
                 setFinalPrice(location.state.booking.total_price);
             }
 
-            // Fetch booking and vehicle if not in location state
+            // Obtener reserva y vehículo si no están en estado de ubicación
             if (!booking && !vehicle && bookingId !== 'demo') {
                 const { data: bookingData } = await supabase.from('bookings').select('*').eq('id', bookingId).single();
                 if (bookingData) {
@@ -122,13 +122,13 @@ const Pago = () => {
                 return;
             }
 
-            // Check details like expiration date
+            // Verificar detalles como fecha de expiración
             if (promo.end_date && new Date(promo.end_date) < new Date()) {
                 setDiscountError('Este código ha expirado.');
                 return;
             }
 
-            // Calculate Discount
+            // Calcular Descuento
             let discountAmount = 0;
             const originalPrice = parseFloat(booking.total_price);
 
@@ -155,20 +155,20 @@ const Pago = () => {
         setPaymentStatus('processing');
 
         try {
-            // Determine status based on method
-            // Card -> Confirmed (Auto-approved simulation)
-            // Yape -> Pending (Requires Admin Approval)
+            // Determinar estado basado en método
+            // Tarjeta -> Confirmado (Simulación auto-aprobada)
+            // Yape -> Pendiente (Requiere Aprobación del Admin)
             const newStatus = selectedMethod === 'card' ? 'confirmed' : 'pending';
 
-            // Simulate Network Delay for realism
+            // Simular Retraso de Red para realismo
             if (selectedMethod === 'card') {
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
-            // Update booking with new status and potential new price (if promo applied)
+            // Actualizar reserva con nuevo estado y posible nuevo precio (si se aplicó promo)
             const updateData = { status: newStatus };
             if (appliedPromo) {
-                updateData.total_price = finalPrice; // Persist the discounted price
+                updateData.total_price = finalPrice; // Persistir el precio con descuento
             }
 
             const { error } = await supabase
@@ -178,10 +178,10 @@ const Pago = () => {
 
             if (error) throw error;
 
-            // Update local state so Ticket reflects changes immediately
+            // Actualizar estado local para que el Ticket refleje cambios inmediatamente
             setBooking(prev => ({ ...prev, ...updateData }));
 
-            // Success Transition
+            // Transición de Éxito
             setPaymentStatus('success');
             toast.success(selectedMethod === 'card' ? '¡Pago confirmado!' : '¡Solicitud enviada!');
 
@@ -210,12 +210,12 @@ const Pago = () => {
                     </p>
                 </div>
 
-                {/* Digital Ticket Display */}
+                {/* Visualización de Ticket Digital */}
                 <div className="mb-8 w-full max-w-sm transform hover:scale-[1.02] transition-transform duration-300">
                     <TicketReserva booking={booking} vehicle={vehicle} user={user} />
                 </div>
 
-                {/* WhatsApp Button for Yape Payments */}
+                {/* Botón de WhatsApp para Pagos Yape */}
                 {selectedMethod === 'yape' && (
                     <div className="mb-6 w-full max-w-sm bg-purple-50 border-2 border-purple-200 rounded-2xl p-6 animate-in fade-in slide-in-from-bottom-2">
                         <div className="flex items-start gap-3 mb-4">
@@ -272,7 +272,7 @@ const Pago = () => {
                 <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-900 mb-10 text-center">Finalizar Reserva</h1>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    {/* Left Column: Payment Methods */}
+                    {/* Columna Izquierda: Métodos de Pago */}
                     <div className="lg:col-span-2 space-y-8">
                         <div className="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
                             <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
@@ -310,7 +310,7 @@ const Pago = () => {
                                 </button>
                             </div>
 
-                            {/* Card Form */}
+                            {/* Formulario de Tarjeta */}
                             {selectedMethod === 'card' && (
                                 <div className="mt-8 bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4 animate-in fade-in slide-in-from-top-2">
                                     <div className="flex justify-between items-center mb-2">
@@ -384,7 +384,7 @@ const Pago = () => {
                             )}
 
 
-                            {/* Yape QR Code */}
+                            {/* Código QR Yape */}
                             {selectedMethod === 'yape' && (
                                 <div className="mt-8 bg-gradient-to-br from-purple-600 to-purple-700 p-8 rounded-3xl text-white text-center animate-in fade-in slide-in-from-top-2">
                                     <div className="mb-6">
@@ -392,10 +392,10 @@ const Pago = () => {
                                         <p className="text-purple-100 text-sm">Escanea el código QR con tu app de Yape o Plin</p>
                                     </div>
 
-                                    {/* QR Code Container */}
+                                    {/* Contenedor de Código QR */}
                                     <div className="bg-white rounded-2xl p-6 mb-6 mx-auto max-w-sm">
                                         <div className="aspect-square bg-purple-50 rounded-xl flex items-center justify-center mb-4 overflow-hidden">
-                                            {/* QR Code - Using a placeholder QR generator */}
+                                            {/* Código QR - Usando un generador QR de marcador de posición */}
                                             <img
                                                 src="/yape-qr.png"
                                                 alt="Código QR Yape"
@@ -440,7 +440,7 @@ const Pago = () => {
                         </button>
                     </div>
 
-                    {/* Right Column: Order Summary */}
+                    {/* Columna Derecha: Resumen de Orden */}
                     <div className="lg:col-span-1">
                         <div className="bg-white p-6 rounded-[2rem] shadow-lg shadow-brand-blue/5 border border-slate-100 sticky top-28">
                             <h3 className="text-lg font-bold text-slate-900 mb-6">Resumen de Reserva</h3>
@@ -460,7 +460,7 @@ const Pago = () => {
                                     </span>
                                 </div>
 
-                                {/* Promo Code Section */}
+                                {/* Sección de Código Promocional */}
                                 {appliedPromo ? (
                                     <div className="flex justify-between text-emerald-600 bg-emerald-50 p-2 rounded-lg mb-2">
                                         <span className="font-bold flex items-center gap-1"><Smartphone className="w-3 h-3" /> {appliedPromo.code}</span>
@@ -487,7 +487,7 @@ const Pago = () => {
                                     </div>
                                 )}
 
-                                {/* Financial Breakdown */}
+                                {/* Desglose Financiero */}
                                 <div className="pt-4 space-y-2 border-t border-dashed border-slate-200">
                                     <div className="flex justify-between text-slate-500">
                                         <span>Subtotal</span>

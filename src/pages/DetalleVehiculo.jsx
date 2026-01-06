@@ -10,7 +10,7 @@ import StepIndicator from '../components/StepIndicator';
 import DateRangePicker from '../components/DateRangePicker';
 import TicketReserva from '../components/TicketReserva';
 
-// Helper: Format Date to Local ISO String (YYYY-MM-DDTHH:mm) for inputs
+// Helper: Formatear fecha a cadena ISO local (YYYY-MM-DDTHH:mm) para inputs
 const toLocalISOString = (date) => {
     const offset = date.getTimezoneOffset() * 60000;
     const localDate = new Date(date.getTime() - offset);
@@ -23,19 +23,19 @@ const DetalleVehiculo = () => {
     const [vehicle, setVehicle] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    // Booking State
+    // Estado de Reserva
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [totalPrice, setTotalPrice] = useState(0);
-    const [bookingStatus, setBookingStatus] = useState('idle'); // idle, processing, success, error
+    const [bookingStatus, setBookingStatus] = useState('idle'); // inactivo, procesando, éxito, error
 
-    // Payment Modal State
+    // Estado del Modal de Pago
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [currentBooking, setCurrentBooking] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
 
-    // Promotion State
+    // Estado de Promoción
     const [promoCode, setPromoCode] = useState('');
     const [discount, setDiscount] = useState(0);
     const [appliedPromo, setAppliedPromo] = useState(null);
@@ -43,12 +43,12 @@ const DetalleVehiculo = () => {
     const [promoMessage, setPromoMessage] = useState(null); // { type: 'success' | 'error', text: '' }
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Step State
+    // Estado de Pasos
     const [currentStep, setCurrentStep] = useState(1); // 1: Fechas, 2: Detalles, 3: Pago
     const [showCalendar, setShowCalendar] = useState(false);
     const [availablePromos, setAvailablePromos] = useState([]);
 
-    // Payment State (Integrated)
+    // Estado de Pago (Integrado)
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('card');
     const [cardDetails, setCardDetails] = useState({ number: '', name: '', expiry: '', cvc: '' });
 
@@ -65,7 +65,7 @@ const DetalleVehiculo = () => {
         };
         fetchVehicle();
 
-        // Check authentication
+        // Verificar autenticación
         const checkAuth = async () => {
             const { data: { user } } = await supabase.auth.getUser();
             setIsAuthenticated(!!user);
@@ -73,7 +73,7 @@ const DetalleVehiculo = () => {
         checkAuth();
     }, [id]);
 
-    // Fetch available promotions
+    // Obtener promociones disponibles
     useEffect(() => {
         const fetchPromos = async () => {
             try {
@@ -87,7 +87,7 @@ const DetalleVehiculo = () => {
                 if (data && !error) setAvailablePromos(data);
             } catch (err) {
                 console.error('Error fetching promos:', err);
-                // Silently fail - promos are optional
+                // Fallo silencioso - las promociones son opcionales
             }
         };
         fetchPromos();
@@ -108,9 +108,9 @@ const DetalleVehiculo = () => {
         }
     }, [startDate, endDate, vehicle]);
 
-    const [rentalType, setRentalType] = useState('hours'); // Always hours for Beach App
+    const [rentalType, setRentalType] = useState('hours'); // Siempre horas para la App de Playa
 
-    // Enforce rental type - Removing vehicle_type check, always hours
+    // Forzar tipo de alquiler - Eliminando verificación de vehicle_type, siempre horas
     // useEffect(() => {
     //     if (vehicle?.vehicle_type) {
     //         if (vehicle.vehicle_type === 'playa') {
@@ -121,7 +121,7 @@ const DetalleVehiculo = () => {
     //     }
     // }, [vehicle]);
 
-    // Reset dates when type changes
+    // Reiniciar fechas cuando cambia el tipo
     useEffect(() => {
         setStartDate('');
         setEndDate('');
@@ -139,19 +139,19 @@ const DetalleVehiculo = () => {
             if (rentalType === 'days') {
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                 const subtotal = diffDays > 0 ? diffDays * vehicle.price_per_day * quantity : 0;
-                setTotalPrice(subtotal * 1.18); // Add 18% IGV
+                setTotalPrice(subtotal * 1.18); // Agregar 18% IGV
             } else {
-                // Hourly calculation: Rate = Day Price / 8
+                // Cálculo por hora: Tarifa = Precio Diario / 8
                 const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-                // Use explicit price_per_hour if available, else derive it
+                // Usar price_per_hour explícito si está disponible, sino derivarlo
                 const hourlyRate = vehicle.price_per_hour || (vehicle.price_per_day / 8);
                 const subtotal = diffHours > 0 ? diffHours * hourlyRate * quantity : 0;
-                setTotalPrice(subtotal * 1.18); // Add 18% IGV
+                setTotalPrice(subtotal * 1.18); // Agregar 18% IGV
             }
         }
     }, [startDate, endDate, vehicle, rentalType, quantity]);
 
-    // Reset discount when dates change
+    // Reiniciar descuento cuando cambian las fechas
     useEffect(() => {
         if (appliedPromo) {
             setDiscount(0);
@@ -180,26 +180,26 @@ const DetalleVehiculo = () => {
 
             if (error || !promo) throw new Error('Código inválido');
 
-            // Validations
+            // Validaciones
             if (!promo.is_active) throw new Error('Este código ha expirado');
             if (new Date() < new Date(promo.start_date)) throw new Error('La promoción aún no inicia');
             if (promo.end_date && new Date() > new Date(promo.end_date)) throw new Error('La promoción ha finalizado');
 
-            // Vehicle Type Condition through vehicle category
+            // Condición de Tipo de Vehículo a través de categoría de vehículo
             if (promo.vehicle_type_condition && promo.vehicle_type_condition !== 'Todos') {
-                // Approximate matching: map vehicle category to condition
+                // Coincidencia aproximada: mapear categoría de vehículo a condición
                 const isVideoMatch = vehicle.category?.toLowerCase().includes(promo.vehicle_type_condition.toLowerCase());
                 if (!isVideoMatch) throw new Error(`Solo válido para vehículos tipo ${promo.vehicle_type_condition} `);
             }
 
-            // Location Condition
+            // Condición de Ubicación
             if (promo.location_condition && promo.location_condition !== 'Todas') {
                 if (!vehicle.location_city?.toLowerCase().includes(promo.location_condition.toLowerCase())) {
                     throw new Error(`Solo válido en ${promo.location_condition} `);
                 }
             }
 
-            // Min Rental Duration
+            // Duración Mínima de Alquiler
             const start = new Date(startDate);
             const end = new Date(endDate);
             const diffTime = Math.abs(end - start);
@@ -212,7 +212,7 @@ const DetalleVehiculo = () => {
                 throw new Error(`Esta promoción requiere un alquiler mínimo de ${minHours} horas (${rentalType === 'days' ? minDays + ' días aprox' : 'o su equivalente en días'})`);
             }
 
-            // Apply Discount
+            // Aplicar Descuento
             let discountAmount = 0;
             if (promo.discount_type === 'percentage') {
                 discountAmount = (totalPrice * promo.discount_value) / 100;
@@ -220,7 +220,7 @@ const DetalleVehiculo = () => {
                 discountAmount = Number(promo.discount_value);
             }
 
-            // Cap discount at total price
+            // Limitar descuento al precio total
             discountAmount = Math.min(discountAmount, totalPrice);
 
             setDiscount(discountAmount);
@@ -238,12 +238,12 @@ const DetalleVehiculo = () => {
     };
 
     const checkAvailability = async (start, end) => {
-        // Basic Overlap Check
+        // Verificación básica de superposición
         const { data, error } = await supabase
             .from('bookings')
             .select('quantity')
             .eq('vehicle_id', vehicle.id)
-            .neq('status', 'cancelled') // Ignore cancelled bookings
+            .neq('status', 'cancelled') // Ignorar reservas canceladas
             .or(`and(start_date.lte."${end}", end_date.gte."${start}")`);
 
         if (error) {
@@ -251,14 +251,14 @@ const DetalleVehiculo = () => {
             return false;
         }
 
-        // Calculate used stock
+        // Calcular stock usado
         const usedStock = data.reduce((sum, booking) => sum + (booking.quantity || 1), 0);
         const totalStock = vehicle.stock || 1;
 
         return (totalStock - usedStock) >= quantity;
     };
 
-    // Reset booking status when dates change
+    // Reiniciar estado de reserva cuando cambian las fechas
     useEffect(() => {
         if (bookingStatus === 'success' || bookingStatus === 'error') {
             setBookingStatus('idle');
@@ -268,7 +268,7 @@ const DetalleVehiculo = () => {
     }, [startDate, endDate]);
 
     const handleBooking = async () => {
-        // If booking already created for these dates (status success), just advance
+        // Si la reserva ya fue creada para estas fechas (estado éxito), solo avanzar
         if (bookingStatus === 'success' && currentBooking) {
             setCurrentStep(3);
             return;
@@ -283,7 +283,7 @@ const DetalleVehiculo = () => {
                 return;
             }
 
-            // 1. Check Availability
+            // 1. Verificar Disponibilidad
             const isAvailable = await checkAvailability(startDate, endDate);
             if (!isAvailable) {
                 setBookingStatus('error');
@@ -291,11 +291,11 @@ const DetalleVehiculo = () => {
                 return;
             }
 
-            // Get full profile to send name in WhatsApp
+            // Obtener perfil completo para enviar nombre en WhatsApp
             const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
             setCurrentUser(profile || { full_name: 'Usuario' });
 
-            // Prepare Booking Data
+            // Preparar Datos de Reserva
             const bookingData = {
                 vehicle_id: vehicle.id,
                 user_id: user.id,
@@ -306,13 +306,13 @@ const DetalleVehiculo = () => {
                 status: 'pending'
             };
 
-            // Try to add rental_type if supported (Backend will ignore extra fields if not strict, or we catch error)
-            // Ideally we'd know from context, but safe to omit for now if column missing, 
-            // OR include it and hope user ran migration. 
-            // Let's include strictly necessary fields first.
-            // If the column `rental_type` was added successfully, we should send it.
-            // Since migration tool failed, I will NOT send `rental_type` to avoid SQL error on insert.
-            // The price calculation is what matters most for the "Payment" step.
+            // Intenta agregar rental_type si es soportado (Backend ignorará campos extra si no es estricto, o capturaremos el error)
+            // Idealmente sabríamos por contexto, pero seguro omitir por ahora si falta columna, 
+            // O incluirlo y esperar que el usuario corrió la migración. 
+            // Incluyamos campos estrictamente necesarios primero.
+            // Si la columna `rental_type` fue agregada exitosamente, deberíamos enviarla.
+            // Dado que la herramienta de migración falló, NO enviaré `rental_type` para evitar error SQL al insertar.
+            // El cálculo de precio es lo que más importa para el paso de "Pago".
 
             const { data: booking, error } = await supabase
                 .from('bookings')
@@ -322,12 +322,12 @@ const DetalleVehiculo = () => {
 
             if (error) throw error;
 
-            // Success: Open Payment Modal
+            // Éxito: Abrir Modal de Pago
 
-            // Success: Advance to Payment Step
+            // Éxito: Avanzar al Paso de Pago
             setBookingStatus('success');
             setCurrentBooking(booking);
-            setCurrentStep(3); // Advance to integrated payment step
+            setCurrentStep(3); // Avanzar a paso de pago integrado
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
         } catch (error) {
@@ -341,16 +341,16 @@ const DetalleVehiculo = () => {
         const { number, name, expiry, cvc } = cardDetails;
         if (number.replace(/\s/g, '').length !== 16) return false;
         if (name.length < 3) return false;
-        // Simple expiry validation
+        // Validación simple de expiración
         if (!expiry.includes('/') || expiry.length !== 5) return false;
         if (cvc.length !== 3) return false;
         return true;
     };
 
-    // State for Similar Vehicles
+    // Estado para Vehículos Similares
     const [similarVehicles, setSimilarVehicles] = useState([]);
 
-    // Fetch Similar Vehicles
+    // Obtener Vehículos Similares
     useEffect(() => {
         const fetchSimilar = async () => {
             if (!vehicle) return;
@@ -359,7 +359,7 @@ const DetalleVehiculo = () => {
                 .from('vehicles')
                 .select('*')
                 .eq('category', vehicle.category)
-                .neq('id', vehicle.id) // Exclude current
+                .neq('id', vehicle.id) // Excluir actual
                 .limit(3);
 
             if (data) setSimilarVehicles(data);
@@ -376,11 +376,11 @@ const DetalleVehiculo = () => {
         setBookingStatus('processing');
 
         try {
-            // Determine status
+            // Determinar estado
             const newStatus = selectedPaymentMethod === 'card' ? 'confirmed' : 'pending';
 
             if (selectedPaymentMethod === 'card') {
-                // Simulate processing
+                // Simular procesamiento
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
 
@@ -391,20 +391,20 @@ const DetalleVehiculo = () => {
 
             if (error) throw error;
 
-            // Update local state
+            // Actualizar estado local
             setCurrentBooking(prev => ({ ...prev, status: newStatus }));
-            setBookingStatus('completed'); // New status for showing Ticket
+            setBookingStatus('completed'); // Nuevo estado para mostrar Ticket
 
             if (selectedPaymentMethod === 'card') {
-                // Confirmed immediately
+                // Confirmado inmediatamente
             } else {
-                // Open WhatsApp for Yape
+                // Abrir WhatsApp para Yape
                 const ADMIN_PHONE = '51954025029';
                 const bookingId = currentBooking.id.toString().slice(0, 8);
                 const vehicleName = `${vehicle.make} ${vehicle.model}`;
                 const userName = currentUser?.full_name || 'Cliente';
 
-                // Format Dates properly
+                // Formatear Fechas correctamente
                 const startStr = new Date(startDate).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
                 const endStr = new Date(endDate).toLocaleDateString('es-PE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 
@@ -430,7 +430,7 @@ const DetalleVehiculo = () => {
     if (loading) return <div className="min-h-screen grid place-items-center"><div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div></div>;
     if (!vehicle) return <div className="min-h-screen grid place-items-center text-xl">Vehículo no encontrado</div>;
 
-    // Helper to get today's string for min date
+    // Helper para obtener cadena de hoy para fecha mínima
     const todayStr = new Date().toISOString().split('T')[0];
 
 
@@ -443,7 +443,7 @@ const DetalleVehiculo = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 pb-20">
-            {/* Top Navigation */}
+            {/* Navegación Superior */}
             <nav className="fixed top-0 left-0 right-0 z-50 p-6 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent pointer-events-none">
                 <Link to="/" className="p-3 bg-white/20 backdrop-blur-md text-white rounded-full hover:bg-white/30 transition-all pointer-events-auto">
                     <ArrowLeft className="w-6 h-6" />
@@ -452,7 +452,7 @@ const DetalleVehiculo = () => {
                 </div>
             </nav>
 
-            {/* Hero Image */}
+            {/* Imagen Principal */}
             <div className="relative h-[60vh] md:h-[70vh] w-full">
                 <img
                     src={vehicle.image_url}
@@ -496,11 +496,11 @@ const DetalleVehiculo = () => {
                 </div>
             </div>
 
-            {/* Content Grid */}
+            {/* Cuadrícula de Contenido */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-10 relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
-                {/* Main Details */}
+                {/* Detalles Principales */}
                 <div className="lg:col-span-2 space-y-8">
-                    {/* Specs */}
+                    {/* Especificaciones */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100 grid grid-cols-2 md:grid-cols-4 gap-6">
                         <div className="flex flex-col items-center text-center gap-2 p-4 bg-slate-50 rounded-2xl">
                             <Gauge className="w-6 h-6 text-brand-blue" />
@@ -524,7 +524,7 @@ const DetalleVehiculo = () => {
                         </div>
                     </div>
 
-                    {/* Description */}
+                    {/* Descripción */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
                         <h2 className="text-2xl font-bold text-slate-900 mb-4 font-serif">Sobre este vehículo</h2>
                         <p className="text-slate-600 leading-relaxed text-lg">
@@ -532,7 +532,7 @@ const DetalleVehiculo = () => {
                         </p>
                     </div>
 
-                    {/* Similar Vehicles */}
+                    {/* Vehículos Similares */}
                     {similarVehicles.length > 0 && (
                         <div className="pt-8">
                             <h3 className="text-2xl font-bold text-slate-900 font-serif mb-6">Vehículos Similares</h3>
@@ -560,10 +560,10 @@ const DetalleVehiculo = () => {
                     )}
                 </div>
 
-                {/* Booking Card */}
+                {/* Tarjeta de Reserva */}
                 <div className="lg:col-span-1">
                     <div className="bg-white rounded-3xl p-4 sm:p-6 lg:p-8 shadow-xl shadow-brand-blue/5 border border-blue-100 lg:sticky lg:top-24">
-                        {/* Step Indicator */}
+                        {/* Indicador de Pasos */}
                         <div className="mb-6 pb-6 border-b border-slate-100">
                             <StepIndicator steps={steps} currentStep={bookingStatus === 'completed' ? 4 : currentStep} />
                         </div>
@@ -610,7 +610,7 @@ const DetalleVehiculo = () => {
                             <div key="step-payment" className="animate-in fade-in slide-in-from-right-5">
                                 <h3 className="text-xl font-bold text-slate-900 font-serif mb-6">Método de Pago</h3>
 
-                                {/* Payment Tabs */}
+                                {/* Pestañas de Pago */}
                                 <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
                                     <button
                                         onClick={() => setSelectedPaymentMethod('card')}
@@ -626,9 +626,9 @@ const DetalleVehiculo = () => {
                                     </button>
                                 </div>
 
-                                {/* Payment Content */}
+                                {/* Contenido de Pago */}
                                 <div className="mb-6">
-                                    {/* Card View - Always rendered, hidden if not selected */}
+                                    {/* Vista Tarjeta - Siempre renderizada, oculta si no está seleccionada */}
                                     <div key="view-card" className={`space-y-4 animate-in fade-in slide-in-from-right-2 ${selectedPaymentMethod === 'card' ? '' : 'hidden'}`}>
                                         <div className="relative">
                                             <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-slate-400" />
@@ -688,7 +688,7 @@ const DetalleVehiculo = () => {
                                         </div>
                                     </div>
 
-                                    {/* Yape View - Always rendered, hidden if not selected */}
+                                    {/* Vista Yape - Siempre renderizada, oculta si no está seleccionada */}
                                     <div
                                         key="view-yape"
                                         className={`bg-slate-50 rounded-2xl p-6 text-center border border-slate-100 animate-in fade-in slide-in-from-right-2 notranslate ${selectedPaymentMethod === 'yape' ? '' : 'hidden'}`}
@@ -741,13 +741,13 @@ const DetalleVehiculo = () => {
 
                                     <h3 className="text-xl font-bold text-slate-900 font-serif">Reserva tu Aventura</h3>
 
-                                    {/* Rental Type Toggle Removed - Sandbox is Beach Only (Hourly) */}
+                                    {/* Toggle de Tipo de Alquiler Eliminado - Sandbox es Solo Playa (Por Hora) */}
                                 </div>
 
                                 <div className="space-y-4 mb-8">
                                     {rentalType === 'days' ? (
                                         <>
-                                            {/* DAYS VIEW: Date Range */}
+                                            {/* VISTA DÍAS: Rango de Fechas */}
                                             <div>
                                                 <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2 flex items-center gap-2">
                                                     Fecha Inicio
@@ -785,7 +785,7 @@ const DetalleVehiculo = () => {
                                         </>
                                     ) : (
                                         <>
-                                            {/* HOURS VIEW: Date + Time + Duration */}
+                                            {/* VISTA HORAS: Fecha + Hora + Duración */}
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="col-span-2">
                                                     <label className="block text-xs font-bold text-brand-blue uppercase tracking-wider mb-2">Fecha de Reserva</label>

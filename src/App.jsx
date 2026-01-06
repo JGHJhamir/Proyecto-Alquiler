@@ -12,7 +12,7 @@ import PantallaMantenimiento from './components/PantallaMantenimiento';
 const MODO_MANTENIMIENTO = false;
 // ************************************************************************
 
-// Lazy loading pages
+// Carga diferida de páginas
 const Inicio = lazy(() => import('./pages/Inicio'));
 const DetalleVehiculo = lazy(() => import('./pages/DetalleVehiculo'));
 const ExplorarVehiculos = lazy(() => import('./pages/ExplorarVehiculos'));
@@ -24,7 +24,7 @@ const PanelPropietario = lazy(() => import('./pages/PanelPropietario'));
 const PanelCliente = lazy(() => import('./pages/PanelCliente'));
 const Perfil = lazy(() => import('./pages/Perfil'));
 
-// Loading Fallback Component
+// Componente de reserva de carga
 const LoadingFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
     <div className="w-10 h-10 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div>

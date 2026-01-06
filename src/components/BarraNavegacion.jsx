@@ -30,12 +30,12 @@ const BarraNavegacion = () => {
 
         getUserData();
 
-        // Listen for changes
+        // Escuchar cambios
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setUser(session?.user ?? null);
             if (!session) setRole(null);
             else {
-                // If we improved this, we'd refetch the role here too just in case
+                // Si mejoráramos esto, volveríamos a obtener el rol aquí también por si acaso
                 getUserData();
             }
         });
@@ -43,7 +43,7 @@ const BarraNavegacion = () => {
         return () => subscription.unsubscribe();
     }, []);
 
-    // Prevent scrolling when mobile menu is open
+    // Evitar desplazamiento cuando el menú móvil está abierto
     useEffect(() => {
         if (isMobileNavOpen) {
             document.body.style.overflow = 'hidden';
@@ -60,7 +60,7 @@ const BarraNavegacion = () => {
     };
 
     const getDashboardLink = () => {
-        if (!role) return '/cliente'; // Fallback
+        if (!role) return '/cliente'; // Alternativa
         if (role === 'admin') return '/admin';
         if (role === 'owner') return '/owner';
         return '/cliente';
@@ -76,7 +76,7 @@ const BarraNavegacion = () => {
                     <span className="text-xl md:text-2xl font-serif font-bold text-slate-800 tracking-tight group-hover:text-brand-blue transition-colors">JIAR PlayaRent</span>
                 </Link>
 
-                {/* Desktop Nav Links */}
+                {/* Enlaces de Navegación de Escritorio */}
                 <div className="hidden md:flex items-center gap-10 text-slate-600 font-medium">
                     <Link to="/" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Inicio</Link>
                     <Link to="/explorar" className="hover:text-brand-blue hover:font-semibold transition-all duration-200">Explorar Flota</Link>
@@ -84,7 +84,7 @@ const BarraNavegacion = () => {
 
                 <div className="flex items-center gap-2 md:gap-4 relative z-50">
 
-                    {/* Mobile Menu Button - Styled as Circle */}
+                    {/* Botón de Menú Móvil - Estilizado como Círculo */}
                     <button
                         className="md:hidden w-10 h-10 flex items-center justify-center text-slate-800 bg-white/50 hover:bg-white rounded-full transition-all border border-slate-200/50"
                         onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
@@ -92,7 +92,7 @@ const BarraNavegacion = () => {
                         {isMobileNavOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
 
-                    {/* Admin/Owner Dashboard Button */}
+                    {/* Botón de Panel de Admin/Dueño */}
                     {user && (role === 'admin' || role === 'owner') && (
                         <Link
                             to={getDashboardLink()}
@@ -120,7 +120,7 @@ const BarraNavegacion = () => {
                                 </svg>
                             </button>
 
-                            {/* User Dropdown Menu (Desktop) */}
+                            {/* Menú Desplegable de Usuario (Escritorio) */}
                             {isMenuOpen && (
                                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 py-3 overflow-hidden animate-in fade-in slide-in-from-top-2 z-50">
                                     <div className="px-5 py-3 border-b border-slate-100 mb-2">
@@ -148,7 +148,7 @@ const BarraNavegacion = () => {
                                 </div>
                             )}
 
-                            {/* Overlay to close details menu */}
+                            {/* Superposición para cerrar el menú de detalles */}
                             {isMenuOpen && (
                                 <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)}></div>
                             )}
@@ -162,7 +162,7 @@ const BarraNavegacion = () => {
                 </div>
             </nav>
 
-            {/* Mobile Navigation Full Screen Overlay */}
+            {/* Superposición de Pantalla Completa de Navegación Móvil */}
             {isMobileNavOpen && (
                 <div className="fixed inset-0 z-40 bg-white/95 backdrop-blur-xl md:hidden flex flex-col pt-24 px-6 animate-in slide-in-from-top-5 duration-300">
                     <div className="flex flex-col gap-6 text-center">

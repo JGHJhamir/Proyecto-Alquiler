@@ -35,7 +35,7 @@ const UserIconMap = {
     reports: BarChart3
 };
 
-// --- Sub-Components ---
+// --- Sub-Componentes ---
 
 const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) => {
     const navItems = [
@@ -55,7 +55,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
 
     return (
         <>
-            {/* Mobile Overlay */}
+            {/* Overlay Móvil */}
             {isMobileOpen && (
                 <div className="fixed inset-0 bg-slate-900/50 z-40 md:hidden" onClick={() => setIsMobileOpen(false)} />
             )}
@@ -112,7 +112,7 @@ import { VEHICLE_CATALOG } from '../data/vehicleData';
 const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitting, isEditing }) => {
     if (!isOpen) return null;
 
-    // State for Dynamic Locations
+    // Estado para Ubicaciones Dinámicas
     const [availableLocations, setAvailableLocations] = useState(COASTAL_LOCATIONS);
 
     useEffect(() => {
@@ -121,8 +121,8 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
             if (data) {
                 const newLocs = { ...COASTAL_LOCATIONS };
                 data.forEach(loc => {
-                    const dept = loc.department; // e.g. "Piura"
-                    const city = loc.name;       // e.g. "Cabo Blanco"
+                    const dept = loc.department; // ej. "Piura"
+                    const city = loc.name;       // ej. "Cabo Blanco"
 
                     if (!newLocs[dept]) {
                         newLocs[dept] = [];
@@ -137,7 +137,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
         fetchLocations();
     }, []);
 
-    // Derived states for dropdowns
+    // Estados derivados para desplegables
     const availableCategories = formData.vehicle_type && VEHICLE_CATALOG[formData.vehicle_type]
         ? Object.keys(VEHICLE_CATALOG[formData.vehicle_type].categories)
         : [];
@@ -146,7 +146,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
         ? Object.keys(VEHICLE_CATALOG[formData.vehicle_type].categories[formData.category].brands)
         : [];
 
-    // Note: models are now Objects {name, specs}
+    // Nota: los modelos ahora son Objetos {name, specs}
     const availableModels = formData.vehicle_type && formData.category && formData.make && VEHICLE_CATALOG[formData.vehicle_type]?.categories[formData.category]?.brands[formData.make]
         ? VEHICLE_CATALOG[formData.vehicle_type].categories[formData.category].brands[formData.make]
         : [];
@@ -156,14 +156,14 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    // Special handlers for dependent fields
+    // Manejadores especiales para campos dependientes
     const handleTypeChange = (e) => {
         setFormData(prev => ({
             ...prev,
             vehicle_type: e.target.value,
             category: '',
             make: '',
-            model: '' // Reset downstream
+            model: '' // Reiniciar dependientes
         }));
     };
 
@@ -172,7 +172,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
             ...prev,
             category: e.target.value,
             make: '',
-            model: '' // Reset downstream
+            model: '' // Reiniciar dependientes
         }));
     };
 
@@ -180,7 +180,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
         setFormData(prev => ({
             ...prev,
             make: e.target.value,
-            model: '' // Reset downstream
+            model: '' // Reiniciar dependientes
         }));
     };
 
@@ -191,13 +191,13 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
         setFormData(prev => ({
             ...prev,
             model: selectedModelName,
-            // Auto-fill specs if model found
+            // Auto-completar especificaciones si se encuentra modelo
             ...(selectedModelObj && selectedModelObj.specs ? {
                 passengers: selectedModelObj.specs.passengers,
                 transmission: selectedModelObj.specs.transmission,
                 fuel_type: selectedModelObj.specs.fuel_type,
                 engine_power: selectedModelObj.specs.engine_power,
-                image_url: selectedModelObj.image // Auto-fill image
+                image_url: selectedModelObj.image // Auto-completar imagen
             } : {})
         }));
     };
@@ -216,7 +216,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                 </div>
 
                 <form onSubmit={onSubmit} className="p-8 space-y-8">
-                    {/* Section 1: Classification (Dropdown Flow) */}
+                    {/* Sección 1: Clasificación (Flujo Desplegable) */}
                     <div className="space-y-4">
                         <h3 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
                             <Tag className="w-4 h-4" /> Clasificación del Vehículo
@@ -224,7 +224,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
 
-                            {/* 2. Category */}
+                            {/* 2. Categoría */}
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-slate-700 block">Categoría</label>
                                 <select
@@ -241,7 +241,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                                 </select>
                             </div>
 
-                            {/* 3. Brand */}
+                            {/* 3. Marca */}
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-slate-700 block">Marca</label>
                                 <select
@@ -259,7 +259,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                                 </select>
                             </div>
 
-                            {/* 4. Model (AUTO-FILLS SPECS ON CHANGE) */}
+                            {/* 4. Modelo (AUTO-COMPLETA ESPECIFICACIONES AL CAMBIAR) */}
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-slate-700 block">Modelo</label>
                                 <select
@@ -281,7 +281,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
 
                     <hr className="border-slate-100" />
 
-                    {/* Section 2: Technical Specs (Now Auto-filled & Locked) */}
+                    {/* Sección 2: Especificaciones Técnicas (Ahora Auto-completadas y Bloqueadas) */}
                     <div className="space-y-4">
                         <div className="flex justify-between items-center">
                             <h3 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
@@ -293,7 +293,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         </div>
 
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            {/* Year */}
+                            {/* Año */}
                             <div className="space-y-1.5">
                                 <label className="text-xs font-semibold text-slate-500 block">Año</label>
                                 <select name="year" required className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none"
@@ -313,7 +313,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                                 />
                             </div>
 
-                            {/* Passengers */}
+                            {/* Pasajeros */}
                             <div className="space-y-1.5 opacity-80">
                                 <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
                                     Pasajeros {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
@@ -329,7 +329,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                                 </div>
                             </div>
 
-                            {/* Transmission */}
+                            {/* Transmisión */}
                             <div className="space-y-1.5 opacity-80">
                                 <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
                                     Transmisión {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
@@ -345,7 +345,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                                 </select>
                             </div>
 
-                            {/* Fuel */}
+                            {/* Combustible */}
                             <div className="space-y-1.5 opacity-80">
                                 <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
                                     Combustible {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
@@ -365,7 +365,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                             </div>
                         </div>
 
-                        {/* Power / Engine */}
+                        {/* Potencia / Motor */}
                         <div className="space-y-1.5 opacity-80 pt-2">
                             <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
                                 Potencia / Motor {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
@@ -384,12 +384,12 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
 
                     <hr className="border-slate-100" />
 
-                    {/* Section 3: Location & Prices */}
+                    {/* Sección 3: Ubicación y Costos */}
                     <div className="space-y-4">
                         <h3 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
                             <MapPin className="w-4 h-4" /> Ubicación y Costos
                         </h3>
-                        {/* Location */}
+                        {/* Ubicación */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-slate-700 block">Departamento</label>
@@ -414,8 +414,8 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                             </div>
                         </div>
 
-                        {/* Prices */}
-                        {/* Prices */}
+                        {/* Precios */}
+                        {/* Precios */}
                         <div className="grid grid-cols-1 gap-6">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-slate-700 block">
@@ -433,7 +433,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         </div>
                     </div>
 
-                    {/* Image Section */}
+                    {/* Sección de Imagen */}
                     <div className="space-y-1.5">
                         <div className="flex justify-between items-center">
                             <label className="text-sm font-semibold text-slate-700 block">Imagen del Vehículo</label>
@@ -459,7 +459,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         </div>
                     </div>
 
-                    {/* Description - Auto-generated suggestion */}
+                    {/* Descripción - Sugerencia auto-generada */}
                     <div className="space-y-1.5">
                         <div className="flex justify-between">
                             <label className="text-sm font-semibold text-slate-700 block">Descripción</label>
@@ -524,7 +524,7 @@ const ClientModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitt
                             <input type="email"
                                 value={formData.email}
                                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                disabled={isEditing} // Email usually handled by Auth, better not edit here to avoid sync issues
+                                disabled={isEditing} // Email generalmente manejado por Auth, mejor no editar aquí para evitar problemas de sincronización
                                 className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none disabled:bg-slate-100 disabled:text-slate-500"
                             />
                             {isEditing && <p className="text-[10px] text-slate-400">El email no se puede cambiar desde aquí.</p>}
@@ -605,20 +605,20 @@ const DashboardView = ({ users }) => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                // Fetch all bookings with created_at for time analysis
+                // Obtener todas las reservas con created_at para análisis temporal
                 const { data: bookings } = await supabase.from('bookings').select('total_price, status, created_at');
 
-                // Fetch all vehicles
+                // Obtener todos los vehículos
                 const { data: vehicles } = await supabase.from('vehicles').select('id');
 
-                // Calculate stats
-                // Only count revenue from 'confirmed' or 'completed'
+                // Calcular estadísticas
+                // Solo contar ingresos de 'confirmada' o 'finalizada'
                 const validRevenueStatus = ['confirmed', 'completed'];
                 const totalRevenue = bookings?.filter(b => validRevenueStatus.includes(b.status)).reduce((sum, b) => sum + (Number(b.total_price) || 0), 0) || 0;
                 const totalBookings = bookings?.length || 0;
                 const totalVehicles = vehicles?.length || 0;
 
-                // Count by status
+                // Contar por estado
                 const byStatus = {
                     confirmed: bookings?.filter(b => b.status === 'confirmed').length || 0,
                     completed: bookings?.filter(b => b.status === 'completed').length || 0,
@@ -626,14 +626,14 @@ const DashboardView = ({ users }) => {
                     cancelled: bookings?.filter(b => b.status === 'cancelled').length || 0
                 };
 
-                // Calculate Monthly Revenue (Last 6 Months)
+                // Calcular Ingresos Mensuales (Últimos 6 Meses)
                 const monthlyData = {};
                 const today = new Date();
                 const months = [];
                 for (let i = 5; i >= 0; i--) {
                     const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
                     const key = `${d.getFullYear()}-${d.getMonth() + 1}`; // YYYY-M
-                    // Label: "Ene", "Feb", etc.
+                    // Etiqueta: "Ene", "Feb", etc.
                     const monthName = d.toLocaleString('es-PE', { month: 'short' });
                     monthlyData[key] = {
                         label: monthName.charAt(0).toUpperCase() + monthName.slice(1),
@@ -672,7 +672,7 @@ const DashboardView = ({ users }) => {
 
     return (
         <div className="animate-fade-in-up space-y-8">
-            {/* Stats Cards */}
+            {/* Tarjetas de Estadísticas */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-36">
                     <div className="flex justify-between items-start">
@@ -710,15 +710,15 @@ const DashboardView = ({ users }) => {
                 </div>
             </div>
 
-            {/* Charts Row */}
+            {/* Fila de Gráficos */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Bar Chart Section */}
+                {/* Sección de Gráfico de Barras */}
                 <div className="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 className="font-bold text-xl text-slate-900">Ingresos por Mes</h3>
                     <p className="text-sm text-slate-500 mb-8">Análisis de ingresos de reservas finalizadas, en curso o confirmadas.</p>
 
                     <div className="h-64 flex items-end justify-between gap-2 border-b border-slate-100 pb-2 relative">
-                        {/* Y-Axis Lines */}
+                        {/* Líneas Eje Y */}
                         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
                             <div className="border-t border-slate-50 w-full h-full"></div>
                             <div className="border-t border-slate-50 w-full h-full"></div>
@@ -728,7 +728,7 @@ const DashboardView = ({ users }) => {
 
                         {stats.monthlyRevenue && stats.monthlyRevenue.length > 0 ? (
                             stats.monthlyRevenue.map((item, index) => {
-                                // Find max revenue to scale
+                                // Encontrar ingreso máximo para escalar
                                 const maxRev = Math.max(...stats.monthlyRevenue.map(m => m.revenue), 100); // Avoid div by zero
                                 const heightPercent = (item.revenue / maxRev) * 100;
 
@@ -738,14 +738,14 @@ const DashboardView = ({ users }) => {
                                         <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] px-2 py-1 rounded shadow-lg pointer-events-none whitespace-nowrap z-10">
                                             S/ {item.revenue.toLocaleString()}
                                         </div>
-                                        {/* Bar */}
+                                        {/* Barra */}
                                         <div
                                             className="w-full max-w-[40px] bg-brand-blue rounded-t-lg transition-all duration-500 hover:bg-blue-600 relative overflow-hidden"
                                             style={{ height: `${Math.max(heightPercent, 2)}%` }} // Min 2% height
                                         >
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                         </div>
-                                        {/* Label */}
+                                        {/* Etiqueta */}
                                         <p className="text-xs text-slate-400 mt-2 font-medium">{item.label}</p>
                                     </div>
                                 );
@@ -758,12 +758,12 @@ const DashboardView = ({ users }) => {
                     </div>
                 </div>
 
-                {/* Donut Chart Section */}
+                {/* Sección de Gráfico de Donut */}
                 <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm flex flex-col">
                     <h3 className="font-bold text-xl text-slate-900 mb-6 leading-tight">Distribución de Reservas por Estado</h3>
 
                     <div className="flex-1 flex items-center justify-center">
-                        {/* Dynamic SVG Donut Chart */}
+                        {/* Gráfico de Donut SVG Dinámico */}
                         {(() => {
                             const total = stats.totalBookings || 1;
                             const confirmed = stats.bookingsByStatus.confirmed;
@@ -771,19 +771,19 @@ const DashboardView = ({ users }) => {
                             const active = stats.bookingsByStatus.active;
                             const cancelled = stats.bookingsByStatus.cancelled;
 
-                            // Calculate percentages and angles
+                            // Calcular porcentajes y ángulos
                             const confirmedPercent = (confirmed / total) * 100;
                             const completedPercent = (completed / total) * 100;
                             const activePercent = (active / total) * 100;
                             const cancelledPercent = (cancelled / total) * 100;
 
-                            // SVG circle parameters
+                            // Parámetros de círculo SVG
                             const size = 200;
                             const strokeWidth = 20;
                             const radius = (size - strokeWidth) / 2;
                             const circumference = 2 * Math.PI * radius;
 
-                            // Calculate stroke dash offsets for each segment
+                            // Calcular offsets de trazo para cada segmento
                             let currentOffset = 0;
                             const segments = [
                                 { percent: confirmedPercent, color: '#14b8a6', label: 'Confirmada' },

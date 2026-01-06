@@ -26,32 +26,32 @@ const Registro = () => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // Auto-select document type based on country
+        // Auto-seleccionar tipo de documento basado en país
         if (name === 'country') {
-            // DNI is only for Peru, all other countries use Passport
+            // DNI es solo para Perú, todos los otros países usan Pasaporte
             const newDocumentType = value === 'Perú' ? 'dni' : 'passport';
             setFormData({ ...formData, country: value, documentType: newDocumentType, dni: '' });
             return;
         }
 
-        // Apply specific validations based on document type
+        // Aplicar validaciones específicas basadas en tipo de documento
         if (name === 'dni') {
             if (formData.documentType === 'dni') {
-                // Only allow numbers and max 8 digits for DNI
+                // Solo permitir números y máx 8 dígitos para DNI
                 if (!/^\d*$/.test(value) || value.length > 8) return;
             } else {
-                // Passport: alphanumeric, max 12 characters
+                // Pasaporte: alfanumérico, máx 12 caracteres
                 if (value.length > 12) return;
             }
         }
 
-        // Phone Validation
+        // Validación de Teléfono
         if (name === 'phone') {
-            // Only allow numbers
+            // Solo permitir números
             if (!/^\d*$/.test(value)) return;
-            // Limit to 9 digits if country is Peru
+            // Limitar a 9 dígitos si país es Perú
             if (formData.country === 'Perú' && value.length > 9) return;
-            // General limit for other countries (e.g. 15)
+            // Límite general para otros países (ej. 15)
             if (value.length > 15) return;
         }
 
@@ -74,7 +74,7 @@ const Registro = () => {
         setError('');
         setLoading(true);
 
-        // 1. Validate passwords match
+        // 1. Validar que contraseñas coincidan
         if (formData.password !== formData.confirmPassword) {
             toast.error('Las contraseñas no coinciden.');
             setError('Las contraseñas no coinciden.');
@@ -82,7 +82,7 @@ const Registro = () => {
             return;
         }
 
-        // 2. Validate Age
+        // 2. Validar Edad
         if (!validateAge(formData.birthDate)) {
             toast.error('Debes ser mayor de 18 años para registrarte.');
             setError('Debes ser mayor de 18 años para registrarte.');
@@ -90,7 +90,7 @@ const Registro = () => {
             return;
         }
 
-        // 3. Validate Document
+        // 3. Validar Documento
         if (formData.documentType === 'dni') {
             if (formData.dni.length !== 8) {
                 setError('El DNI debe tener exactamente 8 dígitos.');
@@ -105,7 +105,7 @@ const Registro = () => {
             }
         }
 
-        // 4. Validate Phone for Peru
+        // 4. Validar Teléfono para Perú
         if (formData.country === 'Perú' && formData.phone.length !== 9) {
             setError('El celular debe tener 9 dígitos.');
             setLoading(false);
@@ -164,7 +164,7 @@ const Registro = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-            {/* Left Side - Image */}
+            {/* Lado Izquierdo - Imagen */}
             <div className="hidden md:block w-1/2 bg-slate-900 relative overflow-hidden">
                 <img
                     src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?q=80&w=2070&auto=format&fit=crop"
@@ -180,7 +180,7 @@ const Registro = () => {
                 </div>
             </div>
 
-            {/* Right Side - Form */}
+            {/* Lado Derecho - Formulario */}
             <div className="w-full md:w-1/2 flex items-center justify-center p-6 md:p-12 bg-white">
                 <div className="max-w-md w-full">
                     <div className="text-center md:text-left mb-10">

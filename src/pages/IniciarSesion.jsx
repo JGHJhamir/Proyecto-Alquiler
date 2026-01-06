@@ -48,8 +48,8 @@ const IniciarSesion = () => {
 
             if (profileError) {
                 console.error('Error fetching profile:', profileError);
-                // Handle case where user auth exists but profile doesn't 
-                // This might happen if triggers acted weirdly or manual cleanup happened
+                // Manejar caso donde existe auth de usuario pero no perfil 
+                // Esto podría suceder si los triggers actuaron extrañamente o hubo una limpieza manual
                 setError('Usuario autenticado, pero no se encontró perfil. Contacte soporte.');
                 return;
             }
@@ -73,13 +73,13 @@ const IniciarSesion = () => {
                     navigate('/');
                     break;
                 default:
-                    // Default fallback
+                    // Fallback por defecto
                     navigate('/');
             }
 
         } catch (err) {
             console.error("Login catch block:", err);
-            // Show the actual message from Supabase or fallback
+            // Mostrar el mensaje real de Supabase o fallback
             const msg = err.message || 'Error al iniciar sesión.';
             setError(msg);
             toast.error(msg);
@@ -90,7 +90,7 @@ const IniciarSesion = () => {
 
     return (
         <div className="min-h-screen relative flex items-center justify-center p-4 sm:p-6 overflow-hidden">
-            {/* Background Image with Overlay */}
+            {/* Imagen de Fondo con Superposición */}
             <div className="absolute inset-0 z-0">
                 <img
                     src="https://images.unsplash.com/photo-1471922694854-ff1b63b20054?q=80&w=2072&auto=format&fit=crop"
@@ -100,13 +100,13 @@ const IniciarSesion = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-dark/40 to-slate-900/60 backdrop-blur-[2px]"></div>
             </div>
 
-            {/* Main Container */}
+            {/* Contenedor Principal */}
             <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in-95 duration-500">
 
-                {/* Glass Card */}
+                {/* Tarjeta de Cristal */}
                 <div className="bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl overflow-hidden">
 
-                    {/* Header Section */}
+                    {/* Sección de Encabezado */}
                     <div className="px-8 pt-10 pb-6 text-center">
                         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-brand-blue/10 text-brand-blue mb-6">
                             <Lock className="w-6 h-6" />
@@ -115,7 +115,7 @@ const IniciarSesion = () => {
                         <p className="text-slate-500 text-sm">Ingresa a tu cuenta JIAR PlayaRent</p>
                     </div>
 
-                    {/* Error Message */}
+                    {/* Mensaje de Error */}
                     {error && (
                         <div className="mx-8 mb-6 p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 animate-in slide-in-from-top-2">
                             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -123,7 +123,7 @@ const IniciarSesion = () => {
                         </div>
                     )}
 
-                    {/* Form Section */}
+                    {/* Sección del Formulario */}
                     <form onSubmit={handleLogin} className="px-8 pb-10 space-y-5">
                         <div className="space-y-4">
                             <div className="group">
@@ -200,7 +200,7 @@ const IniciarSesion = () => {
                     </form>
                 </div>
 
-                {/* Footer copyright */}
+                {/* Copyright del Pie de Página */}
                 <p className="text-center text-white/50 text-xs mt-8">
                     &copy; 2025 JIAR PlayaRent. Todos los derechos reservados.
                 </p>

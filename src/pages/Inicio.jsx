@@ -2,10 +2,10 @@ import { Search, ChevronDown, Sun, Minus, Plus, MapPin, Star, ArrowRight, User }
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { Link } from 'react-router-dom';
-import BarraNavegacion from '../components/BarraNavegacion'; // Import shared Navbar
+import BarraNavegacion from '../components/BarraNavegacion'; // Importar barra de navegación compartida
 import { COASTAL_LOCATIONS } from '../constants';
 
-// --- Shared Components ---
+// --- Componentes Compartidos ---
 const SectionTitle = ({ title, subtitle, light = false }) => (
     <div className="text-center mb-12 md:mb-20 relative z-10">
         <h2 className={`text-4xl md:text-6xl font-serif font-bold mb-6 tracking-tight ${light ? 'text-white' : 'text-brand-dark'}`}>
@@ -22,20 +22,20 @@ const SectionTitle = ({ title, subtitle, light = false }) => (
     </div>
 );
 
-// ... (Navbar handled by shared component)
+// ... (Barra de navegación manejada por componente compartido)
 
 import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-// Custom CSS for DatePicker to match the dark theme or just general improvements
-import '../index.css'; // Ensure main css is loaded for variables if needed
+// CSS personalizado para el DatePicker para coincidir con el tema oscuro o mejoras generales
+import '../index.css'; // Asegurar que el CSS principal esté cargado para variables si es necesario
 
 const SearchBar = () => {
     const [destination, setDestination] = useState('');
     const [dateRange, setDateRange] = useState([null, null]);
     const [startDate, endDate] = dateRange;
     const [passengers, setPassengers] = useState(1);
-    const [maxPassengers, setMaxPassengers] = useState(5); // Default to 5 until fetched
+    const [maxPassengers, setMaxPassengers] = useState(5); // Por defecto 5 hasta que se obtenga
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const navigate = useNavigate();
@@ -45,12 +45,12 @@ const SearchBar = () => {
     useEffect(() => {
         const fetchLocations = async () => {
             try {
-                // 1. Fetch defined locations (Master List)
+                // 1. Obtener ubicaciones definidas (Lista Maestra)
                 const { data: dbLocations, error: locError } = await supabase
                     .from('locations')
                     .select('name, department');
 
-                // 2. Fetch cities with actual vehicles (Inventory) and find max passengers
+                // 2. Obtener ciudades con vehículos reales (Inventario) y encontrar el máximo de pasajeros
                 const { data: vehicleData, error: vError } = await supabase
                     .from('vehicles')
                     .select('location_city, passengers');
@@ -58,24 +58,24 @@ const SearchBar = () => {
                 if (locError || vError) throw new Error('Error loading location data');
 
                 const vehicleCities = new Set(vehicleData.map(v => v.location_city));
-                // Calculate max passengers dynamically from inventory
+                // Calcular máximo de pasajeros dinámicamente desde el inventario
                 const maxCap = vehicleData.reduce((max, v) => Math.max(max, v.passengers || 0), 4);
                 setMaxPassengers(maxCap || 5);
 
                 const locations = [];
                 const activeDepartments = new Set();
 
-                // 3. Build valid list (Intersection of DB Locations AND Active Inventory)
+                // 3. Construir lista válida (Intersección de Ubicaciones en BD E Inventario Activo)
                 dbLocations.forEach(loc => {
-                    // Normalize check to avoid accent/case mismatches if possible, 
-                    // but strict match is safer for data integrity. Assuming exact match for now.
+                    // Normalizar verificación para evitar desajustes de acentos/mayúsculas si es posible, 
+                    // pero la coincidencia estricta es más segura para la integridad de datos. Asumiendo coincidencia exacta por ahora.
                     if (vehicleCities.has(loc.name)) {
                         locations.push({ type: 'city', name: loc.name, label: `${loc.name}, ${loc.department}` });
                         activeDepartments.add(loc.department);
                     }
                 });
 
-                // Add active departments
+                // Agregar departamentos activos
                 activeDepartments.forEach(dept => {
                     locations.push({ type: 'department', name: dept, label: dept });
                 });
@@ -98,7 +98,7 @@ const SearchBar = () => {
         if (value.length > 0) {
             const filtered = availableLocations.filter(loc =>
                 loc.label.toLowerCase().includes(value.toLowerCase())
-            ).slice(0, 5); // Limit to 5 suggestions
+            ).slice(0, 5); // Limitar a 5 sugerencias
             setSuggestions(filtered);
             setShowSuggestions(true);
         } else {
@@ -117,7 +117,7 @@ const SearchBar = () => {
         navigate(`/explorar?destination=${destination}&start=${formattedStart}&end=${formattedEnd}&passengers=${passengers}`);
     };
 
-    // Custom Input to match the design - Clean/Airbnb
+    // Input personalizado para coincidir con el diseño - Limpio/Airbnb
     const CustomDateInput = ({ value, onClick }, ref) => (
         <div onClick={onClick} ref={ref} className="cursor-pointer w-full">
             <input
@@ -133,7 +133,7 @@ const SearchBar = () => {
     return (
         <div className="bg-white/90 backdrop-blur-xl border border-white/50 rounded-[2.5rem] shadow-glass hover:shadow-glow transition-all duration-300 p-4 md:pl-8 md:pr-2 md:py-2 max-w-5xl mx-auto flex flex-col md:flex-row items-stretch md:items-center transform -translate-y-12 md:-translate-y-1/2 relative z-50">
 
-            {/* Location */}
+            {/* Ubicación */}
             <div className="flex-1 py-3 md:py-2 md:pr-6 w-full md:w-[32%] relative border-b border-slate-200/50 md:border-b-0 md:border-r md:border-slate-200/50 hover:bg-white/50 md:rounded-full transition-colors group cursor-pointer">
                 <label className="block text-xs font-extrabold text-brand-dark ml-1 mb-0.5 tracking-wider uppercase">Dónde</label>
                 <div className="relative">
@@ -164,7 +164,7 @@ const SearchBar = () => {
                 </div>
             </div>
 
-            {/* Date */}
+            {/* Fecha */}
             <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[38%] relative border-b border-slate-200/50 md:border-b-0 md:border-r md:border-slate-200/50 hover:bg-white/50 md:rounded-full transition-colors group cursor-pointer">
                 <label className="block text-xs font-extrabold text-brand-dark ml-1 mb-0.5 tracking-wider uppercase">Fechas</label>
                 <div className="w-full text-left">
@@ -190,7 +190,7 @@ const SearchBar = () => {
                 </div>
             </div>
 
-            {/* Passengers */}
+            {/* Pasajeros */}
             <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[30%] relative hover:bg-white/50 md:rounded-full transition-colors group cursor-pointer flex items-center justify-between">
                 <div>
                     <label className="block text-xs font-extrabold text-brand-dark ml-1 mb-0.5 tracking-wider uppercase">Quién</label>
@@ -199,7 +199,7 @@ const SearchBar = () => {
                     </div>
                 </div>
 
-                {/* Passenger Controls */}
+                {/* Controles de Pasajeros */}
                 <div className="flex items-center gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity absolute right-0 md:right-4 bg-white shadow-sm md:shadow-lg rounded-full p-1 border border-slate-100">
                     <button onClick={(e) => { e.stopPropagation(); setPassengers(Math.max(1, passengers - 1)) }} className="p-1.5 hover:bg-slate-100 rounded-full"><Minus className="w-3 h-3 text-slate-600" /></button>
                     <span className="text-xs font-bold w-4 text-center">{passengers}</span>
@@ -207,7 +207,7 @@ const SearchBar = () => {
                 </div>
             </div>
 
-            {/* Search Button */}
+            {/* Botón de Búsqueda */}
             <button
                 onClick={handleSearch}
                 className="bg-brand-blue hover:bg-brand-dark text-white p-3.5 rounded-2xl md:rounded-full shadow-lg shadow-brand-blue/30 transition-all hover:scale-[1.02] md:hover:scale-105 active:scale-95 mt-2 md:mt-0 w-full md:w-auto flex items-center justify-center gap-2 font-bold px-8 flex-shrink-0 z-10"
@@ -221,10 +221,10 @@ const SearchBar = () => {
 
 const PromotionCard = ({ title, discount, discountType, code }) => (
     <div className="group relative overflow-hidden rounded-3xl p-8 transition-all duration-500 hover:-translate-y-2">
-        {/* Glass Background */}
+        {/* Fondo de Cristal */}
         <div className="absolute inset-0 bg-white/10 backdrop-blur-xl border border-white/20 transition-all duration-500 group-hover:bg-white/20"></div>
 
-        {/* Gradient Glow */}
+        {/* Brillo de Gradiente */}
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-brand-gold/20 rounded-full blur-3xl group-hover:bg-brand-gold/30 transition-all duration-1000"></div>
         <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-brand-blue/20 rounded-full blur-3xl group-hover:bg-brand-blue/30 transition-all duration-1000"></div>
 
@@ -261,19 +261,19 @@ const PromotionCard = ({ title, discount, discountType, code }) => (
 
 const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
     <div className="group relative rounded-[2rem] transition-all duration-500 hover:-translate-y-3">
-        {/* Floating Effect Shadow */}
+        {/* Sombra de Efecto Flotante */}
         <div className="absolute inset-4 bg-brand-dark/20 blur-2xl rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 translate-y-8"></div>
 
-        {/* Card Content with Glassmorphism */}
+        {/* Contenido de Tarjeta con Glassmorfismo */}
         <div className="relative h-full bg-white/90 backdrop-blur-md border border-white/50 rounded-[2rem] overflow-hidden shadow-glass hover:shadow-glow transition-all duration-500 flex flex-col">
 
-            {/* Image Section */}
+            {/* Sección de Imagen */}
             <div className="relative h-80 overflow-hidden">
                 <Link to={`/vehiculo/${id}`} className="block h-full w-full">
-                    {/* Overlay Gradient */}
+                    {/* Gradiente de Superposición */}
                     <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500 z-10"></div>
 
-                    {/* Hover Reveal Actions */}
+                    {/* Acciones Reveladas al Pasar el Mouse */}
                     <div className="absolute inset-0 bg-brand-dark/20 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-all duration-500 z-20 flex items-center justify-center gap-4">
                         <span className="bg-white/20 hover:bg-white hover:text-brand-dark text-white backdrop-blur-md px-6 py-3 rounded-full font-bold transition-all transform scale-90 group-hover:scale-100 duration-300 border border-white/30">
                             Ver Detalles
@@ -303,9 +303,9 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
                 </Link>
             </div>
 
-            {/* Info Section */}
+            {/* Sección de Información */}
             <div className="p-8 flex flex-col flex-1 relative">
-                {/* Decorative Background Element */}
+                {/* Elemento Decorativo de Fondo */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
 
                 <div className="mb-auto relative z-10">
@@ -341,16 +341,16 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
     </div>
 );
 
-// ... (Fleet Section wrapper updated in main render)
-// --- Main Component ---
+// ... (Contenedor de Sección de Flota actualizado en render principal)
+// --- Componente Principal ---
 export default function Inicio() {
-    // ... (State and useEffect remain same)
+    // ... (Estado y useEffect permanecen igual)
     const [vehicles, setVehicles] = useState([]);
     const [promotions, setPromotions] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
-            // ... (Fetch logic logic remains same)
+            // ... (Lógica de obtención permanece igual)
             const { data: vehiclesData, error: vehiclesError } = await supabase.from('vehicles').select('*');
             if (vehiclesError) console.error('Error fetching vehicles:', vehiclesError);
             else setVehicles(vehiclesData || []);
@@ -366,7 +366,7 @@ export default function Inicio() {
         <div className="min-h-screen bg-brand-cream font-sans selection:bg-brand-gold/30 selection:text-brand-dark">
             <BarraNavegacion />
 
-            {/* Hero Section - Immersive Video/Image */}
+            {/* Sección Hero - Video/Imagen Inmersiva */}
             <div className="relative h-[85vh] w-full overflow-hidden">
                 <img
                     src="https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?q=80&w=2070&auto=format&fit=crop"
@@ -374,7 +374,7 @@ export default function Inicio() {
                     className="w-full h-full object-cover scale-105 animate-[kenburns_30s_infinite_alternate]"
                 />
 
-                {/* Advanced Gradient Overlay */}
+                {/* Superposición de Gradiente Avanzado */}
                 <div className="absolute inset-0 bg-gradient-to-b from-brand-dark/60 via-transparent to-brand-dark/90"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-brand-dark/50 to-transparent"></div>
 
@@ -396,16 +396,16 @@ export default function Inicio() {
                 </div>
             </div>
 
-            {/* Floating Search Bar Container - Negative Margin for overlap */}
+            {/* Contenedor de Barra de Búsqueda Flotante - Margen negativo para superposición */}
             <div className="px-4 md:px-6 relative z-30 max-w-7xl mx-auto w-full -mt-20 md:-mt-24">
                 <SearchBar />
             </div>
 
-            {/* Promotions Section with Dark Premium Background */}
+            {/* Sección de Promociones con Fondo Oscuro Premium */}
             <section className="relative py-24 overflow-hidden">
-                {/* Dark Background */}
+                {/* Fondo Oscuro */}
                 <div className="absolute inset-0 bg-brand-dark"></div>
-                {/* Decorative Elements */}
+                {/* Elementos Decorativos */}
                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-20 pointer-events-none">
                     <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-brand-blue rounded-full blur-[120px]"></div>
                     <div className="absolute top-[40%] -right-[10%] w-[40%] h-[60%] bg-brand-gold rounded-full blur-[100px]"></div>
@@ -438,7 +438,7 @@ export default function Inicio() {
                 </div>
             </section>
 
-            {/* Fleet Section with Sand Gradient */}
+            {/* Sección de Flota con Gradiente de Arena */}
             <section className="bg-slate-100 py-32 relative overflow-hidden">
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <SectionTitle

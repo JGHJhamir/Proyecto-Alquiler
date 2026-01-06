@@ -10,10 +10,10 @@ const PanelCliente = () => {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [selectedBookingForPayment, setSelectedBookingForPayment] = useState(null);
-    const [selectedBookingForCancellation, setSelectedBookingForCancellation] = useState(null); // [NEW]
-    const [cancellationReason, setCancellationReason] = useState(''); // [NEW]
+    const [selectedBookingForCancellation, setSelectedBookingForCancellation] = useState(null); // [NUEVO]
+    const [cancellationReason, setCancellationReason] = useState(''); // [NUEVO]
     const [selectedTicket, setSelectedTicket] = useState(null);
-    const [activeTab, setActiveTab] = useState('bookings'); // 'bookings' or 'profile'
+    const [activeTab, setActiveTab] = useState('bookings'); // 'reservas' o 'perfil'
     const [profileData, setProfileData] = useState({
         full_name: '',
         phone: '',
@@ -35,7 +35,7 @@ const PanelCliente = () => {
                     return;
                 }
 
-                // Get profile
+                // Obtener perfil
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('*')
@@ -52,7 +52,7 @@ const PanelCliente = () => {
                     birth_date: profile?.birth_date || ''
                 });
 
-                // Get Bookings
+                // Obtener Reservas
                 const { data: bookingsData, error } = await supabase
                     .from('bookings')
                     .select(`
@@ -84,7 +84,7 @@ const PanelCliente = () => {
         setSelectedBookingForPayment(booking);
     };
 
-    // [NEW] Handle Cancellation Request
+    // [NUEVO] Manejar Solicitud de Cancelación
     const handleRequestCancellation = async (e) => {
         e.preventDefault();
         if (!cancellationReason.trim()) return;
@@ -101,7 +101,7 @@ const PanelCliente = () => {
 
             if (error) throw error;
 
-            // Update local state
+            // Actualizar estado local
             setBookings(bookings.map(b =>
                 b.id === selectedBookingForCancellation.id
                     ? { ...b, status: 'cancellation_requested', cancellation_reason: cancellationReason }
@@ -123,7 +123,7 @@ const PanelCliente = () => {
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
 
-        // Auto-select document type based on country (same logic as registration)
+        // Auto-seleccionar tipo de documento basado en país (misma lógica que registro)
         if (name === 'country') {
             const newDocumentType = value === 'Perú' ? 'dni' : 'passport';
             setProfileData({ ...profileData, country: value, document_type: newDocumentType });
@@ -153,11 +153,11 @@ const PanelCliente = () => {
 
             if (error) throw error;
 
-            // Update local user state
+            // Actualizar estado de usuario local
             setUser({ ...user, ...profileData });
             setMessage({ type: 'success', text: 'Perfil actualizado correctamente' });
 
-            // Clear success message after 3 seconds
+            // Limpiar mensaje de éxito después de 3 segundos
             setTimeout(() => setMessage(null), 3000);
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -177,7 +177,7 @@ const PanelCliente = () => {
 
     return (
         <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-20">
-            {/* Header */}
+            {/* Encabezado */}
             <header className="bg-white shadow-sm border-b border-slate-200">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
                     <button onClick={() => navigate('/')} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -201,7 +201,7 @@ const PanelCliente = () => {
             </header>
 
             <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Tabs */}
+                {/* Pestañas */}
                 <div className="flex gap-8 border-b border-slate-200 mb-8">
                     <button
                         onClick={() => setActiveTab('bookings')}
@@ -242,7 +242,7 @@ const PanelCliente = () => {
                                 {bookings.map((booking) => (
                                     <div key={booking.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow group">
                                         <div className="flex flex-col md:flex-row gap-6">
-                                            {/* Image */}
+                                            {/* Imagen */}
                                             <div className="w-full md:w-48 h-32 rounded-xl overflow-hidden bg-slate-100 flex-shrink-0 relative">
                                                 <img
                                                     src={booking.vehicles?.image_url}
@@ -252,7 +252,7 @@ const PanelCliente = () => {
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
                                             </div>
 
-                                            {/* Content */}
+                                            {/* Contenido */}
                                             <div className="flex-1">
                                                 <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                                                     <div>
@@ -262,7 +262,7 @@ const PanelCliente = () => {
                                                         <p className="text-slate-500 text-sm">{booking.vehicles?.category} • {booking.vehicles?.location_city}</p>
                                                     </div>
 
-                                                    {/* Status Badge */}
+                                                    {/* Insignia de Estado */}
                                                     <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border ${booking.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
                                                         booking.status === 'completed' ? 'bg-blue-50 text-brand-blue border-blue-100' :
                                                             booking.status === 'cancelled' ? 'bg-red-50 text-red-700 border-red-100' :
@@ -320,7 +320,7 @@ const PanelCliente = () => {
                                                         </button>
                                                     )}
 
-                                                    {/* [NEW] Cancel Button for Confirmed/Awaiting */}
+                                                    {/* [NUEVO] Botón Cancelar para Confirmadas/En espera */}
                                                     {(booking.status === 'confirmed' || booking.status === 'awaiting_confirmation') && (
                                                         <button
                                                             onClick={() => setSelectedBookingForCancellation(booking)}
@@ -344,7 +344,7 @@ const PanelCliente = () => {
                         )}
                     </div>
                 ) : (
-                    /* My Profile Tab */
+                    /* Pestaña Mi Perfil */
                     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center justify-between mb-8">
                             <div>
@@ -363,7 +363,7 @@ const PanelCliente = () => {
 
                         <form onSubmit={handleSaveProfile} className="space-y-6 max-w-2xl">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* Read Only Email */}
+                                {/* Email de Solo Lectura */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-slate-700">Email</label>
                                     <div className="relative">
@@ -380,7 +380,7 @@ const PanelCliente = () => {
                                     <p className="text-xs text-slate-400">El email no se puede cambiar.</p>
                                 </div>
 
-                                {/* Full Name */}
+                                {/* Nombre Completo */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-slate-700">Nombre Completo</label>
                                     <div className="relative group">
@@ -396,7 +396,7 @@ const PanelCliente = () => {
                                     </div>
                                 </div>
 
-                                {/* Phone */}
+                                {/* Teléfono */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-slate-700">Teléfono</label>
                                     <input
@@ -409,7 +409,7 @@ const PanelCliente = () => {
                                     />
                                 </div>
 
-                                {/* Country */}
+                                {/* País */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-slate-700">País de Origen</label>
                                     <div className="relative group">
@@ -437,7 +437,7 @@ const PanelCliente = () => {
                                     </div>
                                 </div>
 
-                                {/* Document ID */}
+                                {/* Documento de Identidad */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-slate-700">
                                         {profileData.document_type === 'dni' ? 'DNI' : 'Pasaporte'}
@@ -455,7 +455,7 @@ const PanelCliente = () => {
                                     </div>
                                 </div>
 
-                                {/* Birth Date */}
+                                {/* Fecha de Nacimiento */}
                                 <div className="space-y-2">
                                     <label className="text-sm font-semibold text-slate-700">Fecha de Nacimiento</label>
                                     <div className="relative group">
@@ -494,7 +494,7 @@ const PanelCliente = () => {
                 user={user}
             />
 
-            {/* [NEW] Cancellation Modal */}
+            {/* [NUEVO] Modal de Cancelación */}
             {selectedBookingForCancellation && (
                 <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl animate-in zoom-in slide-in-from-bottom-4 duration-300">
@@ -533,7 +533,7 @@ const PanelCliente = () => {
                 </div>
             )}
 
-            {/* Ticket Modal */}
+            {/* Modal de Ticket */}
             {selectedTicket && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
                     <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-in zoom-in slide-in-from-bottom-4 duration-300">
