@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { COASTAL_LOCATIONS } from '../constants';
 import TicketReserva from '../components/TicketReserva';
+import UserManagement from '../components/UserManagement/UserManagement';
 
 
 
@@ -492,106 +493,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
     );
 };
 
-const ClientModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitting, isEditing }) => {
-    if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
-                <div className="bg-white px-8 py-5 border-b border-slate-100 flex justify-between items-center">
-                    <div>
-                        <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Editar Cliente' : 'Añadir Cliente'}</h2>
-                        <p className="text-slate-500 text-sm">Gestiona la información del perfil del usuario.</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                        <X className="w-5 h-5 text-slate-400" />
-                    </button>
-                </div>
-
-                <form onSubmit={onSubmit} className="p-8 space-y-6">
-                    <div className="space-y-4">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Nombre Completo</label>
-                            <input type="text"
-                                value={formData.full_name}
-                                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                required
-                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
-                            />
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Email</label>
-                            <input type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                disabled={isEditing} // Email generalmente manejado por Auth, mejor no editar aquí para evitar problemas de sincronización
-                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none disabled:bg-slate-100 disabled:text-slate-500"
-                            />
-                            {isEditing && <p className="text-[10px] text-slate-400">El email no se puede cambiar desde aquí.</p>}
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700 block">Celular</label>
-                                <input type="text"
-                                    value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700 block">DNI / Pasaporte</label>
-                                <input type="text"
-                                    value={formData.dni}
-                                    onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
-                                />
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700 block">País</label>
-                                <input type="text"
-                                    value={formData.country || ''}
-                                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                                    placeholder="Perú"
-                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700 block">Fecha Nacimiento</label>
-                                <input type="date"
-                                    value={formData.birth_date || ''}
-                                    onChange={(e) => setFormData({ ...formData, birth_date: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
-                                />
-                            </div>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-semibold text-slate-700 block">Rol</label>
-                            <select
-                                value={formData.role}
-                                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:border-brand-blue outline-none"
-                            >
-                                <option value="client">Cliente</option>
-                                <option value="admin">Administrador</option>
-                                <option value="owner">Propietario</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="pt-2 flex gap-4">
-                        <button type="button" onClick={onClose} className="flex-1 py-3 rounded-xl border border-slate-200 text-slate-600 font-bold hover:bg-slate-50">Cancelar</button>
-                        <button type="submit" disabled={submitting} className="flex-1 py-3 rounded-xl bg-brand-blue text-white font-bold hover:bg-blue-700 items-center justify-center flex gap-2">
-                            {submitting ? <Loader2 className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />}
-                            {isEditing ? 'Actualizar' : 'Guardar'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-};
 
 const DashboardView = ({ users }) => {
     const [stats, setStats] = useState({
@@ -1035,140 +937,7 @@ const VehiclesView = ({ onAddClick, onFixImages, onDelete, onDeleteMultiple, onE
     );
 };
 
-const ClientsView = ({ users, onEdit, onDelete, onAdd, activeMenu, setActiveMenu }) => {
-    const [visibleColumns, setVisibleColumns] = useState({
-        name: true, email: true, phone: true, dni: true, role: true, actions: true
-    });
-    const [showColumnMenu, setShowColumnMenu] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredUsers = users.filter(user =>
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.dni?.includes(searchTerm)
-    );
-
-    return (
-        <div className="space-y-6 animate-fade-in-up">
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                    <Users className="w-6 h-6" /> Gestión de Clientes
-                </h2>
-                <div className="flex gap-2">
-
-
-                </div>
-            </div>
-
-            <div className="flex gap-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                        type="text"
-                        placeholder="Filtrar por email, nombre o DNI..."
-                        className="w-full pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <div className="relative">
-                    <button
-                        onClick={() => setShowColumnMenu(!showColumnMenu)}
-                        className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 flex items-center gap-2"
-                    >
-                        Columnas <MoreVertical className="w-3 h-3" />
-                    </button>
-                    {showColumnMenu && (
-                        <div className="absolute right-0 top-12 z-50 w-48 bg-white rounded-lg shadow-xl border border-slate-100 p-2 animate-fade-in-up">
-                            <div className="text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">Mostrar</div>
-                            {Object.entries({
-                                email: 'Email',
-                                phone: 'Celular',
-                                dni: 'DNI/Pasaporte',
-                                role: 'Rol'
-                            }).map(([key, label]) => (
-                                <label key={key} className="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-50 rounded cursor-pointer text-sm text-slate-700 select-none">
-                                    <input
-                                        type="checkbox"
-                                        checked={visibleColumns[key]}
-                                        onChange={() => setVisibleColumns(prev => ({ ...prev, [key]: !prev[key] }))}
-                                        className="rounded border-slate-300 w-4 h-4 accent-brand-blue"
-                                    />
-                                    {label}
-                                </label>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[400px]">
-                <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                        <tr className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                            <th className="p-4 w-8"><input type="checkbox" className="rounded border-slate-300" /></th>
-                            <th className="px-6 py-3">Nombre</th>
-                            {visibleColumns.email && <th className="px-6 py-3">Email</th>}
-                            {visibleColumns.phone && <th className="px-6 py-3">Celular</th>}
-                            {visibleColumns.dni && <th className="px-6 py-3">DNI/Pasaporte</th>}
-                            {visibleColumns.role && <th className="px-6 py-3">Role</th>}
-                            <th className="px-4 py-3 text-right"></th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {filteredUsers.map((user, idx) => (
-                            <tr key={idx} className="hover:bg-blue-50/50 transition-colors">
-                                <td className="p-4"><input type="checkbox" className="rounded border-slate-300" /></td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-slate-100 text-brand-blue text-xs flex items-center justify-center font-bold border border-slate-200">
-                                            {user.full_name?.charAt(0).toUpperCase() || '?'}
-                                        </div>
-                                        <span className="font-medium text-slate-700 text-sm">{user.full_name}</span>
-                                    </div>
-                                </td>
-                                {visibleColumns.email && <td className="px-6 py-4 text-sm text-slate-600">{user.email || 'email@example.com'}</td>}
-                                {visibleColumns.phone && <td className="px-6 py-4 text-sm text-slate-600">{user.phone || '-'}</td>}
-                                {visibleColumns.dni && <td className="px-6 py-4 text-sm text-slate-600">{user.dni || '-'}</td>}
-                                {visibleColumns.role && (
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                                            {user.role || 'client'}
-                                        </span>
-                                    </td>
-                                )}
-                                <td className="px-4 py-4 text-right relative">
-                                    <button onClick={() => setActiveMenu(activeMenu === user.id ? null : user.id)} className="text-slate-400 hover:text-brand-blue p-2 rounded-full hover:bg-slate-100 transition-colors">
-                                        <MoreVertical className="w-4 h-4" />
-                                    </button>
-                                    {/* Dropdown Menu */}
-                                    {activeMenu === user.id && (
-                                        <div className="absolute right-8 top-12 w-32 bg-white rounded-lg shadow-lg border border-slate-100 z-10 overflow-hidden animate-fade-in-up">
-                                            <button onClick={() => { onEdit(user); setActiveMenu(null); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 flex items-center gap-2">
-                                                <Edit className="w-3.5 h-3.5 text-slate-400" /> Editar
-                                            </button>
-                                            <button onClick={() => { onDelete(user.id); setActiveMenu(null); }} className="w-full text-left px-4 py-2.5 text-xs font-medium text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                                <LogOut className="w-3.5 h-3.5" /> Eliminar
-                                            </button>
-                                        </div>
-                                    )}
-                                </td>
-                            </tr>
-                        ))}
-                        {users.length === 0 && <tr><td colSpan="7" className="p-8 text-center text-slate-400 text-sm">No hay clientes.</td></tr>}
-                    </tbody>
-                </table>
-            </div>
-            <div className="flex justify-between items-center text-xs text-slate-500 px-2">
-                <span>0 de {users.length} fila(s) seleccionadas.</span>
-                <div className="flex gap-2">
-                    <button className="px-3 py-1.5 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50">Anterior</button>
-                    <button className="px-3 py-1.5 border border-slate-200 rounded hover:bg-slate-50 disabled:opacity-50">Siguiente</button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 const PlaceholderView = ({ title, icon: Icon }) => (
     <div className="text-center py-20 animate-fade-in-up">
@@ -2360,12 +2129,13 @@ const logAction = async (action, details) => {
 
 const PanelAdministrador = () => {
     const [activeView, setActiveView] = useState('dashboard');
-    const [users, setUsers] = useState([]);
-    const [loadingUsers, setLoadingUsers] = useState(true);
+    // const [users, setUsers] = useState([]); <--- REMOVED
+    // const [loadingUsers, setLoadingUsers] = useState(true); <--- REMOVED
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
+
     const [activeMenu, setActiveMenu] = useState(null);
 
     // User Profile for Topbar
@@ -2377,12 +2147,7 @@ const PanelAdministrador = () => {
         category: '4x4', image_url: '', description: '', is_offer: false
     });
 
-    // Client Form State
-    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-    const [editingClientId, setEditingClientId] = useState(null);
-    const [clientFormData, setClientFormData] = useState({
-        full_name: '', email: '', phone: '', dni: '', role: 'client'
-    });
+    // Client Form State REMOVED
 
     useEffect(() => {
         const fetchData = async () => {
@@ -2393,11 +2158,8 @@ const PanelAdministrador = () => {
                     setCurrentUser(profile || { full_name: 'Admin', email: user.email });
                 }
 
-                const { data: usersData, error } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-                if (error) throw error;
-                setUsers(usersData || []);
+                // Users fetching removed - handled by UserManagement
             } catch (error) { console.error('Error:', error); }
-            finally { setLoadingUsers(false); }
         };
         fetchData();
     }, []);
@@ -2444,96 +2206,7 @@ const PanelAdministrador = () => {
 
 
 
-    // --- Client Management Logic ---
-    const handleEditClient = (client) => {
-        setEditingClientId(client.id);
-        setClientFormData({
-            full_name: client.full_name || '',
-            email: client.email || '',
-            phone: client.phone || '',
-            dni: client.dni || '',
-            country: client.country || 'Perú',
-            birth_date: client.birth_date || '',
-            role: client.role || 'client'
-        });
-        setIsClientModalOpen(true);
-    };
 
-    const handleDeleteClient = async (id) => {
-        // 1. Check for existing bookings
-        try {
-            const { count, error: countError } = await supabase
-                .from('bookings')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', id);
-
-            if (countError) throw countError;
-
-            if (count > 0) {
-                alert(`No se puede eliminar este usuario porque tiene ${count} reserva(s) registrada(s). Esto comprometería el historial de reservas.`);
-                return;
-            }
-
-            // 2. Proceed with deletion if no bookings
-            if (!confirm('¿Estás seguro de eliminar el perfil de este usuario permanentemente?')) return;
-
-            const { error } = await supabase.from('profiles').delete().eq('id', id);
-            if (error) throw error;
-            await logAction('DELETE_CLIENT_PROFILE', { profile_id: id });
-            alert('Usuario eliminado correctamente.');
-            setUsers(users.filter(u => u.id !== id));
-        } catch (error) {
-            alert('Error al procesar la solicitud: ' + error.message);
-        }
-    };
-
-    const handleSaveClient = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-        try {
-            if (editingClientId) {
-                // Update existing profile
-                const { error } = await supabase.from('profiles').update({
-                    full_name: clientFormData.full_name,
-                    phone: clientFormData.phone,
-                    dni: clientFormData.dni,
-                    role: clientFormData.role,
-                    country: clientFormData.country,
-                    birth_date: clientFormData.birth_date || null
-                    // Email cannot be updated here straightforwardly as it's linked to Auth
-                }).eq('id', editingClientId);
-
-                if (error) throw error;
-                await logAction('UPDATE_CLIENT_PROFILE', { profile_id: editingClientId, ...clientFormData });
-                alert('Cliente actualizado correctamente');
-
-                // Optimistic Update
-                setUsers(users.map(u => u.id === editingClientId ? { ...u, ...clientFormData } : u));
-            } else {
-                // Create new profile (Simulated, as auth user creation requires backend)
-                alert('Nota: Para crear un usuario completo con acceso, debe registrarse desde la página de Login/Registro. Aquí solo se creará el registro de perfil.');
-                const { error } = await supabase.from('profiles').insert([{
-                    full_name: clientFormData.full_name,
-                    phone: clientFormData.phone,
-                    dni: clientFormData.dni,
-                    role: clientFormData.role,
-                    email: clientFormData.email, // Just for record keeping if possible
-                    country: clientFormData.country,
-                    birth_date: clientFormData.birth_date || null,
-                    updated_at: new Date()
-                }]);
-                if (error) throw error;
-                await logAction('CREATE_CLIENT_PROFILE', { full_name: clientFormData.full_name });
-                alert('Perfil de cliente creado.');
-                window.location.reload();
-            }
-            setIsClientModalOpen(false);
-        } catch (error) {
-            alert('Error al guardar: ' + error.message);
-        } finally {
-            setSubmitting(false);
-        }
-    };
 
 
 
@@ -2663,9 +2336,9 @@ const PanelAdministrador = () => {
 
     const renderContent = () => {
         switch (activeView) {
-            case 'dashboard': return <DashboardView users={users} />;
+            case 'dashboard': return <DashboardView />;
             case 'vehicles': return <VehiclesView onAddClick={() => { setEditingId(null); setFormData({ make: '', model: '', year: new Date().getFullYear(), vehicle_type: 'playa', price_per_hour: '', department: '', city: '', category: '4x4', image_url: '', description: '', is_offer: false, stock: 1 }); setIsModalOpen(true); }} onFixImages={handleFixImages} onDelete={handleDeleteVehicle} onDeleteMultiple={handleDeleteMultipleVehicles} onEdit={handleEditVehicle} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
-            case 'clients': return <ClientsView users={users} onEdit={handleEditClient} onDelete={handleDeleteClient} onAdd={() => { setEditingClientId(null); setClientFormData({ full_name: '', email: '', phone: '', dni: '', role: 'client' }); setIsClientModalOpen(true); }} activeMenu={activeMenu} setActiveMenu={setActiveMenu} />;
+            case 'clients': return <UserManagement />;
             case 'promotions': return <PromotionsView />;
             case 'reports': return <VistaReportes />;
             case 'reservas': return <BookingsView />;
@@ -2720,15 +2393,7 @@ const PanelAdministrador = () => {
                 isEditing={!!editingId} // Ensure isEditing is passed correctly
             />
 
-            <ClientModal
-                isOpen={isClientModalOpen}
-                onClose={() => setIsClientModalOpen(false)}
-                formData={clientFormData}
-                setFormData={setClientFormData}
-                onSubmit={handleSaveClient}
-                submitting={submitting}
-                isEditing={!!editingClientId}
-            />
+
         </div>
     );
 };

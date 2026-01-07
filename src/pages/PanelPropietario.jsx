@@ -17,15 +17,17 @@ import {
     Activity,
     Search,
     Trash2,
-    FileText
+    FileText,
+    UserCog
 } from 'lucide-react';
+import UserManagement from '../components/UserManagement/UserManagement';
 
 // --- Componentes ---
 
 const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) => {
     const navItems = [
         { id: 'dashboard', label: 'Dashboard Ejecutivo', icon: LayoutDashboard },
-        { id: 'team', label: 'Gestión de Equipo', icon: Users },
+        { id: 'clients', label: 'Gestión de Usuarios', icon: UserCog },
         { id: 'reports', label: 'Reportes Globales', icon: FileText }
     ];
 
@@ -631,227 +633,7 @@ const FinanceView = () => {
     );
 };
 
-const TeamView = () => {
-    const [members, setMembers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [formData, setFormData] = useState({ full_name: '', email: '', phone: '', dni: '', role: 'admin' });
-    const [submitting, setSubmitting] = useState(false);
-    const [currentUserId, setCurrentUserId] = useState(null);
 
-    useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setCurrentUserId(user?.id);
-        };
-        getUser();
-        fetchMembers();
-    }, []);
-
-    const fetchMembers = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .in('role', ['admin', 'owner'])
-                .order('role', { ascending: false }) // Propietarios primero usualmente
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setMembers(data || []);
-        } catch (error) {
-            console.error('Error fetching team:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleCreateMember = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-        try {
-            // En una app real, esto crearía un usuario Auth vía Supabase Edge Function
-            if (!confirm(`Nota: Esto creará un perfil de ${formData.role === 'owner' ? 'PROPIETARIO' : 'ADMINISTRADOR'}. ¿Continuar?`)) {
-                return;
-            }
-
-            const { error } = await supabase.from('profiles').insert([{
-                ...formData,
-                updated_at: new Date()
-            }]);
-
-            if (error) throw error;
-
-            alert(`¡${formData.role === 'owner' ? 'Propietario' : 'Administrador'} añadido al equipo!`);
-            setIsModalOpen(false);
-            setFormData({ full_name: '', email: '', phone: '', dni: '', role: 'admin' });
-            fetchMembers();
-
-        } catch (error) {
-            alert('Error: ' + error.message);
-        } finally {
-            setSubmitting(false);
-        }
-    };
-
-    const handleRemoveMember = async (id) => {
-        if (id === currentUserId) {
-            alert('No puedes eliminar tu propia cuenta desde aquí.');
-            return;
-        }
-        if (!confirm('¿Estás seguro de revocar el acceso a este miembro del equipo?')) return;
-        try {
-            const { error } = await supabase.from('profiles').delete().eq('id', id);
-            if (error) throw error;
-            setMembers(members.filter(m => m.id !== id));
-            alert('Acceso revocado correctamente.');
-        } catch (error) {
-            alert('Error al eliminar: ' + error.message);
-        }
-    };
-
-    return (
-        <div className="space-y-6 animate-fade-in-up">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-2xl font-bold text-slate-900">Gestión de Equipo</h2>
-                    <p className="text-slate-500 text-sm">Administra propietarios y administradores del sistema.</p>
-                </div>
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-lg shadow-amber-500/20"
-                >
-                    <Plus className="w-4 h-4" /> Nuevo Miembro
-                </button>
-            </div>
-
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <table className="w-full text-left sm:text-sm">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold text-slate-600">Nombre</th>
-                            <th className="px-6 py-4 font-semibold text-slate-600">Rol</th>
-                            <th className="px-6 py-4 font-semibold text-slate-600">Contacto</th>
-                            <th className="px-6 py-4 font-semibold text-slate-600">DNI</th>
-                            <th className="px-6 py-4 text-right"></th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                        {loading ? (
-                            <tr><td colSpan="5" className="p-8 text-center text-slate-400">Cargando equipo...</td></tr>
-                        ) : members.length === 0 ? (
-                            <tr><td colSpan="5" className="p-8 text-center text-slate-400">No hay miembros asignados.</td></tr>
-                        ) : (
-                            members.map(member => (
-                                <tr key={member.id} className="hover:bg-slate-50">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ${member.role === 'owner' ? 'bg-amber-500 text-white' : 'bg-slate-900 text-white'}`}>
-                                                {member.full_name?.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div className="font-medium text-slate-900">{member.full_name}</div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${member.role === 'owner' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}`}>
-                                            {member.role === 'owner' ? 'PROPIETARIO' : 'ADMINISTRADOR'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-slate-600">{member.email}</div>
-                                        <div className="text-xs text-slate-400">{member.phone}</div>
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-600 font-mono text-xs">{member.dni}</td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => handleRemoveMember(member.id)}
-                                            disabled={member.id === currentUserId}
-                                            className={`p-2 rounded-lg transition-colors ${member.id === currentUserId ? 'text-slate-200 cursor-not-allowed' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
-                                            title={member.id === currentUserId ? "No puedes eliminarte a ti mismo" : "Revocar acceso"}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Modal de Nuevo Miembro */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-white rounded-2xl w-full max-w-md shadow-xl overflow-hidden p-6 animate-in zoom-in-95 duration-200">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-lg font-bold text-slate-900">Nuevo Miembro del Equipo</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                <X className="w-5 h-5 text-slate-400" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleCreateMember} className="space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase">Rol Asignado</label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, role: 'admin' })}
-                                        className={`px-4 py-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${formData.role === 'admin' ? 'border-brand-blue bg-blue-50 text-brand-blue ring-2 ring-brand-blue/20' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                                    >
-                                        <Briefcase className="w-4 h-4" />
-                                        <span className="font-bold text-sm">Administrador</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, role: 'owner' })}
-                                        className={`px-4 py-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${formData.role === 'owner' ? 'border-amber-500 bg-amber-50 text-amber-700 ring-2 ring-amber-500/20' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}
-                                    >
-                                        <TrendingUp className="w-4 h-4" />
-                                        <span className="font-bold text-sm">Propietario</span>
-                                    </button>
-                                </div>
-                                <p className="text-xs text-slate-400 mt-1">
-                                    {formData.role === 'owner'
-                                        ? 'Acceso total a finanzas, auditoría y gestión de equipo.'
-                                        : 'Acceso a reservas, vehículos y clientes. Sin acceso a finanzas.'}
-                                </p>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase">Nombre Completo</label>
-                                <input required type="text" className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-                                    value={formData.full_name} onChange={e => setFormData({ ...formData, full_name: e.target.value })} />
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-500 uppercase">Email Corporativo</label>
-                                <input required type="email" className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-                                    value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-500 uppercase">Teléfono</label>
-                                    <input required type="tel" className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-                                        value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold text-slate-500 uppercase">DNI</label>
-                                    <input required type="text" className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none"
-                                        value={formData.dni} onChange={e => setFormData({ ...formData, dni: e.target.value })} />
-                                </div>
-                            </div>
-                            <div className="pt-4 flex gap-3">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2.5 rounded-lg border border-slate-200 font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
-                                <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-lg bg-amber-500 text-white font-bold hover:bg-amber-600 disabled:opacity-50">
-                                    {submitting ? 'Guardando...' : 'Crear Miembro'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
 
 
 const AuditView = () => {
@@ -978,7 +760,7 @@ const PanelPropietario = () => {
     const renderContent = () => {
         switch (activeView) {
             case 'dashboard': return <DashboardView />;
-            case 'team': return <TeamView />;
+            case 'clients': return <UserManagement />;
             case 'reports': return <VistaReportes />;
 
             default: return <div className="p-12 text-center text-slate-400">Selecciona una opción del menú</div>;
@@ -998,7 +780,7 @@ const PanelPropietario = () => {
                         </button>
                         <h1 className="text-xl font-bold text-slate-800">
                             {activeView === 'dashboard' && 'Dashboard Ejecutivo'}
-                            {activeView === 'team' && 'Equipo'}
+                            {activeView === 'clients' && 'Gestión de Usuarios'}
                             {activeView === 'reports' && 'Reportes Globales'}
                         </h1>
                     </div>
