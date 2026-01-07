@@ -22,7 +22,7 @@ const VIEW_TITLES = {
     vehicles: 'Gestión de Vehículos',
     locations: 'Gestión de Ubicaciones',
     promotions: 'Gestión de Promociones',
-    reports: 'Reportes'
+    reports: 'Reporte Integral'
 };
 
 const UserIconMap = {
@@ -46,7 +46,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
         { id: 'vehicles', label: 'Vehículos', icon: Car },
         { id: 'locations', label: 'Ubicaciones', icon: MapPin },
         { id: 'promotions', label: 'Promociones', icon: Tag },
-        { id: 'reports', label: 'Reportes', icon: BarChart3 },
+        { id: 'reports', label: 'Reporte Integral', icon: BarChart3 },
     ];
 
     const handleLogout = async () => {

@@ -28,7 +28,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
     const navItems = [
         { id: 'dashboard', label: 'Dashboard Ejecutivo', icon: LayoutDashboard },
         { id: 'clients', label: 'Gestión de Usuarios', icon: UserCog },
-        { id: 'reports', label: 'Reportes Globales', icon: FileText }
+        { id: 'reports', label: 'Reporte Integral', icon: FileText }
     ];
 
     const handleLogout = async () => {
@@ -781,7 +781,7 @@ const PanelPropietario = () => {
                         <h1 className="text-xl font-bold text-slate-800">
                             {activeView === 'dashboard' && 'Dashboard Ejecutivo'}
                             {activeView === 'clients' && 'Gestión de Usuarios'}
-                            {activeView === 'reports' && 'Reportes Globales'}
+                            {activeView === 'reports' && 'Reporte Integral'}
                         </h1>
                     </div>
                 </header>
