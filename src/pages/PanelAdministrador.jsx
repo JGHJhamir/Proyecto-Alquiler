@@ -17,11 +17,11 @@ import UserManagement from '../components/UserManagement/UserManagement';
 
 const VIEW_TITLES = {
     dashboard: 'Panel de Control',
-    reservas: 'Reservas',
-    clients: 'Gestión de Clientes',
-    vehicles: 'Vehículos',
-    locations: 'Ubicaciones',
-    promotions: 'Promociones',
+    reservas: 'Gestión de Reservas',
+    clients: 'Gestión de Usuarios',
+    vehicles: 'Gestión de Vehículos',
+    locations: 'Gestión de Ubicaciones',
+    promotions: 'Gestión de Promociones',
     reports: 'Reportes'
 };
 
@@ -42,11 +42,11 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
     const navItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'reservas', label: 'Reservas', icon: Calendar },
-        { id: 'clients', label: 'Clientes', icon: Users },
+        { id: 'clients', label: 'Usuarios', icon: Users },
         { id: 'vehicles', label: 'Vehículos', icon: Car },
         { id: 'locations', label: 'Ubicaciones', icon: MapPin },
         { id: 'promotions', label: 'Promociones', icon: Tag },
-        { id: 'reports', label: 'Reportes', icon: FileText },
+        { id: 'reports', label: 'Reportes', icon: BarChart3 },
     ];
 
     const handleLogout = async () => {
@@ -117,7 +117,9 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
     const [customMode, setCustomMode] = useState({
         category: false,
         make: false,
-        model: false
+        model: false,
+        department: false,
+        city: false
     });
 
     // Estado para Ubicaciones Dinámicas
@@ -140,19 +142,34 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
         fetchLocations();
 
         // Si estamos editando y el valor actual no está en el catálogo, activar modo custom automáticamente
-        if (isEditing && formData.vehicle_type) {
-            const typeData = CATALOGO_VEHICULOS[formData.vehicle_type];
-            if (formData.category && (!typeData?.categories || !typeData.categories[formData.category])) {
-                setCustomMode(prev => ({ ...prev, category: true, make: true, model: true }));
-            } else if (formData.make && (!typeData?.categories[formData.category]?.brands || !typeData.categories[formData.category].brands[formData.make])) {
-                setCustomMode(prev => ({ ...prev, make: true, model: true }));
-            } else if (formData.model) {
-                const models = typeData?.categories[formData.category]?.brands[formData.make] || [];
-                const modelExists = models.some(m => m.name === formData.model);
-                if (!modelExists) setCustomMode(prev => ({ ...prev, model: true }));
+        if (isEditing) {
+            // Lógica para Vehículos
+            if (formData.vehicle_type) {
+                const typeData = CATALOGO_VEHICULOS[formData.vehicle_type];
+                if (formData.category && (!typeData?.categories || !typeData.categories[formData.category])) {
+                    setCustomMode(prev => ({ ...prev, category: true, make: true, model: true }));
+                } else if (formData.make && (!typeData?.categories[formData.category]?.brands || !typeData.categories[formData.category].brands[formData.make])) {
+                    setCustomMode(prev => ({ ...prev, make: true, model: true }));
+                } else if (formData.model) {
+                    const models = typeData?.categories[formData.category]?.brands[formData.make] || [];
+                    const modelExists = models.some(m => m.name === formData.model);
+                    if (!modelExists) setCustomMode(prev => ({ ...prev, model: true }));
+                }
+            }
+            // Lógica para Ubicaciones
+            if (formData.department && !availableLocations[formData.department]) {
+                setCustomMode(prev => ({ ...prev, department: true, city: true }));
+            } else if (formData.department && formData.city) {
+                const cities = availableLocations[formData.department] || [];
+                if (!cities.includes(formData.city)) {
+                    setCustomMode(prev => ({ ...prev, city: true }));
+                }
+            } else if (!formData.department && formData.city) {
+                // Si hay ciudad pero no dpto (caso custom guardado sin dpto en BD), abrir modo custom
+                setCustomMode(prev => ({ ...prev, department: true, city: true }));
             }
         }
-    }, [isEditing, formData.vehicle_type]); // Dependencia simplificada para evitar bucles, aunque idealmente revisaríamos solo al abrir
+    }, [isEditing, formData.vehicle_type, availableLocations]); // Added availableLocations to dependencies
 
     // --- Lógica de Catálogos ---
     const currentTypeData = formData.vehicle_type ? CATALOGO_VEHICULOS[formData.vehicle_type] : null;
@@ -175,7 +192,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
 
     const handleTypeChange = (e) => {
         setFormData(prev => ({ ...prev, vehicle_type: e.target.value, category: '', make: '', model: '' }));
-        setCustomMode({ category: false, make: false, model: false });
+        setCustomMode(prev => ({ ...prev, category: false, make: false, model: false }));
     };
 
     // --- Manejadores de Categoría ---
@@ -224,6 +241,29 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                     image_url: selectedModelObj.image || prev.image_url
                 } : {})
             }));
+        }
+    };
+
+    // --- Manejadores de Ubicación ---
+    const handleDepartmentChange = (e) => {
+        const val = e.target.value;
+        if (val === '__CUSTOM__') {
+            setCustomMode(prev => ({ ...prev, department: true, city: true }));
+            setFormData(prev => ({ ...prev, department: '', city: '' }));
+        } else {
+            setCustomMode(prev => ({ ...prev, department: false, city: false }));
+            setFormData(prev => ({ ...prev, department: val, city: '' }));
+        }
+    };
+
+    const handleCityChange = (e) => {
+        const val = e.target.value;
+        if (val === '__CUSTOM__') {
+            setCustomMode(prev => ({ ...prev, city: true }));
+            setFormData(prev => ({ ...prev, city: '' }));
+        } else {
+            setCustomMode(prev => ({ ...prev, city: false }));
+            setFormData(prev => ({ ...prev, city: val }));
         }
     };
 
@@ -500,24 +540,73 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-slate-700 block">Departamento</label>
-                                <select name="department" required
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer"
-                                    value={formData.department} onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value, city: '' }))}
-                                >
-                                    <option value="">Selecciona...</option>
-                                    {Object.keys(availableLocations).map(dept => <option key={dept} value={dept}>{dept}</option>)}
-                                </select>
+                                {!customMode.department ? (
+                                    <select name="department" required
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer"
+                                        value={formData.department}
+                                        onChange={handleDepartmentChange}
+                                    >
+                                        <option value="">Selecciona...</option>
+                                        {Object.keys(availableLocations).map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                                        <option value="__CUSTOM__" className="font-bold text-brand-blue">+ Nueva Ubicación</option>
+                                    </select>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            name="department"
+                                            value={formData.department}
+                                            onChange={handleInputChange}
+                                            placeholder="Ingresa departamento..."
+                                            className="w-full bg-white border border-brand-blue rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none shadow-sm"
+                                            autoFocus
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setCustomMode(prev => ({ ...prev, department: false, city: false }))}
+                                            className="px-3 py-2 bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-200"
+                                            title="Volver a lista"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-slate-700 block">Ciudad / Playa</label>
-                                <select name="city" required disabled={!formData.department}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
-                                    value={formData.city || ''}
-                                    onChange={handleInputChange}
-                                >
-                                    <option value="">Selecciona...</option>
-                                    {formData.department && availableLocations[formData.department]?.map(city => <option key={city} value={city}>{city}</option>)}
-                                </select>
+                                {!customMode.city ? (
+                                    <select name="city" required disabled={!formData.department}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
+                                        value={formData.city || ''}
+                                        onChange={handleCityChange}
+                                    >
+                                        <option value="">Selecciona...</option>
+                                        {formData.department && availableLocations[formData.department]?.map(city => <option key={city} value={city}>{city}</option>)}
+                                        {formData.department && <option value="__CUSTOM__" className="font-bold text-brand-blue">+ Nueva Ciudad/Playa</option>}
+                                    </select>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            name="city"
+                                            value={formData.city}
+                                            onChange={handleInputChange}
+                                            placeholder="Ingresa ciudad/playa..."
+                                            className="w-full bg-white border border-brand-blue rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none shadow-sm"
+                                            autoFocus
+                                        />
+                                        {!customMode.department && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setCustomMode(prev => ({ ...prev, city: false }))}
+                                                className="px-3 py-2 bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-200"
+                                                title="Volver a lista"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -1976,6 +2065,7 @@ const LocationsView = () => {
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ name: '', department: '' });
+    const [isCustomRegion, setIsCustomRegion] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -2019,6 +2109,7 @@ const LocationsView = () => {
             await fetchLocations();
             setIsModalOpen(false);
             setFormData({ name: '', department: '' });
+            setIsCustomRegion(false);
             alert('Ubicación agregada correctamente.');
         } catch (error) {
             alert('Error al guardar: ' + error.message);
@@ -2051,7 +2142,7 @@ const LocationsView = () => {
                         <p className="text-slate-500 text-sm mt-1">Añade, edita y administra las playas y lugares disponibles.</p>
                     </div>
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => { setIsModalOpen(true); setIsCustomRegion(false); setFormData({ name: '', department: '' }); }}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-lg shadow-blue-600/20"
                     >
                         <Plus className="w-4 h-4" /> Añadir Ubicación
@@ -2188,17 +2279,47 @@ const LocationsView = () => {
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-sm font-semibold text-slate-700">Región</label>
-                                <select
-                                    required
-                                    value={formData.department}
-                                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                    className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-brand-blue outline-none transition-all bg-white"
-                                >
-                                    <option value="">Selecciona una región</option>
-                                    {Object.keys(COASTAL_LOCATIONS).map(dept => (
-                                        <option key={dept} value={dept}>{dept}</option>
-                                    ))}
-                                </select>
+                                {!isCustomRegion ? (
+                                    <select
+                                        required
+                                        value={formData.department}
+                                        onChange={(e) => {
+                                            if (e.target.value === '__CUSTOM__') {
+                                                setIsCustomRegion(true);
+                                                setFormData({ ...formData, department: '' });
+                                            } else {
+                                                setFormData({ ...formData, department: e.target.value });
+                                            }
+                                        }}
+                                        className="w-full px-4 py-2 rounded-lg border border-slate-200 focus:border-brand-blue outline-none transition-all bg-white"
+                                    >
+                                        <option value="">Selecciona una región</option>
+                                        {Object.keys(COASTAL_LOCATIONS).map(dept => (
+                                            <option key={dept} value={dept}>{dept}</option>
+                                        ))}
+                                        <option value="__CUSTOM__" className="font-bold text-brand-blue">+ Nueva Región / Otra</option>
+                                    </select>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            required
+                                            value={formData.department}
+                                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                            placeholder="Ingresa nueva región..."
+                                            className="w-full px-4 py-2 rounded-lg border border-brand-blue focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all shadow-sm"
+                                            autoFocus
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => { setIsCustomRegion(false); setFormData({ ...formData, department: '' }); }}
+                                            className="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-500 transition-colors"
+                                            title="Volver a lista"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                             <div className="pt-4">
                                 <button

@@ -175,7 +175,7 @@ const UserManagement = () => {
                     <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                         <Users className="w-6 h-6" /> Gestión de Usuarios
                     </h2>
-                    <p className="text-slate-500 text-sm mt-1">Administra clientes, administradores y propietarios.</p>
+                    <p className="text-slate-500 text-sm mt-1">Administra clientes y administradores.</p>
                 </div>
                 <button
                     onClick={handleAddUser}
