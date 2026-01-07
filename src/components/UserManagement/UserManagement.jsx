@@ -83,30 +83,22 @@ const UserManagement = () => {
     };
 
     const handleDeleteUser = async (id) => {
-        // 1. Check for existing bookings
+        if (!confirm('¿Estás seguro de eliminar el perfil de este usuario permanentemente? Esta acción borrará también su acceso al sistema.')) return;
+
         try {
-            const { count, error: countError } = await supabase
-                .from('bookings')
-                .select('*', { count: 'exact', head: true })
-                .eq('user_id', id);
+            // Using Edge Function to safely delete Auth User + Profile
+            const { data, error } = await supabase.functions.invoke('delete-user', {
+                body: { user_id: id }
+            });
 
-            if (countError) throw countError;
+            if (error) throw new Error(error.message || 'Error al conectar con el servidor');
+            if (data && data.error) throw new Error(data.error);
 
-            if (count > 0) {
-                alert(`No se puede eliminar este usuario porque tiene ${count} reserva(s) registrada(s). Esto comprometería el historial de reservas.`);
-                return;
-            }
-
-            // 2. Proceed with deletion if no bookings
-            if (!confirm('¿Estás seguro de eliminar el perfil de este usuario permanentemente?')) return;
-
-            const { error } = await supabase.from('profiles').delete().eq('id', id);
-            if (error) throw error;
             await logAction('DELETE_USER_PROFILE', { profile_id: id });
             alert('Usuario eliminado correctamente.');
             setUsers(users.filter(u => u.id !== id));
         } catch (error) {
-            alert('Error al procesar la solicitud: ' + error.message);
+            alert('No se pudo eliminar: ' + error.message);
         }
     };
 

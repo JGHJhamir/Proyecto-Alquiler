@@ -113,6 +113,13 @@ import { CATALOGO_VEHICULOS } from '../data/datosVehiculos';
 const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitting, isEditing }) => {
     if (!isOpen) return null;
 
+    // Estado para saber si estamos en modo "Manual" para cada campo
+    const [customMode, setCustomMode] = useState({
+        category: false,
+        make: false,
+        model: false
+    });
+
     // Estado para Ubicaciones Dinámicas
     const [availableLocations, setAvailableLocations] = useState(COASTAL_LOCATIONS);
 
@@ -122,34 +129,43 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
             if (data) {
                 const newLocs = { ...COASTAL_LOCATIONS };
                 data.forEach(loc => {
-                    const dept = loc.department; // ej. "Piura"
-                    const city = loc.name;       // ej. "Cabo Blanco"
-
-                    if (!newLocs[dept]) {
-                        newLocs[dept] = [];
-                    }
-                    if (!newLocs[dept].includes(city)) {
-                        newLocs[dept].push(city);
-                    }
+                    const dept = loc.department;
+                    const city = loc.name;
+                    if (!newLocs[dept]) newLocs[dept] = [];
+                    if (!newLocs[dept].includes(city)) newLocs[dept].push(city);
                 });
                 setAvailableLocations(newLocs);
             }
         };
         fetchLocations();
-    }, []);
 
-    // Estados derivados para desplegables
-    const availableCategories = formData.vehicle_type && CATALOGO_VEHICULOS[formData.vehicle_type]
-        ? Object.keys(CATALOGO_VEHICULOS[formData.vehicle_type].categories)
+        // Si estamos editando y el valor actual no está en el catálogo, activar modo custom automáticamente
+        if (isEditing && formData.vehicle_type) {
+            const typeData = CATALOGO_VEHICULOS[formData.vehicle_type];
+            if (formData.category && (!typeData?.categories || !typeData.categories[formData.category])) {
+                setCustomMode(prev => ({ ...prev, category: true, make: true, model: true }));
+            } else if (formData.make && (!typeData?.categories[formData.category]?.brands || !typeData.categories[formData.category].brands[formData.make])) {
+                setCustomMode(prev => ({ ...prev, make: true, model: true }));
+            } else if (formData.model) {
+                const models = typeData?.categories[formData.category]?.brands[formData.make] || [];
+                const modelExists = models.some(m => m.name === formData.model);
+                if (!modelExists) setCustomMode(prev => ({ ...prev, model: true }));
+            }
+        }
+    }, [isEditing, formData.vehicle_type]); // Dependencia simplificada para evitar bucles, aunque idealmente revisaríamos solo al abrir
+
+    // --- Lógica de Catálogos ---
+    const currentTypeData = formData.vehicle_type ? CATALOGO_VEHICULOS[formData.vehicle_type] : null;
+
+    const availableCategories = currentTypeData?.categories ? Object.keys(currentTypeData.categories) : [];
+
+    // Si la categoría es custom, no hay marcas predefinidas, así que marcas también debe ser custom (o lista vacía)
+    const availableBrands = !customMode.category && currentTypeData?.categories?.[formData.category]?.brands
+        ? Object.keys(currentTypeData.categories[formData.category].brands)
         : [];
 
-    const availableBrands = formData.vehicle_type && formData.category && CATALOGO_VEHICULOS[formData.vehicle_type]?.categories[formData.category]
-        ? Object.keys(CATALOGO_VEHICULOS[formData.vehicle_type].categories[formData.category].brands)
-        : [];
-
-    // Nota: los modelos ahora son Objetos {name, specs}
-    const availableModels = formData.vehicle_type && formData.category && formData.make && CATALOGO_VEHICULOS[formData.vehicle_type]?.categories[formData.category]?.brands[formData.make]
-        ? CATALOGO_VEHICULOS[formData.vehicle_type].categories[formData.category].brands[formData.make]
+    const availableModels = !customMode.category && !customMode.make && currentTypeData?.categories?.[formData.category]?.brands?.[formData.make]
+        ? currentTypeData.categories[formData.category].brands[formData.make]
         : [];
 
     const handleInputChange = (e) => {
@@ -157,50 +173,58 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
 
-    // Manejadores especiales para campos dependientes
     const handleTypeChange = (e) => {
-        setFormData(prev => ({
-            ...prev,
-            vehicle_type: e.target.value,
-            category: '',
-            make: '',
-            model: '' // Reiniciar dependientes
-        }));
+        setFormData(prev => ({ ...prev, vehicle_type: e.target.value, category: '', make: '', model: '' }));
+        setCustomMode({ category: false, make: false, model: false });
     };
 
+    // --- Manejadores de Categoría ---
     const handleCategoryChange = (e) => {
-        setFormData(prev => ({
-            ...prev,
-            category: e.target.value,
-            make: '',
-            model: '' // Reiniciar dependientes
-        }));
+        const val = e.target.value;
+        if (val === '__CUSTOM__') {
+            setCustomMode(prev => ({ ...prev, category: true, make: true, model: true })); // Si cat es custom, hijos también prob lo sean
+            setFormData(prev => ({ ...prev, category: '', make: '', model: '' }));
+        } else {
+            setCustomMode(prev => ({ ...prev, category: false, make: false, model: false }));
+            setFormData(prev => ({ ...prev, category: val, make: '', model: '' }));
+        }
     };
 
+    // --- Manejadores de Marca ---
     const handleBrandChange = (e) => {
-        setFormData(prev => ({
-            ...prev,
-            make: e.target.value,
-            model: '' // Reiniciar dependientes
-        }));
+        const val = e.target.value;
+        if (val === '__CUSTOM__') {
+            setCustomMode(prev => ({ ...prev, make: true, model: true }));
+            setFormData(prev => ({ ...prev, make: '', model: '' }));
+        } else {
+            setCustomMode(prev => ({ ...prev, make: false, model: false }));
+            setFormData(prev => ({ ...prev, make: val, model: '' }));
+        }
     };
 
+    // --- Manejadores de Modelo ---
     const handleModelChange = (e) => {
-        const selectedModelName = e.target.value;
-        const selectedModelObj = availableModels.find(m => m.name === selectedModelName);
+        const val = e.target.value;
+        if (val === '__CUSTOM__') {
+            setCustomMode(prev => ({ ...prev, model: true }));
+            setFormData(prev => ({ ...prev, model: '' }));
+        } else {
+            setCustomMode(prev => ({ ...prev, model: false }));
 
-        setFormData(prev => ({
-            ...prev,
-            model: selectedModelName,
-            // Auto-completar especificaciones si se encuentra modelo
-            ...(selectedModelObj && selectedModelObj.specs ? {
-                passengers: selectedModelObj.specs.passengers,
-                transmission: selectedModelObj.specs.transmission,
-                fuel_type: selectedModelObj.specs.fuel_type,
-                engine_power: selectedModelObj.specs.engine_power,
-                image_url: selectedModelObj.image // Auto-completar imagen
-            } : {})
-        }));
+            // Auto-rellenar specs
+            const selectedModelObj = availableModels.find(m => m.name === val);
+            setFormData(prev => ({
+                ...prev,
+                model: val,
+                ...(selectedModelObj?.specs ? {
+                    passengers: selectedModelObj.specs.passengers,
+                    transmission: selectedModelObj.specs.transmission,
+                    fuel_type: selectedModelObj.specs.fuel_type,
+                    engine_power: selectedModelObj.specs.engine_power,
+                    image_url: selectedModelObj.image || prev.image_url
+                } : {})
+            }));
+        }
     };
 
     return (
@@ -209,7 +233,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                 <div className="bg-white px-8 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
                     <div>
                         <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Editar Vehículo' : 'Agregar Vehículo'}</h2>
-                        <p className="text-slate-500 text-sm">{isEditing ? 'Modificar ficha técnica.' : 'Selecciona las características del catálogo.'}</p>
+                        <p className="text-slate-500 text-sm">{isEditing ? 'Modificar ficha técnica.' : 'Selecciona o ingresa las características.'}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
                         <X className="w-5 h-5 text-slate-400" />
@@ -217,65 +241,147 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                 </div>
 
                 <form onSubmit={onSubmit} className="p-8 space-y-8">
-                    {/* Sección 1: Clasificación (Flujo Desplegable) */}
+                    {/* Sección 1: Clasificación */}
                     <div className="space-y-4">
                         <h3 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
-                            <Tag className="w-4 h-4" /> Clasificación del Vehículo
+                            <Briefcase className="w-4 h-4" /> Clasificación del Vehículo
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-
-                            {/* 2. Categoría */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700 block">Categoría</label>
+                            {/* Tipo (Zona) */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Tipo / Zona</label>
                                 <select
-                                    name="category"
-                                    required
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
-                                    value={formData.category || ''}
-                                    onChange={handleCategoryChange}
+                                    name="vehicle_type"
+                                    value={formData.vehicle_type}
+                                    onChange={handleTypeChange}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none transition-all"
                                 >
-                                    <option value="">Selecciona Categoría...</option>
-                                    {availableCategories.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
+                                    <option value="playa">Zona Playa (Aventura & Mar)</option>
                                 </select>
                             </div>
 
-                            {/* 3. Marca */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700 block">Marca</label>
-                                <select
-                                    name="make"
-                                    required
-                                    disabled={!formData.category}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
-                                    value={formData.make || ''}
-                                    onChange={handleBrandChange}
-                                >
-                                    <option value="">Selecciona Marca...</option>
-                                    {availableBrands.map(brand => (
-                                        <option key={brand} value={brand}>{brand}</option>
-                                    ))}
-                                </select>
+                            {/* Categoría */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Categoría</label>
+                                {!customMode.category ? (
+                                    <select
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={handleCategoryChange}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none transition-all"
+                                        disabled={!formData.vehicle_type}
+                                    >
+                                        <option value="">Selecciona Categoría...</option>
+                                        {availableCategories.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                        <option value="__CUSTOM__" className="font-bold text-brand-blue">+ Nueva Categoría / Otra</option>
+                                    </select>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            name="category"
+                                            value={formData.category}
+                                            onChange={handleInputChange}
+                                            placeholder="Escribe la categoría..."
+                                            className="w-full bg-white border border-brand-blue rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none shadow-sm"
+                                            autoFocus
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setCustomMode(prev => ({ ...prev, category: false, make: false, model: false }))}
+                                            className="px-3 py-2 bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-200"
+                                            title="Volver a lista"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* 4. Modelo (AUTO-COMPLETA ESPECIFICACIONES AL CAMBIAR) */}
-                            <div className="space-y-1.5">
-                                <label className="text-sm font-semibold text-slate-700 block">Modelo</label>
-                                <select
-                                    name="model"
-                                    required
-                                    disabled={!formData.make}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-blue outline-none transition-all cursor-pointer disabled:opacity-50"
-                                    value={formData.model || ''}
-                                    onChange={handleModelChange}
-                                >
-                                    <option value="">Selecciona Modelo...</option>
-                                    {availableModels.map(item => (
-                                        <option key={item.name} value={item.name}>{item.name}</option>
-                                    ))}
-                                </select>
+                            {/* Marca */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Marca</label>
+                                {!customMode.make ? (
+                                    <select
+                                        name="make"
+                                        value={formData.make}
+                                        onChange={handleBrandChange}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none transition-all"
+                                        disabled={!formData.category}
+                                    >
+                                        <option value="">Selecciona Marca...</option>
+                                        {availableBrands.map(brand => (
+                                            <option key={brand} value={brand}>{brand}</option>
+                                        ))}
+                                        {formData.category && <option value="__CUSTOM__" className="font-bold text-brand-blue">+ Nueva Marca / Otra</option>}
+                                    </select>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            name="make"
+                                            value={formData.make}
+                                            onChange={handleInputChange}
+                                            placeholder="Escribe la marca..."
+                                            className="w-full bg-white border border-brand-blue rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none shadow-sm"
+                                            autoFocus
+                                        />
+                                        {!customMode.category && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setCustomMode(prev => ({ ...prev, make: false, model: false }))}
+                                                className="px-3 py-2 bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-200"
+                                                title="Volver a lista"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Modelo */}
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Modelo</label>
+                                {!customMode.model ? (
+                                    <select
+                                        name="model"
+                                        value={formData.model}
+                                        onChange={handleModelChange}
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none transition-all"
+                                        disabled={!formData.make}
+                                    >
+                                        <option value="">Selecciona Modelo...</option>
+                                        {availableModels.map((modelObj, idx) => (
+                                            <option key={idx} value={modelObj.name}>{modelObj.name}</option>
+                                        ))}
+                                        {formData.make && <option value="__CUSTOM__" className="font-bold text-brand-blue">+ Nuevo Modelo / Otro</option>}
+                                    </select>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            name="model"
+                                            value={formData.model}
+                                            onChange={handleInputChange}
+                                            placeholder="Escribe el modelo..."
+                                            className="w-full bg-white border border-brand-blue rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none shadow-sm"
+                                            autoFocus
+                                        />
+                                        {!customMode.make && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setCustomMode(prev => ({ ...prev, model: false }))}
+                                                className="px-3 py-2 bg-slate-100 rounded-lg text-slate-500 hover:bg-slate-200"
+                                                title="Volver a lista"
+                                            >
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -317,12 +423,12 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                             {/* Pasajeros */}
                             <div className="space-y-1.5 opacity-80">
                                 <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
-                                    Pasajeros {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
+                                    Pasajeros {formData.model && !customMode.model && <Lock className="w-3 h-3 text-slate-400" />}
                                 </label>
                                 <div className="relative">
                                     <Users className="absolute left-2.5 top-2 w-4 h-4 text-slate-400" />
                                     <select name="passengers"
-                                        disabled={!!formData.model}
+                                        disabled={!!formData.model && !customMode.model}
                                         className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none appearance-none bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500 cursor-not-allowed"
                                         value={formData.passengers || 2} onChange={handleInputChange}>
                                         {[1, 2, 3, 4, 5, 7, 8].map(n => <option key={n} value={n}>{n} {n === 1 ? 'Persona' : 'Personas'}</option>)}
@@ -333,10 +439,10 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                             {/* Transmisión */}
                             <div className="space-y-1.5 opacity-80">
                                 <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
-                                    Transmisión {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
+                                    Transmisión {formData.model && !customMode.model && <Lock className="w-3 h-3 text-slate-400" />}
                                 </label>
                                 <select name="transmission"
-                                    disabled={!!formData.model}
+                                    disabled={!!formData.model && !customMode.model}
                                     className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500 cursor-not-allowed"
                                     value={formData.transmission || 'Automática'} onChange={handleInputChange}>
                                     <option value="Automática">Automática</option>
@@ -349,12 +455,12 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                             {/* Combustible */}
                             <div className="space-y-1.5 opacity-80">
                                 <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
-                                    Combustible {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
+                                    Combustible {formData.model && !customMode.model && <Lock className="w-3 h-3 text-slate-400" />}
                                 </label>
                                 <div className="relative">
                                     <Fuel className="absolute left-2.5 top-2 w-4 h-4 text-slate-400" />
                                     <select name="fuel_type"
-                                        disabled={!!formData.model}
+                                        disabled={!!formData.model && !customMode.model}
                                         className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none appearance-none bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500 cursor-not-allowed"
                                         value={formData.fuel_type || 'Gasolina'} onChange={handleInputChange}>
                                         <option value="Gasolina">Gasolina</option>
@@ -369,12 +475,12 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         {/* Potencia / Motor */}
                         <div className="space-y-1.5 opacity-80 pt-2">
                             <label className="text-xs font-semibold text-slate-500 block flex items-center gap-2">
-                                Potencia / Motor {formData.model && <Lock className="w-3 h-3 text-slate-400" />}
+                                Potencia / Motor {formData.model && !customMode.model && <Lock className="w-3 h-3 text-slate-400" />}
                             </label>
                             <input
                                 type="text"
                                 name="engine_power"
-                                disabled={!!formData.model}
+                                disabled={!!formData.model && !customMode.model}
                                 className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500 cursor-not-allowed"
                                 value={formData.engine_power || ''}
                                 placeholder="Ej: 400 HP"
@@ -488,8 +594,8 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

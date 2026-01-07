@@ -142,6 +142,29 @@ const Perfil = () => {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        if (!confirm('¿Estás seguro de que quieres eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.')) return;
+
+        try {
+            const { data, error } = await supabase.functions.invoke('delete-user', {
+                body: {} // No body needed for self-delete, function defaults to requesting user
+            });
+
+            if (error) throw new Error(error.message || 'Error al conectar con el servidor');
+            if (data && data.error) throw new Error(data.error);
+
+            toast.success('Cuenta eliminada correctamente. Hasta pronto.');
+
+            // Sign out and redirect
+            await supabase.auth.signOut();
+            window.location.href = '/login';
+
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            toast.error(error.message || 'No se pudo eliminar la cuenta');
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -216,13 +239,21 @@ const Perfil = () => {
                         </div>
 
                         {/* Pie de Página de Acción */}
-                        <div className="px-8 pb-8">
+                        <div className="px-8 pb-8 space-y-3">
                             <button
                                 onClick={() => setIsEditing(true)}
                                 className="w-full flex items-center justify-center gap-2 py-3 border border-slate-200 rounded-xl text-slate-700 font-medium hover:bg-slate-50 hover:border-slate-300 transition-all"
                             >
                                 <Edit2 className="w-4 h-4" />
                                 Editar Perfil
+                            </button>
+
+                            <button
+                                onClick={handleDeleteAccount}
+                                className="w-full flex items-center justify-center gap-2 py-3 border border-red-100 rounded-xl text-red-600 font-medium hover:bg-red-50 hover:border-red-200 transition-all"
+                            >
+                                <X className="w-4 h-4" />
+                                Eliminar Cuenta
                             </button>
                         </div>
 
