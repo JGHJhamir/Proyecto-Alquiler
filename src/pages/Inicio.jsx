@@ -193,7 +193,7 @@ const SearchBar = () => {
             {/* Pasajeros */}
             <div className="flex-1 py-3 md:py-2 md:px-6 w-full md:w-[30%] relative hover:bg-white/50 md:rounded-full transition-colors group cursor-pointer flex items-center justify-between">
                 <div>
-                    <label className="block text-xs font-extrabold text-brand-dark ml-1 mb-0.5 tracking-wider uppercase">Quién</label>
+                    <label className="block text-xs font-extrabold text-brand-dark ml-1 mb-0.5 tracking-wider uppercase">Cantidad</label>
                     <div className="text-slate-700 text-sm font-medium truncate">
                         {passengers > 0 ? `${passengers} viajeros` : '¿Cuántos?'}
                     </div>

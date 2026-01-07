@@ -1785,7 +1785,7 @@ const BookingsView = () => {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                         <input
                             type="text"
-                            placeholder="Buscar por cliente o vehículo..."
+                            placeholder="Buscar por usuario o vehículo..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none transition-all placeholder:text-slate-400"
@@ -1827,7 +1827,7 @@ const BookingsView = () => {
                                     <div className="text-xs font-semibold text-slate-500 mb-2 px-2 uppercase tracking-wider">Mostrar</div>
                                     {Object.entries({
                                         vehicle: 'Vehículo',
-                                        client: 'Cliente',
+                                        client: 'Usuario',
                                         dates: 'Fechas',
                                         total: 'Total',
                                         status: 'Estado'
@@ -1862,7 +1862,7 @@ const BookingsView = () => {
                                     />
                                 </th>
                                 <th className="px-6 py-4">Vehículo</th>
-                                {visibleColumns.client && <th className="px-6 py-4">Cliente</th>}
+                                {visibleColumns.client && <th className="px-6 py-4">Usuario</th>}
                                 {visibleColumns.dates && <th className="px-6 py-4">Fechas</th>}
                                 {visibleColumns.total && <th className="px-6 py-4">Total</th>}
                                 {visibleColumns.status && <th className="px-6 py-4">Estado</th>}
