@@ -1,4 +1,4 @@
-export const CATALOGO_VEHICULOS = {
+export const CATALOGO_RECURSOS = {
     playa: {
         label: "Zona Playa (Aventura & Mar)",
         categories: {

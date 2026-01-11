@@ -17,7 +17,7 @@ const toLocalISOString = (date) => {
     return localDate.toISOString().slice(0, 16);
 };
 
-const DetalleVehiculo = () => {
+const DetalleRecurso = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [vehicle, setVehicle] = useState(null);
@@ -387,7 +387,7 @@ const DetalleVehiculo = () => {
                 const message = `👋 *Hola, soy ${userName}*${newLine}` +
                     `Acabo de realizar una reserva y realizo el pago por *YAPE / PLIN*.${newLine}${newLine}` +
                     `📄 *ID Reserva:* ${bookingId}${newLine}` +
-                    `🚙 *Vehículo:* ${vehicleName}${newLine}` +
+                    `🚙 *Recurso:* ${vehicleName}${newLine}` +
                     `📅 *Fecha:* ${startStr} - ${endStr}${newLine}` +
                     `💰 *Monto Total:* S/ ${currentBooking.total_price.toFixed(2)}${newLine}${newLine}` +
                     `📎 *Adjunto mi comprobante:*`;
@@ -403,7 +403,7 @@ const DetalleVehiculo = () => {
     };
 
     if (loading) return <div className="min-h-screen grid place-items-center"><div className="w-12 h-12 border-4 border-brand-blue border-t-transparent rounded-full animate-spin"></div></div>;
-    if (!vehicle) return <div className="min-h-screen grid place-items-center text-xl">Vehículo no encontrado</div>;
+    if (!vehicle) return <div className="min-h-screen grid place-items-center text-xl">Recurso no encontrado</div>;
 
     // Helper para obtener cadena de hoy para fecha mínima
     const todayStr = new Date().toISOString().split('T')[0];
@@ -501,7 +501,7 @@ const DetalleVehiculo = () => {
 
                     {/* Descripción */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-100">
-                        <h2 className="text-2xl font-bold text-slate-900 mb-4 font-serif">Sobre este vehículo</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 mb-4 font-serif">Sobre este recurso</h2>
                         <p className="text-slate-600 leading-relaxed text-lg">
                             {vehicle.description || `Diseñado para dominar tanto las dunas como la carretera costera, este ${vehicle.make} ${vehicle.model} ofrece la combinación perfecta de potencia y confort. Ideal para recorrer las playas de ${vehicle.location_city} con estilo y seguridad. Equipado con suspensión reforzada, aire acondicionado y sistema de sonido premium para tus playlists playeras.`}
                         </p>
@@ -510,10 +510,10 @@ const DetalleVehiculo = () => {
                     {/* Vehículos Similares */}
                     {similarVehicles.length > 0 && (
                         <div className="pt-8">
-                            <h3 className="text-2xl font-bold text-slate-900 font-serif mb-6">Vehículos Similares</h3>
+                            <h3 className="text-2xl font-bold text-slate-900 font-serif mb-6">Recursos Similares</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {similarVehicles.map(v => (
-                                    <Link key={v.id} to={`/vehiculo/${v.id}`} className="group bg-white rounded-[2rem] p-4 border border-slate-100 hover:shadow-lg transition-all flex gap-4 overflow-hidden">
+                                    <Link key={v.id} to={`/recurso/${v.id}`} className="group bg-white rounded-[2rem] p-4 border border-slate-100 hover:shadow-lg transition-all flex gap-4 overflow-hidden">
                                         <div className="w-32 h-24 rounded-xl overflow-hidden shrink-0">
                                             <img src={v.image_url} alt={v.model} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                         </div>
@@ -979,7 +979,7 @@ const DetalleVehiculo = () => {
                                 </div>
 
                                 <button
-                                    onClick={isAuthenticated ? handleBooking : () => navigate('/login', { state: { from: `/vehiculo/${id}` } })}
+                                    onClick={isAuthenticated ? handleBooking : () => navigate('/login', { state: { from: `/recurso/${id}` } })}
                                     disabled={!startDate || !endDate || bookingStatus === 'processing'}
                                     className={`w-full btn-primary py-3 sm:py-4 text-base sm:text-lg shadow-lg hover:shadow-brand-blue/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden notranslate ${startDate && endDate ? 'hidden lg:block' : ''}`}
                                     translate="no"
@@ -1042,7 +1042,7 @@ const DetalleVehiculo = () => {
                                 onClick={() => {
                                     if (currentStep === 3) handleFinalizePayment();
                                     else if (isAuthenticated) handleBooking();
-                                    else navigate('/login', { state: { from: `/vehiculo/${id}` } });
+                                    else navigate('/login', { state: { from: `/recurso/${id}` } });
                                 }}
                                 disabled={bookingStatus === 'processing'}
                                 className={`btn-primary px-6 py-3 text-sm shadow-lg hover:shadow-brand-blue/30 active:scale-95 disabled:opacity-50 flex items-center gap-2 ${currentStep === 3 && selectedPaymentMethod === 'yape' ? 'bg-[#25D366] hover:bg-[#128C7E]' : ''}`}
@@ -1074,4 +1074,4 @@ const ChevronDown = ({ className }) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m6 9 6 6 6-6" /></svg>
 );
 
-export default DetalleVehiculo;
+export default DetalleRecurso;

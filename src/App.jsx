@@ -14,8 +14,8 @@ const MODO_MANTENIMIENTO = false;
 
 // Carga diferida de páginas
 const Inicio = lazy(() => import('./pages/Inicio'));
-const DetalleVehiculo = lazy(() => import('./pages/DetalleVehiculo'));
-const ExplorarVehiculos = lazy(() => import('./pages/ExplorarVehiculos'));
+const DetalleRecurso = lazy(() => import('./pages/DetalleRecurso'));
+const ExplorarRecursos = lazy(() => import('./pages/ExplorarRecursos'));
 const Pago = lazy(() => import('./pages/Pago'));
 const Registro = lazy(() => import('./pages/Registro'));
 const IniciarSesion = lazy(() => import('./pages/IniciarSesion'));
@@ -44,8 +44,8 @@ function App() {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             <Route path="/" element={<Inicio />} />
-            <Route path="/vehiculo/:id" element={<DetalleVehiculo />} />
-            <Route path="/explorar" element={<ExplorarVehiculos />} />
+            <Route path="/recurso/:id" element={<DetalleRecurso />} />
+            <Route path="/explorar" element={<ExplorarRecursos />} />
             <Route path="/pago/:bookingId" element={<Pago />} />
             <Route path="/registro" element={<Registro />} />
             <Route path="/login" element={<IniciarSesion />} />

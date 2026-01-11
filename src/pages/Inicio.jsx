@@ -269,7 +269,7 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
 
             {/* Sección de Imagen */}
             <div className="relative h-80 overflow-hidden">
-                <Link to={`/vehiculo/${id}`} className="block h-full w-full">
+                <Link to={`/recurso/${id}`} className="block h-full w-full">
                     {/* Gradiente de Superposición */}
                     <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500 z-10"></div>
 
@@ -310,7 +310,7 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
 
                 <div className="mb-auto relative z-10">
                     <div className="flex items-start justify-between gap-4 mb-2">
-                        <Link to={`/vehiculo/${id}`} className="group-hover:text-brand-blue transition-colors duration-300">
+                        <Link to={`/recurso/${id}`} className="group-hover:text-brand-blue transition-colors duration-300">
                             <h3 className="text-2xl font-serif font-bold text-brand-dark leading-tight">{name}</h3>
                         </Link>
                     </div>
@@ -331,7 +331,7 @@ const VehicleCard = ({ id, name, price, location, image, isOffer, rating }) => (
                                 </span>
                             </div>
                         </div>
-                        <Link to={`/vehiculo/${id}`} className="btn-primary !px-6 !py-3 !rounded-2xl !text-sm group-hover:bg-brand-gold group-hover:border-brand-gold/50 transition-all duration-300">
+                        <Link to={`/recurso/${id}`} className="btn-primary !px-6 !py-3 !rounded-2xl !text-sm group-hover:bg-brand-gold group-hover:border-brand-gold/50 transition-all duration-300">
                             Reservar
                         </Link>
                     </div>
@@ -443,7 +443,7 @@ export default function Inicio() {
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                     <SectionTitle
                         title="Nuestra Colección"
-                        subtitle="Selección curada de vehículos premium para el viajero exigente."
+                        subtitle="Selección curada de recursos premium para el viajero exigente."
                     />
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">

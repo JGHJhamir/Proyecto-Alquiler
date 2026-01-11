@@ -19,7 +19,7 @@ const VIEW_TITLES = {
     dashboard: 'Panel de Control',
     reservas: 'Gestión de Reservas',
     clients: 'Gestión de Usuarios',
-    vehicles: 'Gestión de Vehículos',
+    vehicles: 'Gestión de Recursos',
     locations: 'Gestión de Ubicaciones',
     promotions: 'Gestión de Promociones',
     reports: 'Reporte Integral'
@@ -43,7 +43,7 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { id: 'reservas', label: 'Reservas', icon: Calendar },
         { id: 'clients', label: 'Usuarios', icon: Users },
-        { id: 'vehicles', label: 'Vehículos', icon: Car },
+        { id: 'vehicles', label: 'Recursos', icon: Car },
         { id: 'locations', label: 'Ubicaciones', icon: MapPin },
         { id: 'promotions', label: 'Promociones', icon: Tag },
         { id: 'reports', label: 'Reporte Integral', icon: BarChart3 },
@@ -108,9 +108,9 @@ const Sidebar = ({ activeView, setActiveView, isMobileOpen, setIsMobileOpen }) =
     );
 };
 
-import { CATALOGO_VEHICULOS } from '../data/datosVehiculos';
+import { CATALOGO_RECURSOS } from '../data/datosRecursos';
 
-const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitting, isEditing }) => {
+const ResourceFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, submitting, isEditing }) => {
     if (!isOpen) return null;
 
     // Estado para saber si estamos en modo "Manual" para cada campo
@@ -145,7 +145,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
         if (isEditing) {
             // Lógica para Vehículos
             if (formData.vehicle_type) {
-                const typeData = CATALOGO_VEHICULOS[formData.vehicle_type];
+                const typeData = CATALOGO_RECURSOS[formData.vehicle_type];
                 if (formData.category && (!typeData?.categories || !typeData.categories[formData.category])) {
                     setCustomMode(prev => ({ ...prev, category: true, make: true, model: true }));
                 } else if (formData.make && (!typeData?.categories[formData.category]?.brands || !typeData.categories[formData.category].brands[formData.make])) {
@@ -172,7 +172,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
     }, [isEditing, formData.vehicle_type, availableLocations]); // Added availableLocations to dependencies
 
     // --- Lógica de Catálogos ---
-    const currentTypeData = formData.vehicle_type ? CATALOGO_VEHICULOS[formData.vehicle_type] : null;
+    const currentTypeData = formData.vehicle_type ? CATALOGO_RECURSOS[formData.vehicle_type] : null;
 
     const availableCategories = currentTypeData?.categories ? Object.keys(currentTypeData.categories) : [];
 
@@ -272,7 +272,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
             <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl overflow-hidden md:max-h-[90vh] overflow-y-auto">
                 <div className="bg-white px-8 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Editar Vehículo' : 'Agregar Vehículo'}</h2>
+                        <h2 className="text-xl font-bold text-slate-900">{isEditing ? 'Editar Recurso' : 'Agregar Recurso'}</h2>
                         <p className="text-slate-500 text-sm">{isEditing ? 'Modificar ficha técnica.' : 'Selecciona o ingresa las características.'}</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -284,7 +284,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                     {/* Sección 1: Clasificación */}
                     <div className="space-y-4">
                         <h3 className="text-xs font-bold text-brand-blue uppercase tracking-wider flex items-center gap-2">
-                            <Briefcase className="w-4 h-4" /> Clasificación del Vehículo
+                            <Briefcase className="w-4 h-4" /> Clasificación del Recurso
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {/* Tipo (Zona) */}
@@ -632,7 +632,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                     {/* Sección de Imagen */}
                     <div className="space-y-1.5">
                         <div className="flex justify-between items-center">
-                            <label className="text-sm font-semibold text-slate-700 block">Imagen del Vehículo</label>
+                            <label className="text-sm font-semibold text-slate-700 block">Imagen del Recurso</label>
                             <a href="https://unsplash.com/s/photos/vehicle" target="_blank" rel="noopener noreferrer" className="text-brand-blue text-xs font-medium hover:underline flex items-center gap-1">
                                 <ImageIcon className="w-3 h-3" /> Buscar fotos
                             </a>
@@ -679,7 +679,7 @@ const VehicleFormModal = ({ isOpen, onClose, formData, setFormData, onSubmit, su
                             Cancelar
                         </button>
                         <button type="submit" disabled={submitting} className="flex-1 py-3.5 rounded-xl bg-brand-blue text-white font-bold hover:bg-blue-700 transition-all shadow-lg shadow-brand-blue/20 flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-                            {submitting ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-5 h-5" /> {isEditing ? 'Actualizar' : 'Guardar Vehículo'}</>}
+                            {submitting ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save className="w-5 h-5" /> {isEditing ? 'Actualizar' : 'Guardar Recurso'}</>}
                         </button>
                     </div>
                 </form>
@@ -798,7 +798,7 @@ const DashboardView = ({ users }) => {
                 <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-36">
                     <div className="flex justify-between items-start">
                         <div>
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Vehículos</span>
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Recursos</span>
                             <h3 className="text-3xl font-bold text-slate-900 mt-2">{stats.totalVehicles}</h3>
                         </div>
                         <Car className="w-5 h-5 text-slate-300" />
@@ -984,7 +984,7 @@ const VehiclesView = ({ onAddClick, onFixImages, onDelete, onDeleteMultiple, onE
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
                         type="text"
-                        placeholder="Filtrar por vehículo..."
+                        placeholder="Filtrar por recurso..."
                         className="pl-9 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:border-brand-blue outline-none w-64"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -1028,7 +1028,7 @@ const VehiclesView = ({ onAddClick, onFixImages, onDelete, onDeleteMultiple, onE
                         )}
                     </div>
                     <button onClick={onAddClick} className="bg-brand-blue hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors">
-                        <Plus className="w-4 h-4" /> Añadir Vehículo
+                        <Plus className="w-4 h-4" /> Añadir Recurso
                     </button>
                 </div>
             </div>
@@ -1045,7 +1045,7 @@ const VehiclesView = ({ onAddClick, onFixImages, onDelete, onDeleteMultiple, onE
                                     checked={vehicles.length > 0 && selectedVehicles.length === vehicles.length}
                                 />
                             </th>
-                            <th className="px-6 py-3">Vehículo</th>
+                            <th className="px-6 py-3">Recurso</th>
                             {visibleColumns.category && <th className="px-6 py-3">Categoría</th>}
                             {visibleColumns.location && <th className="px-6 py-3">Ubicación</th>}
                             {visibleColumns.prices && <th className="px-6 py-3">Precios</th>}
@@ -1123,7 +1123,7 @@ const VehiclesView = ({ onAddClick, onFixImages, onDelete, onDeleteMultiple, onE
                             </tr>
                         ))}
                         {vehicles.length === 0 && !loading && (
-                            <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-400 text-sm">Sin vehículos registrados.</td></tr>
+                            <tr><td colSpan="7" className="px-6 py-8 text-center text-slate-400 text-sm">Sin recursos registrados.</td></tr>
                         )}
                     </tbody>
                 </table>
@@ -1243,14 +1243,14 @@ const PromotionModal = ({ isOpen, onClose, formData, setFormData, onSubmit, isEd
 
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Vehículo</label>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Categoría del Recurso</label>
                                     <select
                                         value={formData.vehicle_type_condition || 'Todos'}
                                         onChange={(e) => setFormData({ ...formData, vehicle_type_condition: e.target.value })}
                                         className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 focus:ring-2 focus:ring-brand-blue outline-none transition-all"
                                     >
                                         <option value="Todos">Todos</option>
-                                        {CATALOGO_VEHICULOS.playa && Object.keys(CATALOGO_VEHICULOS.playa.categories).map((cat) => (
+                                        {CATALOGO_RECURSOS.playa && Object.keys(CATALOGO_RECURSOS.playa.categories).map((cat) => (
                                             <option key={cat} value={cat}>{cat}</option>
                                         ))}
                                     </select>
@@ -2610,7 +2610,7 @@ const PanelAdministrador = () => {
                 </main>
             </div>
 
-            <VehicleFormModal
+            <ResourceFormModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 formData={formData}

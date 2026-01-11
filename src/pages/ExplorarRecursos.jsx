@@ -45,7 +45,7 @@ const VehicleResultCard = ({ id, make, model, price, location, image, rating, ty
                 <div>
                     <div className="flex justify-between items-start mb-2">
                         <div>
-                            <p className="text-[10px] text-brand-gold font-bold uppercase tracking-[0.2em] mb-1">{type || 'Vehículo'}</p>
+                            <p className="text-[10px] text-brand-gold font-bold uppercase tracking-[0.2em] mb-1">{type || 'Recurso'}</p>
                             <h3 className="text-2xl font-serif font-bold text-slate-800 group-hover:text-brand-blue transition-colors leading-tight">{make} {model}</h3>
                         </div>
                     </div>
@@ -84,7 +84,7 @@ const VehicleResultCard = ({ id, make, model, price, location, image, rating, ty
     )
 };
 
-const ExplorarVehiculos = () => {
+const ExplorarRecursos = () => {
     // ... (Hooks y lógica de Estado - lógica existente preservada, solo re-renderizamos el retorno)
     const [searchParams] = useSearchParams();
     const destination = searchParams.get('destination') || '';
@@ -361,7 +361,7 @@ const ExplorarVehiculos = () => {
                         ) : filteredVehicles.length > 0 ? (
                             <div className="space-y-6 pb-20">
                                 {filteredVehicles.map(vehicle => (
-                                    <Link key={vehicle.id} to={`/vehiculo/${vehicle.id}`} className="block">
+                                    <Link key={vehicle.id} to={`/recurso/${vehicle.id}`} className="block">
                                         <VehicleResultCard
                                             {...vehicle}
                                             price={vehicle.price_per_hour}
@@ -378,10 +378,10 @@ const ExplorarVehiculos = () => {
                                 <div className="w-20 h-20 bg-brand-gold/10 rounded-full flex items-center justify-center mx-auto mb-6">
                                     <Star className="w-10 h-10 text-brand-gold opacity-50" />
                                 </div>
-                                <h3 className="text-2xl font-serif font-bold text-slate-800 mb-2">No encontramos vehículos</h3>
-                                <p className="text-slate-500 max-w-xs mx-auto mb-8">Intenta ajustar tu búsqueda o los filtros para encontrar tu vehículo ideal.</p>
+                                <h3 className="text-2xl font-serif font-bold text-slate-800 mb-2">No encontramos recursos</h3>
+                                <p className="text-slate-500 max-w-xs mx-auto mb-8">Intenta ajustar tu búsqueda o los filtros para encontrar tu recurso ideal.</p>
                                 <button onClick={() => setFilters({ categories: [], department: '', city: '' })} className="btn-secondary">
-                                    Ver todos los vehículos
+                                    Ver todos los recursos
                                 </button>
                             </div>
                         )}
@@ -424,4 +424,4 @@ const ExplorarVehiculos = () => {
     );
 };
 
-export default ExplorarVehiculos;
+export default ExplorarRecursos;

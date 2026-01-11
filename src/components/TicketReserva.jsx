@@ -36,7 +36,7 @@ const TicketReserva = ({ booking, vehicle, user }) => {
             `ID Reserva: ${booking.id.slice(0, 8)}\n` +
             `Cliente: ${user?.full_name || 'Usuario'}\n` +
             `Estado: ${statusText}\n\n` +
-            `--- VEHICULO ---\n` +
+            `--- RECURSO ---\n` +
             `${vehicle.make} ${vehicle.model} (${vehicle.year})\n` +
             `Categoria: ${vehicle.category}\n\n` +
             `--- FECHAS ---\n` +
@@ -45,7 +45,7 @@ const TicketReserva = ({ booking, vehicle, user }) => {
             `--- UBICACION ---\n` +
             `${vehicle.location_city}, Peru\n` +
             `--- PAGO ---\n` +
-            `Cantidad: ${booking.quantity || 1} Vehículo(s)\n` +
+            `Cantidad: ${booking.quantity || 1} Recurso(s)\n` +
             `Subtotal: S/ ${subtotal.toFixed(2)}\n` +
             `IGV (18%): S/ ${igv.toFixed(2)}\n` +
             `*TOTAL: S/ ${total.toFixed(2)}*` +
@@ -97,7 +97,7 @@ const TicketReserva = ({ booking, vehicle, user }) => {
                     <h3 className="font-bold text-slate-900 text-lg">{vehicle.make} {vehicle.model}</h3>
                     <p className="text-xs text-slate-500 font-medium">{vehicle.year} • {vehicle.category}</p>
                     <div className="mt-2 text-xs font-bold text-brand-blue bg-blue-50 py-1 px-3 rounded-full inline-block">
-                        {booking.quantity || 1} {Number(booking.quantity) === 1 ? 'Vehículo' : 'Vehículos'}
+                        {booking.quantity || 1} {Number(booking.quantity) === 1 ? 'Recurso' : 'Recursos'}
                     </div>
                 </div>
 
